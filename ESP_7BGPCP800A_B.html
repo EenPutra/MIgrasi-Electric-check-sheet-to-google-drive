@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESP Weekly PM — 7BG-PCP-800A/B</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1e3a5f;--navy2:#0f2744;--blue:#2563eb;--sky:#7dd3fc;--sky2:#bfdbfe;
+  --bg:#f8fbff;--bg2:#f0f7ff;--surf:#ffffff;--bdr:#bfdbfe;--bdr2:#dbeafe;
+  --ok:#16a34a;--ok2:#15803d;--ok-bg:#dcfce7;--ok-ring:#bbf7d0;
+  --ng:#dc2626;--ng2:#b91c1c;--ng-bg:#fee2e2;--ng-ring:#fecaca;
+  --idle:#e5e7eb;--idle-txt:#9ca3af;
+  --txt:#0f172a;--txt2:#1e3a5f;--txt3:#3b82f6;--txt4:#64748b;
+  --mono:'Share Tech Mono',monospace;--sans:'Barlow',sans-serif;--raj:'Rajdhani',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:var(--navy2);height:52px;
+  display:flex;align-items:center;padding:0 20px;gap:12px;
+  border-bottom:2px solid var(--blue)}
+.tb-logo{font-family:var(--raj);font-size:20px;font-weight:700;letter-spacing:3px;color:#fff}
+.tb-logo em{color:var(--sky);font-style:normal}
+.tb-sep{width:1px;height:26px;background:rgba(255,255,255,0.15);flex-shrink:0}
+.tb-sub{font-size:11px;color:var(--sky);font-family:var(--mono);letter-spacing:1px;white-space:nowrap}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--sky);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.tb-time{font-family:var(--mono);font-size:12px;color:var(--sky);white-space:nowrap}
+.btn{padding:6px 14px;border-radius:5px;border:none;cursor:pointer;
+  font-family:var(--raj);font-size:13px;font-weight:600;letter-spacing:1px;
+  transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-draft{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)}
+.btn-draft:hover{background:rgba(255,255,255,0.2)}
+.btn-pdf{background:var(--blue);color:#fff}
+.btn-pdf:hover{background:#1d4ed8;transform:translateY(-1px)}
+.btn-sm{padding:4px 10px;font-size:12px}
+
+/* HERO */
+.hero{background:var(--navy);padding:24px 20px 20px;color:#fff}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;color:var(--sky);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.hero-eyebrow::before{content:'';width:20px;height:1px;background:var(--sky)}
+.hero-title{font-family:var(--raj);font-size:clamp(28px,6vw,52px);font-weight:700;line-height:1;color:#fff;letter-spacing:1px}
+.hero-title em{color:var(--sky);font-style:normal}
+.hero-sub{font-size:13px;color:rgba(255,255,255,0.6);margin-top:8px;font-weight:300}
+.hero-stats{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.hstat{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  border-radius:8px;padding:10px 16px;text-align:center;min-width:72px}
+.hstat-n{font-family:var(--raj);font-size:26px;font-weight:700;color:#fff;line-height:1;display:block}
+.hstat-n.ok{color:#4ade80}
+.hstat-n.ng{color:#f87171}
+.hstat-n.pend{color:var(--sky)}
+.hstat-l{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;display:block}
+
+/* WRAP */
+.wrap{max-width:1200px;margin:0 auto;padding:20px 16px 80px}
+
+/* PANEL */
+.panel{background:var(--surf);border:1px solid var(--bdr);border-radius:10px;
+  margin-bottom:16px;overflow:hidden;box-shadow:0 1px 6px rgba(30,58,95,0.06)}
+
+/* WO PANEL */
+.wo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px}
+.mf{display:flex;flex-direction:column;gap:4px}
+.mf label{font-size:10px;color:var(--txt4);font-weight:500;letter-spacing:1px;text-transform:uppercase}
+.mf input,.mf select{border:1.5px solid var(--bdr);border-radius:5px;padding:7px 10px;
+  font-family:var(--sans);font-size:13px;background:var(--bg2);color:var(--txt);
+  transition:border-color .18s;width:100%}
+.mf input:focus,.mf select:focus{outline:none;border-color:var(--blue);background:#fff}
+.mf input[type=date]{font-family:var(--mono)}
+
+/* SECTION HEADER */
+.sec-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;
+  background:var(--navy);cursor:pointer;user-select:none}
+.sec-hdr-icon{width:28px;height:28px;border-radius:6px;background:rgba(37,99,235,0.3);
+  display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.sec-hdr-title{font-family:var(--raj);font-size:15px;font-weight:700;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
+.sec-hdr-sub{font-family:var(--mono);font-size:10px;color:var(--sky);letter-spacing:1px;margin-left:4px}
+.sec-hdr-cnt{margin-left:auto;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.4);
+  padding:2px 8px;border:1px solid rgba(255,255,255,0.15);border-radius:10px}
+.sec-hdr-arrow{color:rgba(255,255,255,0.4);font-size:14px;transition:transform .2s;margin-left:6px}
+.sec-hdr.open .sec-hdr-arrow{transform:rotate(180deg)}
+
+/* TABLE WRAPPER */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl-wrap::-webkit-scrollbar{height:4px}
+.tbl-wrap::-webkit-scrollbar-track{background:var(--bg2)}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--sky2);border-radius:2px}
+
+/* CHECK TABLE */
+.ct{width:100%;border-collapse:collapse;font-size:12px;min-width:600px}
+.ct th{background:var(--navy);color:var(--sky2);padding:7px 8px;text-align:center;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;
+  white-space:nowrap;border-right:1px solid rgba(255,255,255,0.08)}
+.ct th.tl{text-align:left}
+.ct th:last-child{border-right:none}
+.ct td{padding:6px 8px;border-bottom:1px solid var(--bdr2);background:var(--surf);
+  vertical-align:middle;text-align:center;border-right:1px solid var(--bdr2)}
+.ct td:last-child{border-right:none}
+.ct tr:last-child td{border-bottom:none}
+.ct tr:hover td{background:var(--bg2)}
+.ct td.lbl{text-align:left;color:var(--txt);font-size:11.5px;min-width:160px}
+.ct td.lbl small{display:block;font-size:10px;color:var(--txt4);font-style:italic;margin-top:1px}
+.ct td.no{font-family:var(--mono);font-size:11px;color:var(--txt4);min-width:28px}
+.ct td.ref{font-family:var(--mono);font-size:9.5px;color:var(--txt3);min-width:80px}
+.ct td.unit-hdr{background:rgba(37,99,235,0.06);font-family:var(--mono);font-size:10px;
+  color:var(--navy);font-weight:700;letter-spacing:1px}
+.sub-hdr td{background:rgba(37,99,235,0.06)!important;font-family:var(--raj);font-size:11px;
+  font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--navy);
+  padding:5px 8px!important;border-bottom:2px solid var(--bdr)!important}
+
+/* MEAS INPUT */
+.mi{width:44px;font-size:11px;padding:3px 4px;border-radius:3px;font-family:var(--mono);
+  text-align:center;border:1.5px solid var(--bdr);background:var(--bg2);color:var(--txt);
+  transition:border-color .15s}
+.mi:focus{outline:none;border-color:var(--blue);background:#fff}
+
+/* OK/NG BUTTONS — Variasi 1 Solid Fill */
+.tog{display:inline-flex;gap:3px;justify-content:center}
+.rb{font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;font-weight:700;
+  letter-spacing:.5px;border:none;transition:all .15s;font-family:var(--mono)}
+.rb.ok-idle{background:var(--idle);color:var(--idle-txt)}
+.rb.ng-idle{background:var(--idle);color:var(--idle-txt)}
+.rb.ok-act{background:var(--ok);color:#fff;box-shadow:0 0 0 2px var(--ok-ring)}
+.rb.ng-act{background:var(--ng);color:#fff;box-shadow:0 0 0 2px var(--ng-ring)}
+.rb:hover{opacity:0.85;transform:translateY(-1px)}
+
+/* OIL LEVEL SELECT */
+.oil-sel{font-size:10px;padding:3px 5px;border-radius:3px;border:1.5px solid var(--bdr);
+  background:var(--bg2);color:var(--txt);font-family:var(--mono);width:62px}
+
+/* PANEL CLEANING */
+.panel-clean{padding:16px}
+.pc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;margin-top:12px}
+.pc-item{background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:10px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pc-label{font-size:12px;color:var(--txt);font-weight:500}
+.pc-sub{font-size:10px;color:var(--txt4);margin-top:1px}
+
+/* FINDINGS */
+.findings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.mf textarea{border:1.5px solid var(--bdr);border-radius:5px;padding:8px 10px;
+  font-family:var(--sans);font-size:13px;background:var(--bg2);color:var(--txt);
+  resize:vertical;min-height:80px;width:100%;transition:border-color .18s}
+.mf textarea:focus{outline:none;border-color:var(--blue);background:#fff}
+
+/* NOTICE */
+.notice{padding:10px 16px;border-radius:6px;font-size:13px;display:none;margin:12px 0 0}
+.notice.ok{background:#dcfce7;border:1px solid #86efac;color:#15803d;display:block}
+.notice.err{background:#fee2e2;border:1px solid #fca5a5;color:#b91c1c;display:block}
+.notice.info{background:#dbeafe;border:1px solid #93c5fd;color:#1e40af;display:block}
+
+/* FOOTER */
+.footer{background:var(--navy2);padding:16px 20px;display:flex;align-items:center;
+  justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:20px}
+.footer-l,.footer-r{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px}
+
+/* RESPONSIVE */
+@media(max-width:640px){
+  .tb-sub{display:none}
+  .tb-sep{display:none}
+  .hero-stats .hstat{min-width:60px;padding:8px 10px}
+  .hstat-n{font-size:20px}
+  .findings-grid{grid-template-columns:1fr}
+  .btn-draft{display:none}
+}
+@media(max-width:400px){
+  .topbar{padding:0 12px}
+  .wrap{padding:12px 10px 60px}
+}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="live-dot"></div>
+  <span class="tb-logo">ESP <em>800</em></span>
+  <div class="tb-sep"></div>
+  <span class="tb-sub">7BG-PCP-800A/B · WEEKLY PM</span>
+  <div class="tb-right">
+    <span class="tb-time" id="clock">--:--:--</span>
+    <button class="btn btn-draft btn-sm" onclick="saveDraft()">💾 Draft</button>
+    <button class="btn btn-pdf btn-sm" onclick="generatePDF()">📄 PDF</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">Weekly Preventive Maintenance</div>
+  <div class="hero-title">ELECTROSTATIC <em>PRECIPITATOR</em></div>
+  <div class="hero-sub">Unit 7/8 · 7BG-PCP-800A/B · Weekly Maintenance Check Sheet</div>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-n" id="h-total">0</span><span class="hstat-l">Total</span></div>
+    <div class="hstat"><span class="hstat-n ok" id="h-ok">0</span><span class="hstat-l">OK</span></div>
+    <div class="hstat"><span class="hstat-n ng" id="h-ng">0</span><span class="hstat-l">NG</span></div>
+    <div class="hstat"><span class="hstat-n pend" id="h-pend">0</span><span class="hstat-l">Pending</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- WORK ORDER -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">📋</div>
+    <div><div class="sec-hdr-title">Work Order Information</div></div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="wo-grid">
+      <div class="mf"><label>Date</label><input type="date" id="wo-date"></div>
+      <div class="mf"><label>Time</label><input type="time" id="wo-time"></div>
+      <div class="mf"><label>Unit</label>
+        <select id="wo-unit"><option>7</option><option>8</option><option>7/8</option></select>
+      </div>
+      <div class="mf"><label>Equipment</label>
+        <select id="wo-equip"><option>7BG-PCP-800A/B</option><option>7BG-PCP-800A</option><option>7BG-PCP-800B</option></select>
+      </div>
+      <div class="mf"><label>Checked By</label><input type="text" id="checked-by" placeholder="Full name"></div>
+      <div class="mf"><label>Reviewed By</label><input type="text" id="reviewed-by" placeholder="Supervisor name"></div>
+      <div class="mf"><label>Shift</label>
+        <select id="shift"><option>Shift 1 (07:00–15:00)</option><option>Shift 2 (15:00–23:00)</option><option>Shift 3 (23:00–07:00)</option><option>Normal Hours</option></select>
+      </div>
+      <div class="mf"><label>WO Number</label><input type="text" id="wo-no" placeholder="WO-2026-XXXX"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION A: RECTIFIER T/R -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">⚡</div>
+    <div>
+      <div class="sec-hdr-title">A — Rectifier Transformer Unit</div>
+      <span class="sec-hdr-sub">817A 827A 837A 847A 815A 825A 835A 845A · 817B 827B 837B 847B 815B 825B 835B 845B</span>
+    </div>
+    <span class="sec-hdr-cnt" id="cnt-a">16 units</span>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+    <table class="ct" id="tbl-a">
+      <thead>
+        <tr>
+          <th class="tl" style="width:26px">No</th>
+          <th class="tl" style="min-width:170px">Inspection Item</th>
+          <th style="min-width:90px">Criteria</th>
+          <th>817A</th><th>827A</th><th>837A</th><th>847A</th>
+          <th>815A</th><th>825A</th><th>835A</th><th>845A</th>
+          <th>817B</th><th>827B</th><th>837B</th><th>847B</th>
+          <th>815B</th><th>825B</th><th>835B</th><th>845B</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-a"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION B: CE RAPPING WEST -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">⚙️</div>
+    <div>
+      <div class="sec-hdr-title">B — CE Rapping Motors (West)</div>
+      <span class="sec-hdr-sub">815J · 817J · 825J · 827J · 835J · 837J · 845J · 847J</span>
+    </div>
+    <span class="sec-hdr-cnt">8 units</span>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+    <table class="ct">
+      <thead>
+        <tr>
+          <th class="tl" style="width:26px">No</th>
+          <th class="tl" style="min-width:170px">Inspection Item</th>
+          <th style="min-width:90px">Criteria</th>
+          <th>815J</th><th>817J</th><th>825J</th><th>827J</th>
+          <th>835J</th><th>837J</th><th>845J</th><th>847J</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-b"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION C: CE RAPPING EAST -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">⚙️</div>
+    <div>
+      <div class="sec-hdr-title">C — CE Rapping Motors (East)</div>
+      <span class="sec-hdr-sub">815K · 817K · 825K · 827K · 835K · 837K · 845K · 847K</span>
+    </div>
+    <span class="sec-hdr-cnt">8 units</span>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+    <table class="ct">
+      <thead>
+        <tr>
+          <th class="tl" style="width:26px">No</th>
+          <th class="tl" style="min-width:170px">Inspection Item</th>
+          <th style="min-width:90px">Criteria</th>
+          <th>815K</th><th>817K</th><th>825K</th><th>827K</th>
+          <th>835K</th><th>837K</th><th>845K</th><th>847K</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-c"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION D: DE RAPPING ROOF -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🏗️</div>
+    <div>
+      <div class="sec-hdr-title">D — DE Rapping Motors (Roof)</div>
+      <span class="sec-hdr-sub">815F 825F 835F 845F 817F 827F 837F 847F · 815E 825E 835E 845E 817E 827E 837E 847E</span>
+    </div>
+    <span class="sec-hdr-cnt">16 units</span>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+    <table class="ct">
+      <thead>
+        <tr>
+          <th class="tl" style="width:26px">No</th>
+          <th class="tl" style="min-width:170px">Inspection Item</th>
+          <th style="min-width:90px">Criteria</th>
+          <th>815F</th><th>825F</th><th>835F</th><th>845F</th>
+          <th>817F</th><th>827F</th><th>837F</th><th>847F</th>
+          <th>815E</th><th>825E</th><th>835E</th><th>845E</th>
+          <th>817E</th><th>827E</th><th>837E</th><th>847E</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-d"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION E: GD RAPPING -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">💨</div>
+    <div>
+      <div class="sec-hdr-title">E — Gas Distribution Rapping Motors</div>
+      <span class="sec-hdr-sub">815H · 817H · 845H · 847H · 815G · 817G · 845G · 847G</span>
+    </div>
+    <span class="sec-hdr-cnt">8 units</span>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+    <table class="ct">
+      <thead>
+        <tr>
+          <th class="tl" style="width:26px">No</th>
+          <th class="tl" style="min-width:170px">Inspection Item</th>
+          <th style="min-width:90px">Criteria</th>
+          <th>815H</th><th>817H</th><th>845H</th><th>847H</th>
+          <th>815G</th><th>817G</th><th>845G</th><th>847G</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-e"></tbody>
+    </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION F: HOPPER -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🔥</div>
+    <div>
+      <div class="sec-hdr-title">F — Hopper Heater</div>
+      <span class="sec-hdr-sub">BG-HTR-815E/825E/835E/845E/815F/825F/835F/845F</span>
+    </div>
+    <span class="sec-hdr-cnt">8 units</span>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+    <table class="ct">
+      <thead>
+        <tr>
+          <th class="tl" style="width:26px">No</th>
+          <th class="tl" style="min-width:170px">Inspection Item</th>
+          <th style="min-width:90px">Criteria</th>
+          <th>HTR-815E</th><th>HTR-825E</th><th>HTR-835E</th><th>HTR-845E</th>
+          <th>HTR-815F</th><th>HTR-825F</th><th>HTR-835F</th><th>HTR-845F</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-f"></tbody>
+    </table>
+    </div>
+    <!-- Panel Cleaning -->
+    <div class="panel-clean">
+      <div style="font-family:var(--raj);font-size:13px;font-weight:700;color:var(--navy);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">
+        F.2 — Panel Cleaning from Dust & Contamination
+      </div>
+      <div style="font-size:11px;color:var(--txt4);margin-bottom:10px">Bersihkan semua panel lokal dari debu dan kontaminasi</div>
+      <div class="pc-grid">
+        <div class="pc-item">
+          <div><div class="pc-label">BG-CAB-800A</div><div class="pc-sub">Hopper Level Switch Local Indicator</div></div>
+          <div class="tog" id="pc-800a"></div>
+        </div>
+        <div class="pc-item">
+          <div><div class="pc-label">BG-CAB-800B</div><div class="pc-sub">Hopper Level Switch Local Indicator</div></div>
+          <div class="tog" id="pc-800b"></div>
+        </div>
+        <div class="pc-item">
+          <div><div class="pc-label">BG-CAB-800C</div><div class="pc-sub">Hopper Vibrator Local Control</div></div>
+          <div class="tog" id="pc-800c"></div>
+        </div>
+        <div class="pc-item">
+          <div><div class="pc-label">BG-CAB-800D</div><div class="pc-sub">Hopper Vibrator Local Control</div></div>
+          <div class="tog" id="pc-800d"></div>
+        </div>
+        <div class="pc-item">
+          <div><div class="pc-label">BG-CAB-800E</div><div class="pc-sub">Hopper Heater Local Control Panel</div></div>
+          <div class="tog" id="pc-800e"></div>
+        </div>
+        <div class="pc-item">
+          <div><div class="pc-label">BG-CAB-800F</div><div class="pc-sub">Hopper Heater Local Control Panel</div></div>
+          <div class="tog" id="pc-800f"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FINDINGS -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">📝</div>
+    <div><div class="sec-hdr-title">Findings & Conclusion</div></div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="wo-grid" style="padding-bottom:0">
+      <div class="mf">
+        <label>Overall Condition</label>
+        <select id="overall">
+          <option>✅ GOOD — Normal Operation</option>
+          <option>⚠️ FAIR — Requires Monitoring</option>
+          <option>🔧 POOR — Maintenance Required</option>
+          <option>🛑 CRITICAL — Must Shutdown</option>
+        </select>
+      </div>
+      <div class="mf"><label>Next PM Due</label><input type="date" id="next-pm"></div>
+    </div>
+    <div class="findings-grid">
+      <div class="mf"><label>Findings / Observations</label>
+        <textarea id="findings" placeholder="Catat semua temuan, abnormalitas, atau observasi…"></textarea>
+      </div>
+      <div class="mf"><label>Corrective Actions / Recommendations</label>
+        <textarea id="recommendations" placeholder="Tindakan yang diambil dan rekomendasi tindak lanjut…"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTION ROW -->
+<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;padding:4px 0 8px">
+  <button class="btn" style="background:#f1f5f9;color:var(--navy);border:1px solid var(--bdr)" onclick="resetForm()">🔄 Reset</button>
+  <button class="btn btn-draft" style="background:var(--navy);color:#fff" onclick="saveDraft()">💾 Save Draft</button>
+  <button class="btn btn-pdf" onclick="generatePDF()">📄 Download PDF</button>
+</div>
+<div id="notice" class="notice"></div>
+
+</div><!-- /wrap -->
+
+<footer class="footer">
+  <div class="footer-l">UNIT 7/8 · ELECTROSTATIC PRECIPITATOR · 7BG-PCP-800A/B · WEEKLY PM</div>
+  <div class="footer-r" id="fdate">—</div>
+</footer>
+
+<script>
+// ── CLOCK ──────────────────────────────────────────
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('id-ID');
+  document.getElementById('fdate').textContent=n.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+setInterval(tick,1000);tick();
+
+// ── TOGGLE SECTION ─────────────────────────────────
+function toggleSec(hdr){
+  hdr.classList.toggle('open');
+  const body=hdr.nextElementSibling;
+  body.style.display=hdr.classList.contains('open')?'':'none';
+}
+
+// ── STATE ──────────────────────────────────────────
+const ST={};
+function setBtn(id,val,btn){
+  const par=btn.closest('.tog');
+  par.querySelectorAll('.rb').forEach(b=>{
+    b.className='rb '+(b.dataset.v==='OK'?'ok-idle':'ng-idle');
+  });
+  if(ST[id]===val){delete ST[id];}
+  else{
+    btn.className='rb '+(val==='OK'?'ok-act':'ng-act');
+    ST[id]=val;
+  }
+  updateStats();
+}
+function mkTog(id){
+  return `<div class="tog">
+    <button class="rb ok-idle" data-v="OK" onclick="setBtn('${id}','OK',this)">✓ OK</button>
+    <button class="rb ng-idle" data-v="NG" onclick="setBtn('${id}','NG',this)">✗ NG</button>
+  </div>`;
+}
+function mkOilSel(id){
+  return `<select class="oil-sel" id="${id}"><option value="">—</option><option>Normal</option><option>Low</option></select>`;
+}
+function mkInp(id){
+  return `<input class="mi" type="number" step="any" id="${id}" placeholder="—">`;
+}
+
+// ── UPDATE STATS ───────────────────────────────────
+function updateStats(){
+  // Count toggle states
+  const vals=Object.values(ST);
+  const ok=vals.filter(v=>v==='OK').length;
+  const ng=vals.filter(v=>v==='NG').length;
+  // Count all toggle containers
+  const total=document.querySelectorAll('.tog').length;
+  const pending=total-ok-ng;
+  document.getElementById('h-total').textContent=total;
+  document.getElementById('h-ok').textContent=ok;
+  document.getElementById('h-ng').textContent=ng;
+  document.getElementById('h-pend').textContent=pending;
+}
+
+// ── BUILD SECTION A ────────────────────────────────
+function buildA(){
+  const tb=document.getElementById('tbody-a');
+  const cols16=['817A','827A','837A','847A','815A','825A','835A','845A','817B','827B','837B','847B','815B','825B','835B','845B'];
+  function row(no,desc,crit,fn){
+    const tr=document.createElement('tr');
+    let h=`<td class="no">${no}</td><td class="lbl">${desc}</td><td class="ref">${crit}</td>`;
+    cols16.forEach(c=>{ h+=`<td>${fn(no+'_'+c)}</td>`; });
+    tr.innerHTML=h; tb.appendChild(tr);
+  }
+  row('1','Ambient Temp.','&lt; 40°C',id=>mkInp(id)+'<span style="font-size:9px;color:var(--txt4);display:block">°C</span>');
+  row('2','AC Input Voltage T/R','380 V',id=>mkInp(id)+'<span style="font-size:9px;color:var(--txt4);display:block">V</span>');
+  row('3','AC Input Current T/R','&lt; 275 A',id=>mkInp(id)+'<span style="font-size:9px;color:var(--txt4);display:block">A</span>');
+  row('4','DC Output Voltage T/R','&lt; 60 kV',id=>mkInp(id)+'<span style="font-size:9px;color:var(--txt4);display:block">kV</span>');
+  row('5','DC Output Current T/R','&lt; 1200 mA',id=>mkInp(id)+'<span style="font-size:9px;color:var(--txt4);display:block">mA</span>');
+  row('6','DC Output Current Limit','&lt; 1200 mA',id=>mkInp(id)+'<span style="font-size:9px;color:var(--txt4);display:block">mA</span>');
+  row('7','Oil Level T/R','&gt; Oil fill mark',id=>mkOilSel(id));
+  row('8','Oil Temperature','&lt; 90°C',id=>mkInp(id)+'<span style="font-size:9px;color:var(--txt4);display:block">°C</span>');
+  row('9','Oil Leakage<br><small>Drain Valve, Oil Sight Glass, Bushings, Thermostat, Radiator, Welds</small>','No Leak',id=>mkTog(id));
+  row('10','Contamination','Clean',id=>mkTog(id));
+
+  // Item 11 & 12 — text input per kolom, satu tabel sama
+  function rowTxt(no,desc,crit){
+    const tr=document.createElement('tr');
+    let h=`<td class="no">${no}</td><td class="lbl">${desc}</td><td class="ref">${crit}</td>`;
+    cols16.forEach(c=>{
+      h+=`<td><input class="mi" type="text" id="${no}_${c}" placeholder="—" style="width:44px"></td>`;
+    });
+    tr.innerHTML=h; tb.appendChild(tr);
+  }
+  rowTxt('11','Record Sparks / Arcs<br><small>ESP Total Control Panel</small>','Record');
+  rowTxt('12','Indication Lamp, Exhaust Fan, etc.<br><small>Check panel indication</small>','Check');
+}
+
+// ── BUILD RAPPING MOTOR SECTIONS ──────────────────
+function buildRapping(tbodyId,cols,pfx){
+  const tb=document.getElementById(tbodyId);
+  const items=[
+    ['1','Overheating','&lt; 155°C','meas','°C'],
+    ['2','Lubrication Leakage','No Leak','tog'],
+    ['3','Grease Leakage','No Leak','tog'],
+    ['4','Abnormal Sound (motor, gearbox)','No Noise','tog'],
+    ['5','Contamination','Clean','tog'],
+  ];
+  items.forEach(([no,desc,crit,type,unit])=>{
+    const tr=document.createElement('tr');
+    let h=`<td class="no">${no}</td><td class="lbl">${desc}</td><td class="ref">${crit}</td>`;
+    cols.forEach(c=>{
+      const id=pfx+'_'+no+'_'+c;
+      h+=`<td>${type==='tog'?mkTog(id):mkInp(id)+(unit?`<span style="font-size:9px;color:var(--txt4);display:block">${unit}</span>`:'')}</td>`;
+    });
+    tr.innerHTML=h; tb.appendChild(tr);
+  });
+}
+
+// ── BUILD SECTION F HOPPER ─────────────────────────
+function buildF(){
+  const tb=document.getElementById('tbody-f');
+  const cols=['815E','825E','835E','845E','815F','825F','835F','845F'];
+  const tr=document.createElement('tr');
+  let h=`<td class="no">1</td><td class="lbl">Hopper Heater Current</td><td class="ref">&lt; 30 A</td>`;
+  cols.forEach(c=>{
+    h+=`<td>${mkInp('htr_'+c)}<span style="font-size:9px;color:var(--txt4);display:block">A</span></td>`;
+  });
+  tr.innerHTML=h; tb.appendChild(tr);
+  // Panel clean toggles
+  ['pc-800a','pc-800b','pc-800c','pc-800d','pc-800e','pc-800f'].forEach(id=>{
+    document.getElementById(id).innerHTML=mkTog(id);
+  });
+}
+
+// ── DRAFT ──────────────────────────────────────────
+function saveDraft(){
+  const d={};
+  document.querySelectorAll('input[type=text],input[type=date],input[type=time],input[type=number],select,textarea').forEach((el,i)=>d['f'+i]=el.value);
+  d._st=ST;
+  try{
+    localStorage.setItem('esp800_draft',JSON.stringify(d));
+    showNote('💾 Draft tersimpan.','ok');
+  }catch(e){showNote('❌ Gagal menyimpan: '+e.message,'err');}
+}
+function loadDraft(){
+  try{
+    const raw=localStorage.getItem('esp800_draft');
+    if(!raw)return;
+    const d=JSON.parse(raw);
+    document.querySelectorAll('input[type=text],input[type=date],input[type=time],input[type=number],select,textarea').forEach((el,i)=>{if(d['f'+i]!==undefined)el.value=d['f'+i];});
+    if(d._st){
+      Object.entries(d._st).forEach(([id,val])=>{
+        ST[id]=val;
+        const tog=document.querySelector(`.tog .rb[data-v="${val}"][onclick*="'${id}'"]`);
+        if(tog)tog.className='rb '+(val==='OK'?'ok-act':'ng-act');
+      });
+    }
+    updateStats();
+  }catch(e){}
+}
+function resetForm(){
+  if(!confirm('Reset semua data? Tindakan ini tidak dapat dibatalkan.'))return;
+  document.querySelectorAll('input,select,textarea').forEach(el=>{if(el.type!=='file')el.value='';});
+  Object.keys(ST).forEach(k=>delete ST[k]);
+  document.querySelectorAll('.rb').forEach(b=>b.className='rb '+(b.dataset.v==='OK'?'ok-idle':'ng-idle'));
+  updateStats();
+}
+function showNote(msg,t){
+  const n=document.getElementById('notice');
+  n.textContent=msg;n.className='notice '+t;
+  setTimeout(()=>n.className='notice',4000);
+}
+
+// ── HELPERS ────────────────────────────────────────
+const v=id=>{const e=document.getElementById(id);return e?e.value.trim():''};
+const tr2=(s,n)=>s&&s.length>n?s.slice(0,n)+'…':(s||'');
+function getTogVal(id){return ST[id]||'—';}
+function getInpVal(id){const e=document.getElementById(id);return e&&e.value?e.value:'—';}
+function getSelVal(id){const e=document.getElementById(id);return e&&e.value?e.value:'—';}
+
+// ── PDF ────────────────────────────────────────────
+async function generatePDF(){
+  showNote('⏳ Membuat PDF, harap tunggu…','info');
+  await new Promise(r=>setTimeout(r,200));
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  const W=297,H=210,M=10;let y=M;
+  const NAVY=[30,58,95],BLUE=[37,99,235],SKY=[125,211,252],LT=[240,247,255],
+        OK=[22,163,74],NG=[220,38,38],GRAY=[100,116,139],WHITE=[255,255,255];
+
+  function nPage(){pdf.addPage();y=M;miniHdr();}
+  function ckY(n){if(y+n>H-M)nPage();}
+  function miniHdr(){
+    pdf.setFillColor(...NAVY);pdf.rect(0,0,W,8,'F');
+    pdf.setTextColor(...SKY);pdf.setFont('helvetica','bold');pdf.setFontSize(7);
+    pdf.text('ESP 7BG-PCP-800A/B — WEEKLY PM',M,5.5);
+    pdf.setFont('helvetica','normal');pdf.setFontSize(6.5);pdf.setTextColor(...SKY);
+    pdf.text(`Date: ${v('wo-date')||'—'}  Unit: ${v('wo-unit')||'—'}  By: ${v('checked-by')||'—'}`,W-M,5.5,{align:'right'});
+    y=12;
+  }
+
+  // Cover
+  pdf.setFillColor(...NAVY);pdf.rect(0,0,W,38,'F');
+  pdf.setFillColor(...BLUE);pdf.rect(0,36,W,2,'F');
+  pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(18);
+  pdf.text('ELECTROSTATIC PRECIPITATOR',M,14);
+  pdf.setFontSize(11);pdf.setTextColor(...SKY);
+  pdf.text('Weekly Maintenance Check Sheet — 7BG-PCP-800A/B',M,22);
+  pdf.setFontSize(8);pdf.setTextColor(...SKY);pdf.setFont('helvetica','normal');
+  pdf.text('Generated: '+new Date().toLocaleString('en-GB'),M,31);
+  pdf.text('POMI — Unit 7/8 Electrical Maintenance',W-M,31,{align:'right'});
+  y=44;
+
+  // Info box
+  pdf.setFillColor(...LT);pdf.setDrawColor(125,211,252);pdf.setLineWidth(0.25);
+  pdf.roundedRect(M,y,W-M*2,26,2,2,'FD');
+  function ib(lbl,val,x,yy){
+    pdf.setFont('helvetica','bold');pdf.setFontSize(6);pdf.setTextColor(...GRAY);pdf.text(lbl.toUpperCase(),x,yy);
+    pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.setTextColor(...NAVY);pdf.text(tr2(val||'—',26),x,yy+5);
+  }
+  const cx=[M+3,58,106,160,210,250];
+  ib('Date',v('wo-date'),cx[0],y+8);ib('Unit',v('wo-unit'),cx[1],y+8);
+  ib('Equipment',v('wo-equip'),cx[2],y+8);ib('Shift',v('shift').split(' ')[0],cx[3],y+8);
+  ib('WO No.',v('wo-no'),cx[0],y+20);ib('Checked By',v('checked-by'),cx[1],y+20);
+  ib('Reviewed By',v('reviewed-by'),cx[2],y+20);ib('Condition',v('overall').replace(/[✅⚠️🔧🛑]/g,'').trim(),cx[3],y+20);
+  y+=32;
+
+  // Stats
+  const ok_c=Object.values(ST).filter(x=>x==='OK').length;
+  const ng_c=Object.values(ST).filter(x=>x==='NG').length;
+  const tot=document.querySelectorAll('.tog').length;
+  [[M,'TOTAL',String(tot),NAVY],[M+36,'OK',String(ok_c),OK],[M+72,'NG',String(ng_c),NG]].forEach(([x,l,val,cl])=>{
+    pdf.setFillColor(...cl,.08);pdf.setDrawColor(...cl);pdf.setLineWidth(0.3);
+    pdf.roundedRect(x,y,28,10,1.5,1.5,'FD');
+    pdf.setFont('helvetica','bold');pdf.setFontSize(6);pdf.setTextColor(...cl);pdf.text(l,x+2,y+4);
+    pdf.setFontSize(10);pdf.text(val,x+2,y+9);
+  });
+  y+=16;
+
+  // Section builder
+  function drawSection(title,headers,rows){
+    ckY(14);
+    pdf.setFillColor(...NAVY);pdf.rect(M,y,W-M*2,7,'F');
+    pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);
+    pdf.text('▶  '+title,M+3,y+5);y+=10;
+    pdf.autoTable({
+      startY:y,head:[['No.','Inspection Item','Criteria',...headers]],body:rows,theme:'grid',
+      styles:{font:'helvetica',fontSize:6.5,cellPadding:2,textColor:[15,23,42],lineColor:[191,219,254],lineWidth:0.18},
+      headStyles:{fillColor:NAVY,textColor:[125,211,252],fontStyle:'bold',fontSize:6,halign:'center'},
+      columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:42},2:{cellWidth:20,halign:'center'}},
+      didParseCell:d=>{
+        const val=d.cell.text[0];
+        if(val==='OK'||val==='✓ OK'){d.cell.styles.textColor=[...OK];d.cell.styles.fontStyle='bold';}
+        if(val==='NG'||val==='✗ NG'){d.cell.styles.textColor=[...NG];d.cell.styles.fontStyle='bold';}
+      },
+      margin:{left:M,right:M}
+    });
+    y=pdf.lastAutoTable.finalY+5;
+  }
+
+  // Section A
+  const colsA=['817A','827A','837A','847A','815A','825A','835A','845A','817B','827B','837B','847B','815B','825B','835B','845B'];
+  const rowsA=[
+    ['1','Ambient Temp.','<40°C',...colsA.map(c=>getInpVal('1_'+c)+'°C')],
+    ['2','AC Input Voltage','380V',...colsA.map(c=>getInpVal('2_'+c)+'V')],
+    ['3','AC Input Current','<275A',...colsA.map(c=>getInpVal('3_'+c)+'A')],
+    ['4','DC Output Voltage','<60kV',...colsA.map(c=>getInpVal('4_'+c)+'kV')],
+    ['5','DC Output Current','<1200mA',...colsA.map(c=>getInpVal('5_'+c)+'mA')],
+    ['6','DC Current Limit','<1200mA',...colsA.map(c=>getInpVal('6_'+c)+'mA')],
+    ['7','Oil Level','>Fill mark',...colsA.map(c=>getSelVal('7_'+c))],
+    ['8','Oil Temperature','<90°C',...colsA.map(c=>getInpVal('8_'+c)+'°C')],
+    ['9','Oil Leakage','No Leak',...colsA.map(c=>getTogVal('9_'+c))],
+    ['10','Contamination','Clean',...colsA.map(c=>getTogVal('10_'+c))],
+    ['11','Sparks / Arcs','Record',...colsA.map(c=>getInpVal('11_'+c))],
+    ['12','Indication Lamp / Fan','Check',...colsA.map(c=>getInpVal('12_'+c))],
+  ];
+  drawSection('A — Rectifier Transformer Unit (16 T/R)',colsA,rowsA);
+
+  // Section B
+  nPage();
+  const colsB=['815J','817J','825J','827J','835J','837J','845J','847J'];
+  const rappItems=[['1','Overheating','<155°C'],['2','Lubrication Leakage','No Leak'],['3','Grease Leakage','No Leak'],['4','Abnormal Sound','No Noise'],['5','Contamination','Clean']];
+  function rappRows(pfx,cols){return rappItems.map(([no,desc,crit])=>[no,desc,crit,...cols.map(c=>no==='1'?getInpVal(pfx+'_'+no+'_'+c)+'°C':getTogVal(pfx+'_'+no+'_'+c))]);}
+  drawSection('B — CE Rapping Motors West',colsB,rappRows('b',colsB));
+  ckY(14);drawSection('C — CE Rapping Motors East',['815K','817K','825K','827K','835K','837K','845K','847K'],rappRows('c',['815K','817K','825K','827K','835K','837K','845K','847K']));
+
+  nPage();
+  const colsD=['815F','825F','835F','845F','817F','827F','837F','847F','815E','825E','835E','845E','817E','827E','837E','847E'];
+  drawSection('D — DE Rapping Motors Roof (16 units)',colsD,rappItems.map(([no,desc,crit])=>[no,desc,crit,...colsD.map(c=>no==='1'?getInpVal('d_'+no+'_'+c)+'°C':getTogVal('d_'+no+'_'+c))]));
+
+  ckY(14);drawSection('E — Gas Distribution Rapping Motors',['815H','817H','845H','847H','815G','817G','845G','847G'],rappRows('e',['815H','817H','845H','847H','815G','817G','845G','847G']));
+
+  ckY(14);
+  const colsF=['815E','825E','835E','845E','815F','825F','835F','845F'];
+  drawSection('F — Hopper Heater',colsF,[['1','Heater Current','<30A',...colsF.map(c=>getInpVal('htr_'+c)+'A')]]);
+
+  // Panel cleaning
+  ckY(20);
+  pdf.setFillColor(...NAVY);pdf.rect(M,y,W-M*2,7,'F');
+  pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);
+  pdf.text('▶  F.2 — Panel Cleaning',M+3,y+5);y+=10;
+  pdf.autoTable({startY:y,head:[['Panel','Description','Status']],
+    body:[['BG-CAB-800A','Hopper Level Switch Local Indicator',getTogVal('pc-800a')],['BG-CAB-800B','Hopper Level Switch Local Indicator',getTogVal('pc-800b')],['BG-CAB-800C','Hopper Vibrator Local Control',getTogVal('pc-800c')],['BG-CAB-800D','Hopper Vibrator Local Control',getTogVal('pc-800d')],['BG-CAB-800E','Hopper Heater Local Control Panel',getTogVal('pc-800e')],['BG-CAB-800F','Hopper Heater Local Control Panel',getTogVal('pc-800f')]],
+    theme:'grid',styles:{font:'helvetica',fontSize:8,cellPadding:2.5,textColor:[15,23,42],lineColor:[191,219,254],lineWidth:0.18},
+    headStyles:{fillColor:NAVY,textColor:[125,211,252],fontStyle:'bold',fontSize:7},
+    didParseCell:d=>{if(d.cell.text[0]==='OK'){d.cell.styles.textColor=[...OK];d.cell.styles.fontStyle='bold';}if(d.cell.text[0]==='NG'){d.cell.styles.textColor=[...NG];d.cell.styles.fontStyle='bold';}},
+    margin:{left:M,right:M}});
+  y=pdf.lastAutoTable.finalY+6;
+
+  // Findings
+  ckY(30);
+  pdf.setFillColor(...NAVY);pdf.rect(M,y,W-M*2,7,'F');
+  pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);
+  pdf.text('▶  Findings & Conclusion',M+3,y+5);y+=10;
+  pdf.autoTable({startY:y,body:[['Overall Condition',v('overall')],['Next PM Due',v('next-pm')||'—'],['Findings',v('findings')||'—'],['Corrective Actions',v('recommendations')||'—']],
+    theme:'grid',styles:{font:'helvetica',fontSize:8.5,cellPadding:3,textColor:[15,23,42],lineColor:[191,219,254],lineWidth:0.18},
+    columnStyles:{0:{cellWidth:46,fontStyle:'bold',fillColor:LT,textColor:NAVY}},margin:{left:M,right:M}});
+  y=pdf.lastAutoTable.finalY+6;
+
+  // Page numbers
+  const pages=pdf.internal.getNumberOfPages();
+  for(let pg=1;pg<=pages;pg++){
+    pdf.setPage(pg);
+    pdf.setFont('helvetica','normal');pdf.setFontSize(6.5);pdf.setTextColor(150);
+    pdf.text(`Page ${pg}/${pages}`,W-M,H-5,{align:'right'});
+    pdf.text('POMI — Unit 7/8 ESP Weekly PM — 7BG-PCP-800A/B',M,H-5);
+  }
+
+  const fn=`ESP_PM_${v('wo-unit')||'7'}_${(v('wo-date')||new Date().toISOString().slice(0,10)).replace(/-/g,'')}.pdf`;
+  pdf.save(fn);
+  showNote('✅ PDF tersimpan: '+fn,'ok');
+}
+
+// ── INIT ───────────────────────────────────────────
+buildA();
+buildRapping('tbody-b',['815J','817J','825J','827J','835J','837J','845J','847J'],'b');
+buildRapping('tbody-c',['815K','817K','825K','827K','835K','837K','845K','847K'],'c');
+buildRapping('tbody-d',['815F','825F','835F','845F','817F','827F','837F','847F','815E','825E','835E','845E','817E','827E','837E','847E'],'d');
+buildRapping('tbody-e',['815H','817H','845H','847H','815G','817G','845G','847G'],'e');
+buildF();
+loadDraft();
+updateStats();
+</script>
+</body>
+</html>
