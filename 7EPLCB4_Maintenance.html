@@ -587,139 +587,158 @@ const gT=id=>ST[id]||'—';
 
 // ── PDF ────────────────────────────────────────────
 async function generatePDF(){
-  showNote('⏳ Membuat PDF…','info');
-  await new Promise(r=>setTimeout(r,200));
-  const{jsPDF}=window.jspdf;
-  const pdf=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
-  const W=297,H=210,M=10;let y=M;
-  const NAVY=[30,58,95],BLUE=[37,99,235],SKY=[125,211,252],LT=[240,247,255],OK=[22,163,74],NG=[220,38,38];
-  const tr2=(s,n)=>s&&s.length>n?s.slice(0,n)+'…':(s||'—');
+  showNote('Membuat PDF...','info');
+  await new Promise(function(r){setTimeout(r,300);});
+  try{
+  var jsPDF=window.jspdf.jsPDF;
+  var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
+  var W=297,H=210,M=10,CW=W-M*2;
+  var NAVY=[30,58,95],BLUE=[37,99,235],SKY=[125,211,252],LT=[240,247,255],OK=[22,163,74],NG=[220,38,38],GR=[100,116,139];
+  var y=M;
+  function tr2(s,n){if(!s)return'';return s.length>n?s.slice(0,n)+'...':s;}
 
   function ckY(n){if(y+n>H-M)nPage();}
-  function nPage(){pdf.addPage();y=M;miniHdr();}
-  function miniHdr(){
-    pdf.setFillColor(...NAVY);pdf.rect(0,0,W,8,'F');
-    pdf.setTextColor(...SKY);pdf.setFont('helvetica','bold');pdf.setFontSize(7);
-    pdf.text('7EP-LC-B4 SWITCHGEAR & BREAKER MAINTENANCE',M,5.5);
-    pdf.setFont('helvetica','normal');pdf.setFontSize(6.5);
-    pdf.text(`WO: ${v('wo-no')||'—'}  Date: ${v('wo-date')||'—'}  By: ${v('done-by')||'—'}`,W-M,5.5,{align:'right'});
+  function nPage(){pgFt();doc.addPage();y=M;pgHd();}
+  function pgHd(){
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(0,0,W,8,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(SKY[0],SKY[1],SKY[2]);
+    doc.text('7EP-LC-B4  SWITCHGEAR & BREAKER MAINTENANCE',M,5.5);
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);
+    doc.text('WO: '+(gv('wo-no')||'-')+'  Date: '+(gv('wo-date')||'-')+'  By: '+(gv('done-by')||'-'),W-M,5.5,{align:'right'});
     y=12;
+  }
+  function pgFt(){
+    var pg=doc.internal.getCurrentPageInfo().pageNumber;
+    doc.setDrawColor(190,205,225);doc.setLineWidth(0.3);doc.line(M,H-M+2,W-M,H-M+2);
+    doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(150,150,150);
+    doc.text('7EP-LC-B4  |  Switchgear & Breaker Maintenance',M,H-M+6);
+    doc.text('Page '+pg,W-M,H-M+6,{align:'right'});
   }
   function secHdr(title){
     ckY(12);
-    pdf.setFillColor(...NAVY);pdf.rect(M,y,W-M*2,7,'F');
-    pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);
-    pdf.text('▶  '+title,M+3,y+5);y+=10;
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(M,y,CW,7,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(255,255,255);
+    doc.text('  '+title,M+2,y+5);y+=10;
   }
   function autoTbl(head,body,cws){
-    pdf.autoTable({startY:y,head:[head],body,theme:'grid',
-      styles:{font:'helvetica',fontSize:6.5,cellPadding:2,textColor:[15,23,42],lineColor:[191,219,254],lineWidth:0.18},
-      headStyles:{fillColor:NAVY,textColor:[125,211,252],fontStyle:'bold',fontSize:6,halign:'center'},
-      columnStyles:{0:{halign:'center',cellWidth:cws?cws[0]:8},1:{cellWidth:cws?cws[1]:70},...(cws?cws.slice(2).reduce((o,w,i)=>({...o,[i+2]:{cellWidth:w,halign:'center'}}),{}):{})},
-      didParseCell:d=>{const val=d.cell.text[0];if(val==='OK'){d.cell.styles.textColor=[...OK];d.cell.styles.fontStyle='bold';}if(val==='NG'){d.cell.styles.textColor=[...NG];d.cell.styles.fontStyle='bold';}},
-      margin:{left:M,right:M}});
-    y=pdf.lastAutoTable.finalY+5;
+    doc.autoTable({startY:y,head:[head],body:body,theme:'grid',
+      styles:{font:'helvetica',fontSize:6.5,cellPadding:2,textColor:[15,23,42],lineColor:[191,219,254],lineWidth:0.18,overflow:'linebreak'},
+      headStyles:{fillColor:[NAVY[0],NAVY[1],NAVY[2]],textColor:[SKY[0],SKY[1],SKY[2]],fontStyle:'bold',fontSize:6,halign:'center'},
+      columnStyles:{0:{halign:'center',cellWidth:cws?cws[0]:8},1:{cellWidth:cws?cws[1]:70},
+        ...(cws?cws.slice(2).reduce(function(o,w,i){o[i+2]={cellWidth:w,halign:'center'};return o;},{}):{})},
+      didParseCell:function(d){var val=d.cell.text[0];
+        if(val==='OK'){d.cell.styles.textColor=[OK[0],OK[1],OK[2]];d.cell.styles.fontStyle='bold';}
+        if(val==='NG'){d.cell.styles.textColor=[NG[0],NG[1],NG[2]];d.cell.styles.fontStyle='bold';}
+      },margin:{left:M,right:M}});
+    y=doc.lastAutoTable.finalY+5;
   }
 
   // Cover
-  pdf.setFillColor(...NAVY);pdf.rect(0,0,W,38,'F');
-  pdf.setFillColor(...BLUE);pdf.rect(0,36,W,2,'F');
-  pdf.setTextColor(255,255,255);pdf.setFont('helvetica','bold');pdf.setFontSize(20);
-  pdf.text('7EP-LC-B4',M,16);
-  pdf.setFontSize(11);pdf.setTextColor(...SKY);
-  pdf.text('Switchgear & Breaker Maintenance — Load Center Substation Unit B4',M,26);
-  pdf.setFontSize(7.5);pdf.setTextColor(...SKY);pdf.setFont('helvetica','normal');
-  pdf.text('Compartments: 102B · 102C · 103B · 103C · 104B · 104C',M,33);
-  pdf.text(new Date().toLocaleString('en-GB'),W-M,33,{align:'right'});
+  doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(0,0,W,38,'F');
+  doc.setFillColor(BLUE[0],BLUE[1],BLUE[2]);doc.rect(0,36,W,2,'F');
+  doc.setFont('helvetica','bold');doc.setFontSize(20);doc.setTextColor(255,255,255);
+  doc.text('7EP-LC-B4',M,16);
+  doc.setFontSize(11);doc.setTextColor(SKY[0],SKY[1],SKY[2]);
+  doc.text('Switchgear & Breaker Maintenance  -  Load Center Substation Unit B4',M,26);
+  doc.setFontSize(7.5);doc.setFont('helvetica','normal');
+  doc.text('Compartments: 102B  102C  103B  103C  104B  104C',M,33);
+  doc.text(new Date().toLocaleString('en-GB'),W-M,33,{align:'right'});
   y=44;
 
   // Info box
-  pdf.setFillColor(...LT);pdf.setDrawColor(125,211,252);pdf.setLineWidth(0.25);
-  pdf.roundedRect(M,y,W-M*2,22,2,2,'FD');
+  doc.setFillColor(LT[0],LT[1],LT[2]);doc.setDrawColor(125,211,252);doc.setLineWidth(0.25);
+  doc.roundedRect(M,y,CW,22,2,2,'FD');
   function ib(l,val,x,yy){
-    pdf.setFont('helvetica','bold');pdf.setFontSize(5.5);pdf.setTextColor(100,116,139);pdf.text(l.toUpperCase(),x,yy);
-    pdf.setFont('helvetica','normal');pdf.setFontSize(8.5);pdf.setTextColor(...NAVY);pdf.text(tr2(val||'—',28),x,yy+4.5);
+    doc.setFont('helvetica','bold');doc.setFontSize(5.5);doc.setTextColor(GR[0],GR[1],GR[2]);doc.text(l.toUpperCase(),x,yy);
+    doc.setFont('helvetica','normal');doc.setFontSize(8.5);doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.text(tr2(val||'-',28),x,yy+4.5);
   }
-  ib('WO No.',v('wo-no'),M+3,y+5);ib('Date',v('wo-date'),60,y+5);ib('Equipment',v('equip'),110,y+5);ib('Location',v('location'),165,y+5);
-  ib('Done By',v('done-by'),M+3,y+17);ib('Reviewed By',v('reviewed-by'),60,y+17);ib('Shift',v('shift').split(' ')[0],110,y+17);ib('Condition',v('overall').replace(/[✅⚠️🔧🛑]/g,'').trim(),165,y+17);
+  ib('WO No.',gv('wo-no'),M+3,y+5);ib('Date',gv('wo-date'),60,y+5);ib('Equipment',gv('equip'),110,y+5);ib('Location',gv('location'),165,y+5);
+  ib('Done By',gv('done-by'),M+3,y+17);ib('Reviewed By',gv('reviewed-by'),60,y+17);ib('Shift',gv('shift').split(' ')[0],110,y+17);
   y+=28;
 
   // Stats
-  const okN=Object.values(ST).filter(x=>x==='OK').length;
-  const ngN=Object.values(ST).filter(x=>x==='NG').length;
-  const totN=document.querySelectorAll('.tog').length;
-  [[M,'TOTAL',String(totN),NAVY],[M+36,'OK',String(okN),OK],[M+72,'NG',String(ngN),NG]].forEach(([x,l,val,cl])=>{
-    pdf.setFillColor(...cl,.08);pdf.setDrawColor(...cl);pdf.setLineWidth(0.3);
-    pdf.roundedRect(x,y,28,10,1.5,1.5,'FD');
-    pdf.setFont('helvetica','bold');pdf.setFontSize(5.5);pdf.setTextColor(...cl);pdf.text(l,x+2,y+3.5);
-    pdf.setFontSize(11);pdf.text(val,x+2,y+9);
+  var okN=Object.values(ST).filter(function(x){return x==='OK';}).length;
+  var ngN=Object.values(ST).filter(function(x){return x==='NG';}).length;
+  var totN=document.querySelectorAll('.tog').length;
+  [[M,'TOTAL',String(totN),NAVY],[M+36,'OK',String(okN),OK],[M+72,'NG',String(ngN),NG]].forEach(function(chip){
+    var x=chip[0],lbl=chip[1],val=chip[2],cl=chip[3];
+    doc.setDrawColor(cl[0],cl[1],cl[2]);doc.setLineWidth(0.4);doc.roundedRect(x,y,28,10,1.5,1.5,'S');
+    doc.setFont('helvetica','bold');doc.setFontSize(5.5);doc.setTextColor(cl[0],cl[1],cl[2]);doc.text(lbl,x+2,y+3.5);
+    doc.setFontSize(11);doc.text(val,x+2,y+9);
   });
   y+=16;
 
-  // Check items table
-  secHdr('Maintenance Check Items — All Compartments');
-  const checkRows=[];
-  ITEMS.forEach(item=>{
-    if(item.grp){
-      checkRows.push([{content:`— ${item.grp} —`,colSpan:9,styles:{fillColor:LT,fontStyle:'bold',fontSize:7,textColor:NAVY}}]);
-    } else {
-      checkRows.push([item.no,tr2(item.desc,60),tr2(item.crit,22),...COMPS.map(c=>gT(`item_${item.no}_${c}`))]);
-    }
+  // Check items
+  secHdr('Maintenance Check Items  -  All Compartments');
+  var checkRows=[];
+  ITEMS.forEach(function(item){
+    if(item.grp){checkRows.push([{content:'  '+item.grp,colSpan:9,styles:{fillColor:[LT[0],LT[1],LT[2]],fontStyle:'bold',fontSize:7,textColor:[NAVY[0],NAVY[1],NAVY[2]]}}]);}
+    else{checkRows.push([item.no,tr2(item.desc,58),tr2(item.crit,22),...COMPS.map(function(c){return gT('item_'+item.no+'_'+c);})]);}
   });
-  autoTbl(['No.','Check Item / Point','Criteria',...COMPS],checkRows,[8,68,26,20,20,20,20,20,20]);
+  autoTbl(['No.','Check Item / Point','Criteria',...COMPS],checkRows,[8,66,26,20,20,20,20,20,20]);
 
   // Trip Settings
-  nPage();secHdr('Item 14 — Trip Settings Record');
+  pgFt();doc.addPage();y=M;pgHd();
+  secHdr('Item 14  -  Trip Settings Record');
   autoTbl(['Parameter',...COMPS],[
-    ['Motor Overload (A)',...COMPS.map(c=>v(`s14-overload-${c}`)||'—')],
-    ['Breaker Capacity (A)',...COMPS.map(c=>v(`s14-bkrcap-${c}`)||'—')],
-    ['Instant Setting (×In)',...COMPS.map(c=>v(`s14-instant-${c}`)||'—')],
-    ['LT Setting (×In)',...COMPS.map(c=>v(`s14-lt-${c}`)||'—')],
-    ['Time Delay (s)',...COMPS.map(c=>v(`s14-delay-${c}`)||'—')],
-    ['Rating Plug',...COMPS.map(c=>v(`s14-plug-${c}`)||'—')],
+    ['Motor Overload (A)',...COMPS.map(function(c){return gv('s14-overload-'+c)||'-';})],
+    ['Breaker Capacity (A)',...COMPS.map(function(c){return gv('s14-bkrcap-'+c)||'-';})],
+    ['Instant Setting (x In)',...COMPS.map(function(c){return gv('s14-instant-'+c)||'-';})],
+    ['LT Setting (x In)',...COMPS.map(function(c){return gv('s14-lt-'+c)||'-';})],
+    ['Time Delay (s)',...COMPS.map(function(c){return gv('s14-delay-'+c)||'-';})],
+    ['Rating Plug',...COMPS.map(function(c){return gv('s14-plug-'+c)||'-';})],
   ],[50,28,28,28,28,28,28]);
 
   // Photos
-  const hasPhotos=COMPS.filter(c=>photoStore['photo_'+c]);
+  var hasPhotos=COMPS.filter(function(c){return photoStore['photo_'+c];});
   if(hasPhotos.length){
-    ckY(14);secHdr('Evidence Photos — After Cleaning Per Compartment');
-    const cols=Math.min(3,hasPhotos.length);
-    const imgW=(W-M*2)/cols-4;
-    const imgH=42;
-    for(let i=0;i<hasPhotos.length;i+=cols){
-      const batch=hasPhotos.slice(i,i+cols);
-      ckY(imgH+16);
-      batch.forEach((comp,pi)=>{
-        const xo=M+pi*(imgW+4);const slotId='photo_'+comp;
-        pdf.setFont('helvetica','bold');pdf.setFontSize(7.5);pdf.setTextColor(...NAVY);
-        pdf.text(`Compartment ${comp} — After Cleaning`,xo,y+5);
-        try{pdf.addImage(photoStore[slotId],'JPEG',xo,y+7,imgW,imgH,undefined,'MEDIUM');}catch(e){}
-        const cap=v('cap_'+comp);
-        if(cap){pdf.setFont('helvetica','italic');pdf.setFontSize(6.5);pdf.setTextColor(100,130,160);pdf.text(tr2(cap,38),xo,y+7+imgH+4);}
+    ckY(14);secHdr('Evidence Photos  -  After Cleaning Per Compartment');
+    var cols=Math.min(3,hasPhotos.length);
+    var imgW=(CW-(cols-1)*4)/cols;
+    var maxH=42;
+    for(var i=0;i<hasPhotos.length;i+=cols){
+      var batch=hasPhotos.slice(i,i+cols);
+      var rowH=maxH;
+      batch.forEach(function(comp){
+        var p=photoStore['photo_'+comp];
+        if(p&&p.w&&p.h){var rr=p.h/p.w;var ch=imgW*rr;if(ch<rowH)rowH=ch;}
       });
-      y+=imgH+18;
+      rowH=Math.min(rowH,maxH);
+      ckY(rowH+18);
+      batch.forEach(function(comp,pi){
+        var xo=M+pi*(imgW+4);var p=photoStore['photo_'+comp];if(!p)return;
+        doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(xo,y,imgW,6,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(255,255,255);
+        doc.text('Compartment '+comp+' - After Cleaning',xo+2,y+4.2);
+        var dw=imgW,dh=rowH;
+        if(p.w&&p.h){var ratio=p.h/p.w;dh=imgW*ratio;if(dh>maxH){dh=maxH;dw=dh/ratio;}else{dw=imgW;}}
+        var xi=xo+(imgW-dw)/2;
+        doc.setDrawColor(190,205,225);doc.setLineWidth(0.3);doc.rect(xo,y+7,imgW,rowH+1,'S');
+        try{doc.addImage(p.src,'JPEG',xi,y+8,dw,dh,'','FAST');}catch(ex){}
+        var cap=gv('cap_'+comp);
+        if(cap){doc.setFont('helvetica','italic');doc.setFontSize(6.5);doc.setTextColor(GR[0],GR[1],GR[2]);doc.text(tr2(cap,38),xo+2,y+7+rowH+4.5);}
+      });
+      y+=rowH+18;
     }
   }
 
   // Findings
   ckY(14);secHdr('Overall Conclusion');
-  pdf.autoTable({startY:y,body:[
-    ['Findings',v('findings')||'—'],
-    ['Corrective Actions',v('actions')||'—'],
-    ['Next PM Due',v('next-pm')||'—'],
-  ],theme:'grid',styles:{font:'helvetica',fontSize:8,cellPadding:3,textColor:[15,23,42],lineColor:[191,219,254],lineWidth:0.18},
-  columnStyles:{0:{cellWidth:46,fontStyle:'bold',fillColor:LT,textColor:NAVY}},margin:{left:M,right:M}});
+  doc.autoTable({startY:y,body:[
+    ['Findings',gv('findings')||'-'],['Corrective Actions',gv('actions')||'-'],['Next PM Due',gv('next-pm')||'-'],
+  ],theme:'grid',styles:{font:'helvetica',fontSize:8,cellPadding:3,textColor:[15,23,42],lineColor:[191,219,254],lineWidth:0.18,overflow:'linebreak'},
+  columnStyles:{0:{cellWidth:46,fontStyle:'bold',fillColor:[LT[0],LT[1],LT[2]],textColor:[NAVY[0],NAVY[1],NAVY[2]]}},margin:{left:M,right:M}});
 
   // Page numbers
-  const pages=pdf.internal.getNumberOfPages();
-  for(let pg=1;pg<=pages;pg++){
-    pdf.setPage(pg);pdf.setFont('helvetica','normal');pdf.setFontSize(6.5);pdf.setTextColor(150);
-    pdf.text(`Page ${pg}/${pages}`,W-M,H-5,{align:'right'});
-    pdf.text('7EP-LC-B4 — Switchgear & Breaker Maintenance',M,H-5);
+  pgFt();
+  var pages=doc.internal.getNumberOfPages();
+  for(var pg=1;pg<=pages;pg++){
+    doc.setPage(pg);doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(150,150,150);
+    doc.text('Page '+pg+' / '+pages,W-M,H-M+6,{align:'right'});
   }
-
-  const fn=`LCB4_Maintenance_${(v('wo-date')||new Date().toISOString().slice(0,10)).replace(/-/g,'')}.pdf`;
-  pdf.save(fn);showNote('✅ PDF tersimpan: '+fn,'ok');
+  var fn='LCB4_Maintenance_'+((gv('wo-date')||new Date().toISOString().slice(0,10)).replace(/-/g,''))+'.pdf';
+  doc.save(fn);showNote('PDF tersimpan: '+fn,'ok');
+  }catch(err){console.error('PDF Error:',err);showNote('Error PDF: '+err.message,'err');}
 }
 
 // ── INIT ───────────────────────────────────────────
