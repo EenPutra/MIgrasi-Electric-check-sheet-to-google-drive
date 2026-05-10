@@ -97,21 +97,28 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 
 /* PHOTO SECTION */
 .photo-wrap{padding:16px;background:var(--bg2);border-top:2px dashed var(--bdr)}
-.photo-sec-lbl{font-family:var(--raj);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.photo-grid-2{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
-.photo-grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.photo-sec-lbl{font-family:var(--raj);font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--navy);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.photo-dynamic-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:12px}
 .photo-block{display:flex;flex-direction:column;gap:6px}
-.photo-blk-ttl{font-family:var(--raj);font-size:11.5px;font-weight:700;color:var(--sky2);letter-spacing:1px;text-transform:uppercase;padding:5px 10px;background:var(--navy);border-radius:5px;text-align:center}
-.photo-drop{border:2px dashed var(--bdr);border-radius:8px;aspect-ratio:4/3;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:#fff;position:relative;overflow:hidden}
+.photo-block-num{font-family:var(--mono);font-size:10px;color:var(--txt4);text-align:center}
+.photo-drop{border:2px dashed var(--bdr);border-radius:8px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;background:#fff;position:relative;overflow:hidden}
 .photo-drop:hover{border-color:var(--blue);background:var(--bg2)}
 .photo-drop input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
-.photo-drop img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:6px}
-.photo-drop .del-btn{position:absolute;top:5px;right:5px;background:rgba(220,38,38,.85);border:none;color:#fff;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:13px;display:none;align-items:center;justify-content:center;z-index:5}
+.photo-drop img{width:100%;height:auto;display:block;border-radius:6px;position:relative}
+.photo-drop.has-photo{aspect-ratio:unset}
+.photo-drop .del-btn{position:absolute;top:5px;right:5px;background:rgba(220,38,38,.9);border:none;color:#fff;width:24px;height:24px;border-radius:50%;cursor:pointer;font-size:14px;display:none;align-items:center;justify-content:center;z-index:5;box-shadow:0 2px 6px rgba(0,0,0,0.3)}
 .photo-drop.has-photo .del-btn{display:flex}
 .ph-icon{font-size:22px;margin-bottom:5px;pointer-events:none}
 .ph-hint{font-size:10px;color:var(--txt4);text-align:center;pointer-events:none;font-family:var(--mono);padding:0 8px}
 .photo-cap{width:100%;border:1.5px solid var(--bdr);border-radius:5px;padding:5px 8px;font-size:12px;background:#fff;color:var(--txt);font-family:var(--sans)}
 .photo-cap:focus{outline:none;border-color:var(--blue)}
+/* ADD PHOTO BUTTON */
+.btn-add-photo{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;
+  background:var(--navy);color:#fff;border:2px dashed rgba(125,211,252,0.4);border-radius:8px;
+  cursor:pointer;font-family:var(--raj);font-size:14px;font-weight:600;letter-spacing:1px;transition:all .2s}
+.btn-add-photo:hover{background:#1e3a5f;border-color:var(--sky);transform:translateY(-1px)}
+.btn-add-photo .plus{font-size:20px;color:var(--sky);line-height:1}
+.photo-badge{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.5);padding:2px 8px;background:rgba(255,255,255,0.1);border-radius:10px}
 
 .findings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
 .notice{padding:10px 16px;border-radius:6px;font-size:13px;display:none;margin:12px 0 0}
@@ -137,7 +144,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="live-dot"></div>
-  <span class="tb-logo">MCC-<em>XXX</em></span>
+  <span class="tb-logo">MCC-<em>B61</em></span>
   <div class="tb-sep"></div>
   <span class="tb-sub">7EP-MCC-XXX · 4 YEARLY SHUTDOWN MAINTENANCE</span>
   <div class="tb-right">
@@ -218,21 +225,21 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 <div class="panel">
   <div class="sec-hdr open" onclick="toggleSec(this)">
     <div class="sec-icon">📸</div>
-    <div>
-      <div class="sec-title">Foto Kegiatan</div>
-      <span class="sec-sub">Activity Documentation</span>
-    </div>
-    <span class="sec-cnt" id="cnt-activity">0 / 4 uploaded</span>
+    <div><div class="sec-title">Foto Kegiatan</div><span class="sec-sub">Activity Documentation</span></div>
+    <span class="sec-cnt" id="cnt-activity">0 foto</span>
     <span class="sec-arrow">▼</span>
   </div>
   <div class="sec-body">
     <div class="photo-wrap" style="border-top:none">
-      <div class="photo-sec-lbl" style="margin-bottom:14px">
-        <span style="font-size:16px">📸</span> Dokumentasi Kegiatan Maintenance
+      <div class="photo-sec-lbl">
+        <span style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">📸</span> Dokumentasi Kegiatan Maintenance</span>
       </div>
-      <div class="photo-grid-2" id="activity-grid">
-        <!-- Built by JS -->
-      </div>
+      <div class="photo-dynamic-grid" id="activity-grid"></div>
+      <button class="btn-add-photo" onclick="addPhoto('activity')">
+        <span class="plus">＋</span>
+        <span>Add Photo Kegiatan</span>
+        <span class="photo-badge" id="badge-activity">0 foto</span>
+      </button>
     </div>
   </div>
 </div>
@@ -241,21 +248,21 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 <div class="panel">
   <div class="sec-hdr open" onclick="toggleSec(this)">
     <div class="sec-icon">🧹</div>
-    <div>
-      <div class="sec-title">Foto After Cleaning</div>
-      <span class="sec-sub">Post-Cleaning Evidence</span>
-    </div>
-    <span class="sec-cnt" id="cnt-cleaning">0 / 4 uploaded</span>
+    <div><div class="sec-title">Foto After Cleaning</div><span class="sec-sub">Post-Cleaning Evidence</span></div>
+    <span class="sec-cnt" id="cnt-cleaning">0 foto</span>
     <span class="sec-arrow">▼</span>
   </div>
   <div class="sec-body">
     <div class="photo-wrap" style="border-top:none">
-      <div class="photo-sec-lbl" style="margin-bottom:14px">
-        <span style="font-size:16px">🧹</span> Kondisi Setelah Cleaning
+      <div class="photo-sec-lbl">
+        <span style="display:flex;align-items:center;gap:8px"><span style="font-size:16px">🧹</span> Kondisi Setelah Cleaning</span>
       </div>
-      <div class="photo-grid-2" id="cleaning-grid">
-        <!-- Built by JS -->
-      </div>
+      <div class="photo-dynamic-grid" id="cleaning-grid"></div>
+      <button class="btn-add-photo" onclick="addPhoto('cleaning')">
+        <span class="plus">＋</span>
+        <span>Add Photo After Cleaning</span>
+        <span class="photo-badge" id="badge-cleaning">0 foto</span>
+      </button>
     </div>
   </div>
 </div>
@@ -366,57 +373,53 @@ function buildCheckTable(){
 
 // ── PHOTO SYSTEM ───────────────────────────────────
 const photoStore={};
+const photoCounters={activity:0,cleaning:0};
 
-const ACTIVITY_SLOTS=[
-  {id:'act_1', title:'Kegiatan 1', hint:'Proses inspection / measurement'},
-  {id:'act_2', title:'Kegiatan 2', hint:'Proses cleaning / maintenance'},
-  {id:'act_3', title:'Kegiatan 3', hint:'Proses tightening / adjustment'},
-  {id:'act_4', title:'Kegiatan 4', hint:'Proses testing / commissioning'},
-];
-
-const CLEANING_SLOTS=[
-  {id:'clean_1', title:'Panel Overview', hint:'Tampak depan panel setelah cleaning'},
-  {id:'clean_2', title:'Bus Bar Area', hint:'Area bus bar setelah dibersihkan'},
-  {id:'clean_3', title:'Internal Wiring', hint:'Internal wiring setelah cleaning'},
-  {id:'clean_4', title:'Compartment Bottom', hint:'Bagian bawah kompartemen'},
-];
-
-function buildPhotoGrid(slots, gridId){
-  const grid=document.getElementById(gridId);
-  slots.forEach(slot=>{
-    const div=document.createElement('div');
-    div.className='photo-block';
-    div.innerHTML=`
-      <div class="photo-blk-ttl">${slot.title}</div>
-      <div class="photo-drop" id="${slot.id}">
-        <input type="file" accept="image/*" onchange="loadPhoto(this,'${slot.id}')">
-        <button class="del-btn" onclick="delPhoto('${slot.id}',event)">×</button>
-        <div class="ph-icon">📷</div>
-        <div class="ph-hint">${slot.hint}</div>
-      </div>
-      <input class="photo-cap" type="text" id="cap_${slot.id}" placeholder="Caption…">
-    `;
-    grid.appendChild(div);
-  });
+function addPhoto(type){
+  photoCounters[type]++;
+  const num=photoCounters[type];
+  const id=`${type}_${num}`;
+  const grid=document.getElementById(`${type}-grid`);
+  const div=document.createElement('div');
+  div.className='photo-block';
+  div.id='block_'+id;
+  div.innerHTML=`
+    <div class="photo-block-num">${type==='activity'?'Kegiatan':'Cleaning'} #${num}</div>
+    <div class="photo-drop" id="${id}">
+      <input type="file" accept="image/*" onchange="loadPhoto(this,'${id}','${type}')">
+      <button class="del-btn" onclick="delPhoto('${id}','${type}',event)">×</button>
+      <div class="ph-icon">📷</div>
+      <div class="ph-hint">Tap untuk upload foto</div>
+    </div>
+    <input class="photo-cap" type="text" id="cap_${id}" placeholder="Keterangan foto…">
+  `;
+  grid.appendChild(div);
+  updatePhotoBadge(type);
+  setTimeout(()=>div.scrollIntoView({behavior:'smooth',block:'nearest'}),100);
 }
 
-function loadPhoto(input,slotId){
+function loadPhoto(input,slotId,type){
   if(!input.files[0])return;
   const r=new FileReader();
   r.onload=e=>{
-    photoStore[slotId]=e.target.result;
-    const slot=document.getElementById(slotId);
-    let img=slot.querySelector('img');
-    if(!img){img=document.createElement('img');slot.appendChild(img);}
+    const img=new Image();
+    img.onload=()=>{
+      photoStore[slotId]={src:e.target.result,w:img.naturalWidth,h:img.naturalHeight};
+      const slot=document.getElementById(slotId);
+      let el=slot.querySelector('img');
+      if(!el){el=document.createElement('img');slot.appendChild(el);}
+      el.src=e.target.result;el.style.cssText='width:100%;height:auto;display:block;border-radius:6px';
+      slot.classList.add('has-photo');
+      slot.querySelector('.ph-icon').style.display='none';
+      slot.querySelector('.ph-hint').style.display='none';
+      updatePhotoBadge(type);
+    };
     img.src=e.target.result;
-    slot.classList.add('has-photo');
-    slot.querySelector('.ph-icon').style.display='none';
-    slot.querySelector('.ph-hint').style.display='none';
-    updateStats();
   };
   r.readAsDataURL(input.files[0]);
 }
-function delPhoto(slotId,e){
+
+function delPhoto(slotId,type,e){
   e.stopPropagation();
   const slot=document.getElementById(slotId);
   const img=slot.querySelector('img');if(img)img.remove();
@@ -424,7 +427,16 @@ function delPhoto(slotId,e){
   slot.querySelector('.ph-icon').style.display='';
   slot.querySelector('.ph-hint').style.display='';
   delete photoStore[slotId];
-  updateStats();
+  updatePhotoBadge(type);
+}
+
+function updatePhotoBadge(type){
+  const total=photoCounters[type];
+  const filled=Object.keys(photoStore).filter(k=>k.startsWith(type)).length;
+  const totalAll=Object.keys(photoStore).length;
+  document.getElementById('badge-'+type).textContent=`${filled} / ${total}`;
+  document.getElementById('cnt-'+type).textContent=`${total} foto`;
+  document.getElementById('h-photos').textContent=totalAll;
 }
 
 // ── STATS ──────────────────────────────────────────
@@ -635,8 +647,6 @@ async function generatePDF(){
 
 // ── INIT ───────────────────────────────────────────
 buildCheckTable();
-buildPhotoGrid(ACTIVITY_SLOTS,'activity-grid');
-buildPhotoGrid(CLEANING_SLOTS,'cleaning-grid');
 loadDraft();
 updateStats();
 </script>
