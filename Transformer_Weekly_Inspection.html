@@ -66,6 +66,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .lb.normal.a{background:rgba(39,174,96,.14);border-color:var(--ok);color:var(--ok);font-weight:700}
 .mi{border:1.5px solid var(--pb);border-radius:5px;padding:4px 6px;font-family:var(--mono);font-size:11.5px;background:#f4f8f5;color:var(--text);transition:border-color .18s;width:100%;min-width:62px}
 .mi:focus{outline:none;border-color:var(--sl);background:#fff}.mu{font-size:9.5px;color:var(--t3);white-space:nowrap;font-family:var(--mono);display:block;margin-top:1px}
+.m3{display:grid;grid-template-columns:repeat(3,minmax(48px,1fr));gap:4px;align-items:start}.m3c{display:flex;flex-direction:column;align-items:center;gap:1px}.m3lbl{font-family:var(--mono);font-size:9px;color:var(--t3);font-weight:700;line-height:1}.m3 .mi{min-width:0;width:100%;padding:4px 3px;text-align:center}.m3 .mu{font-size:8.5px;margin-top:0}
 .giswrap{display:grid;grid-template-columns:1fr 1fr;gap:20px}
 .gisttl{font-family:var(--raj);font-size:13px;font-weight:700;color:var(--steel);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px}
 .gt{width:100%;border-collapse:separate;border-spacing:0;font-size:11.5px}
@@ -285,6 +286,7 @@ function upStats(){const vs=Object.values(ST).filter(v=>v);const okS=new Set(['O
 
 // CELL TYPES
 function meas(id,u){return `<input class="mi" type="number" step="any" id="${id}" placeholder="—"><span class="mu">${u}</span>`;}
+function meas3(id,u){return `<div class="m3">${['A','B','C'].map(x=>`<div class="m3c"><span class="m3lbl">${x}</span><input class="mi" type="number" step="any" id="${id}_${x}" placeholder="—"><span class="mu">${u}</span></div>`).join('')}</div>`;}
 function tog(id){return `<div class="rc"><button class="rb ok" data-id="${id}" data-v="OK" onclick="setT('${id}','OK',this)">OK</button><button class="rb ng" data-id="${id}" data-v="NG" onclick="setT('${id}','NG',this)">NG</button></div>`;}
 function lc(id,t){const p={leak:['Leak','leak','No Leak','noleak'],clean:['Clean','clean','Dirty','dirty'],noise:['Noise','noise','Normal','normal']}[t];return `<div class="lc"><button class="lb ${p[1]}" data-id="${id}" onclick="setLC('${id}','${p[0]}',this,'${p[1]}')">${p[0]}</button><button class="lb ${p[3]}" data-id="${id}" onclick="setLC('${id}','${p[2]}',this,'${p[3]}')">${p[2]}</button></div>`;}
 function na(){return `<span class="nac">N/A</span>`;}
@@ -299,7 +301,7 @@ function row(tb,no,desc,crit,cells,mr=false){
   cells.forEach(([t,id,u])=>{const td=tr.insertCell();td.style.textAlign='center';
     if(t==='na')td.innerHTML=na();else if(t==='ok')td.innerHTML=tog(id);
     else if(t==='leak')td.innerHTML=lc(id,'leak');else if(t==='clean')td.innerHTML=lc(id,'clean');
-    else if(t==='noise')td.innerHTML=lc(id,'noise');else if(t==='meas')td.innerHTML=meas(id,u||'');
+    else if(t==='noise')td.innerHTML=lc(id,'noise');else if(t==='meas')td.innerHTML=meas(id,u||'');else if(t==='meas3')td.innerHTML=meas3(id,u||'');
   });
 }
 
@@ -311,8 +313,8 @@ function mkAT(tbId,pfx,dga){
   row(tb,'A.1','Ambient Temperature','Record °C',C.map(c=>['meas',pfx+'_a1_'+c,'°C']),true);
   row(tb,'A.2','Oil Temperature','SST/EXC ≤85°C · UAT/SUT/GSUT ≤95°C alarm',C.map(c=>['meas',pfx+'_a2_'+c,'°C']),true);
   row(tb,'A.3','Winding Temperature','80°C→Fan stage1 · 85°C→Fan stage2',C.map(c=>['meas',pfx+'_a3_'+c,'°C']),true);
-  row(tb,'A.4','Voltage','Record kV',C.map(c=>['meas',pfx+'_a4_'+c,'kV']),true);
-  row(tb,'A.5','Apparent Power','GSUT≤873.6 · UAT/SUT≤112 · SST≤36 · EXC≤7.875 MVA',C.map(c=>['meas',pfx+'_a5_'+c,'MVA']),true);
+  row(tb,'A.4','Voltage','Record kV',C.map(c=>(pfx==='s2'&&c==='uat')?['meas3',pfx+'_a4_'+c,'kV']:['meas',pfx+'_a4_'+c,'kV']),true);
+  row(tb,'A.5','Apparent Power','GSUT≤873.6 · UAT/SUT≤112 · SST≤36 · EXC≤7.875 MVA',C.map(c=>(pfx==='s2'&&c==='uat')?['meas3',pfx+'_a5_'+c,'MVA']:['meas',pfx+'_a5_'+c,'MVA']),true);
   shdr(tb,'B.  Oil Level Gauge & Dissolve Gas Analysis');
   row(tb,'B.1','Main Tank Oil Level','In range per Temp vs Level table',C.map(c=>['ok',pfx+'_b1_'+c]));
   row(tb,'B.2','OLTC Oil Level (if equipped)','',C.map(c=>['uat','exc','a1','b1','c1'].includes(c)?['na','','']:['ok',pfx+'_b2_'+c]));
