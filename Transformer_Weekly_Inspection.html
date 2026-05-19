@@ -397,8 +397,9 @@ function mkAT_s2(tbId,pfx){
   row(tb,'A.4','Voltage','Record kV',C.map(c=>c==='uat'?['meas3',pfx+'_a4_'+c,'kV']:['meas',pfx+'_a4_'+c,'kV']),true);
   row(tb,'A.5','Apparent Power','GSUT≤873.6 · UAT/SUT≤112 · SST≤36 · EXC≤7.875 MVA',C.map(c=>c==='uat'?['meas3',pfx+'_a5_'+c,'MVA']:['meas',pfx+'_a5_'+c,'MVA']),true);
   shdr(tb,'B.  Oil Level Gauge');
-  row(tb,'B.1','Main Tank Oil Level','In range per Temp vs Level table',C.map(c=>['ok',pfx+'_b1_'+c]));
-  row(tb,'B.2','OLTC Oil Level (if equipped)','',C.map(c=>['uat','exc','a1','b1','c1'].includes(c)?['na','','']:['ok',pfx+'_b2_'+c]));
+  row(tb,'B.1','Main Tank Oil Level','In range per Temp vs Level table',C.map(c=>['meas',pfx+'_b1_'+c,'%']),true);
+  row(tb,'B.2','OLTC Oil Level (if equipped)','',C.map(c=>['uat','exc','a1','b1','c1'].includes(c)?['na','','']:['meas',pfx+'_b2_'+c,'%']),true);
+  row(tb,'B.3','Dissolve Gas Analysis — DGA (ppm)','Alarm=500 ppm · High=1000 ppm',C.map(c=>c==='exc'?['na','','']:['meas',pfx+'_b3_'+c,'ppm']),true);
 
   // ── SILICAGEL BREATHER — updated section ──
   shdr(tb,'C.  Silicagel Breather');
