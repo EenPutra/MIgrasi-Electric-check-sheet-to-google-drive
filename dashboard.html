@@ -60,8 +60,7 @@ body::before{content:'';position:fixed;inset:0;z-index:0;
 .sc-num{font-family:var(--raj);font-size:42px;font-weight:700;color:#fff;line-height:1;margin-top:8px}
 .sc-num.ok{color:var(--ok)}.sc-num.ng{color:var(--acc)}.sc-num.gold{color:var(--gold)}
 
-/* CHARTS ROW */
-.charts-row{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:32px}
+/* CHART */
 .chart-panel{background:var(--surf);border:1px solid var(--bdr);border-radius:10px;padding:20px}
 .chart-title{font-family:var(--raj);font-size:16px;font-weight:700;color:#fff;margin-bottom:16px;
   letter-spacing:1px;display:flex;align-items:center;gap:8px}
@@ -138,7 +137,6 @@ table.dtbl tr:last-child td{border-bottom:none}
 
 @media(max-width:900px){
   .main{padding:20px}
-  .charts-row{grid-template-columns:1fr}
   .detail-grid{grid-template-columns:1fr}
 }
 @media(max-width:600px){
@@ -185,15 +183,11 @@ table.dtbl tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <!-- CHARTS -->
-  <div class="charts-row">
-    <div class="chart-panel">
-      <div class="chart-title">Trend Bulanan</div>
-      <canvas id="chartTrend" height="220"></canvas>
-    </div>
-    <div class="chart-panel">
+  <!-- CHART -->
+  <div style="margin-bottom:32px;max-width:400px">
+    <div class="chart-panel" style="position:relative;height:320px">
       <div class="chart-title">OK vs NG per Aset</div>
-      <canvas id="chartAsset" height="220"></canvas>
+      <canvas id="chartAsset"></canvas>
     </div>
   </div>
 
@@ -318,31 +312,8 @@ function renderStats(stats) {
   document.getElementById('s-rate').textContent = rate;
 }
 
-let chartTrend, chartAsset;
+let chartAsset;
 function renderCharts(stats) {
-  const months = Object.keys(stats.byMonth).sort();
-  const trendData = months.map(m => stats.byMonth[m]);
-
-  if (chartTrend) chartTrend.destroy();
-  chartTrend = new Chart(document.getElementById('chartTrend'), {
-    type: 'bar',
-    data: {
-      labels: months,
-      datasets: [
-        { label: 'Submissions', data: trendData.map(d => d.submissions), backgroundColor: 'rgba(93,153,112,0.6)', borderRadius: 4 },
-        { label: 'NG Items', data: trendData.map(d => d.ng), backgroundColor: 'rgba(192,57,43,0.6)', borderRadius: 4 }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { labels: { color: '#8fb89a', font: { size: 11 } } } },
-      scales: {
-        x: { ticks: { color: '#4a6a54' }, grid: { color: 'rgba(80,130,95,0.1)' } },
-        y: { ticks: { color: '#4a6a54' }, grid: { color: 'rgba(80,130,95,0.1)' }, beginAtZero: true }
-      }
-    }
-  });
-
   const assets = Object.keys(stats.byAsset);
   if (chartAsset) chartAsset.destroy();
   chartAsset = new Chart(document.getElementById('chartAsset'), {
@@ -358,7 +329,7 @@ function renderCharts(stats) {
       }]
     },
     options: {
-      responsive: true, maintainAspectRatio: false,
+      responsive: true, maintainAspectRatio: true,
       plugins: { legend: { position: 'bottom', labels: { color: '#8fb89a', font: { size: 10 }, padding: 8 } } }
     }
   });
