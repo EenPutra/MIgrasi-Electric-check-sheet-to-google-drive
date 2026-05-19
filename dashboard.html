@@ -248,29 +248,9 @@ table.dtbl tr:last-child td{border-bottom:none}
 
 <!-- DETAIL MODAL -->
 <div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
+  <div class="modal" style="max-width:800px">
     <button class="modal-close" onclick="closeModal()">&times;</button>
-    <div class="modal-title" id="m-title">-</div>
-    <div class="modal-sub" id="m-sub">-</div>
-    <div class="detail-grid" id="m-grid"></div>
-    <div class="detail-section" id="m-items-section" style="display:none">
-      <div class="detail-section-title">Inspection Items</div>
-      <table class="detail-items-table">
-        <thead><tr><th>No</th><th>Item</th><th>Result</th></tr></thead>
-        <tbody id="m-items"></tbody>
-      </table>
-    </div>
-    <div class="detail-section" id="m-meas-section" style="display:none">
-      <div class="detail-section-title">Measurements</div>
-      <table class="detail-items-table">
-        <thead><tr><th>Item</th><th>Value</th><th>Unit</th></tr></thead>
-        <tbody id="m-meas"></tbody>
-      </table>
-    </div>
-    <div class="detail-section" id="m-findings-section" style="display:none">
-      <div class="detail-section-title">Findings & Recommendations</div>
-      <div id="m-findings" style="font-size:13px;color:var(--txt2);white-space:pre-wrap;padding:10px;background:rgba(74,122,90,0.06);border-radius:6px"></div>
-    </div>
+    <div id="m-content"></div>
   </div>
 </div>
 
@@ -412,55 +392,71 @@ async function showDetail(id) {
   const d = allData.find(x => x.id === id);
   if (!d) return;
 
-  document.getElementById('m-title').textContent = d.assetName || d.assetTag || '-';
-  document.getElementById('m-sub').textContent = `${d.assetTag || ''} | ${d.frequency || ''} | WO: ${d.woNumber || '-'}`;
+  const okCount = d.countOk || 0;
+  const ngCount = d.countNg || 0;
+  const naCount = d.countNa || 0;
+  const total = okCount + ngCount + naCount;
 
-  document.getElementById('m-grid').innerHTML = [
-    ['Tanggal', d.executionDate || '-'],
-    ['Waktu', `${d.timeStart || '-'} - ${d.timeEnd || '-'}`],
-    ['Checked By', d.checkedBy || '-'],
-    ['NIK', d.nik || '-'],
-    ['Reviewed By', d.reviewedBy || '-'],
-    ['Shift', d.shift || '-'],
-    ['OK Count', d.countOk || 0],
-    ['NG Count', d.countNg || 0],
-  ].map(([l, v]) => `<div class="detail-item"><div class="detail-label">${l}</div><div class="detail-value">${esc(String(v))}</div></div>`).join('');
+  let html = `
+    <div style="background:rgba(44,62,48,0.95);border-radius:8px;padding:14px 18px;margin-bottom:18px">
+      <div style="font-family:var(--raj);font-size:22px;font-weight:700;color:#fff">${esc(d.assetName || d.assetTag || '-')}</div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--steel2);margin-top:4px">${esc(d.assetTag || '')} &nbsp;|&nbsp; ${esc(d.frequency || '')} PM CHECK SHEET</div>
+    </div>
 
-  const itemsSection = document.getElementById('m-items-section');
-  const itemsTbody = document.getElementById('m-items');
+    <div class="detail-section-title" style="margin-top:0">Work Order Information</div>
+    <table class="detail-items-table" style="margin-bottom:18px">
+      <tbody>
+        <tr><td style="color:var(--txt3);width:140px">Work Order</td><td style="font-family:var(--mono);color:#fff">${esc(d.woNumber || '-')}</td>
+            <td style="color:var(--txt3);width:140px">Tanggal</td><td style="font-family:var(--mono);color:#fff">${esc(d.executionDate || '-')}</td></tr>
+        <tr><td style="color:var(--txt3)">Shift</td><td style="color:#fff">${esc(d.shift || '-')}</td>
+            <td style="color:var(--txt3)">Waktu</td><td style="font-family:var(--mono);color:#fff">${esc(d.timeStart || '-')} - ${esc(d.timeEnd || '-')}</td></tr>
+        <tr><td style="color:var(--txt3)">Checked By</td><td style="color:#fff">${esc(d.checkedBy || '-')}</td>
+            <td style="color:var(--txt3)">NIK</td><td style="font-family:var(--mono);color:#fff">${esc(d.nik || '-')}</td></tr>
+        <tr><td style="color:var(--txt3)">Reviewed By</td><td style="color:#fff" colspan="3">${esc(d.reviewedBy || '-')}</td></tr>
+      </tbody>
+    </table>
+
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px">
+      <div style="padding:8px 16px;border-radius:6px;border:1px solid var(--bdr);font-family:var(--raj);font-weight:600;font-size:13px;color:var(--txt2)">TOTAL <span style="font-size:18px;font-weight:700;color:#fff;margin-left:6px">${total}</span></div>
+      <div style="padding:8px 16px;border-radius:6px;border:1px solid rgba(39,174,96,0.3);background:rgba(39,174,96,0.08);font-family:var(--raj);font-weight:600;font-size:13px;color:var(--ok)">OK <span style="font-size:18px;font-weight:700;margin-left:6px">${okCount}</span></div>
+      <div style="padding:8px 16px;border-radius:6px;border:1px solid rgba(192,57,43,0.3);background:rgba(192,57,43,0.08);font-family:var(--raj);font-weight:600;font-size:13px;color:var(--acc)">NG <span style="font-size:18px;font-weight:700;margin-left:6px">${ngCount}</span></div>
+      <div style="padding:8px 16px;border-radius:6px;border:1px solid rgba(142,68,173,0.3);background:rgba(142,68,173,0.08);font-family:var(--raj);font-weight:600;font-size:13px;color:#8e44ad">N/A <span style="font-size:18px;font-weight:700;margin-left:6px">${naCount}</span></div>
+    </div>`;
+
   if (d.items && d.items.length > 0) {
-    itemsSection.style.display = 'block';
-    itemsTbody.innerHTML = d.items.map((it, i) => `
-      <tr>
-        <td style="color:var(--txt3);font-family:var(--mono)">${i + 1}</td>
-        <td>${esc(it.label)}</td>
-        <td><span class="tag ${it.result === 'OK' ? 'tag-ok' : it.result === 'NG' ? 'tag-ng' : ''}">${it.result}</span></td>
-      </tr>
-    `).join('');
-  } else {
-    itemsSection.style.display = 'none';
+    html += `
+    <div class="detail-section-title">Inspection Items</div>
+    <table class="detail-items-table" style="margin-bottom:18px">
+      <thead><tr><th style="width:40px;text-align:center">No</th><th>Task Description</th><th style="width:60px;text-align:center">Result</th></tr></thead>
+      <tbody>`;
+    d.items.forEach((it, i) => {
+      const rc = it.result === 'OK' ? 'tag-ok' : it.result === 'NG' ? 'tag-ng' : '';
+      html += `<tr><td style="text-align:center;font-family:var(--mono);color:var(--txt3)">${i + 1}</td><td>${esc(it.label)}</td><td style="text-align:center"><span class="tag ${rc}">${it.result}</span></td></tr>`;
+    });
+    html += `</tbody></table>`;
   }
 
-  const measSection = document.getElementById('m-meas-section');
-  const measTbody = document.getElementById('m-meas');
   if (d.measurements && d.measurements.length > 0) {
-    measSection.style.display = 'block';
-    measTbody.innerHTML = d.measurements.map(m => `
-      <tr><td>${esc(m.label)}</td><td style="font-family:var(--mono)">${esc(m.value)}</td><td style="color:var(--txt3)">${esc(m.unit)}</td></tr>
-    `).join('');
-  } else {
-    measSection.style.display = 'none';
+    html += `
+    <div class="detail-section-title">Measurements</div>
+    <table class="detail-items-table" style="margin-bottom:18px">
+      <thead><tr><th>Parameter</th><th style="width:100px;text-align:center">Value</th><th style="width:60px;text-align:center">Unit</th></tr></thead>
+      <tbody>`;
+    d.measurements.forEach(m => {
+      html += `<tr><td>${esc(m.label)}</td><td style="text-align:center;font-family:var(--mono);color:#fff">${esc(m.value)}</td><td style="text-align:center;color:var(--txt3);font-family:var(--mono)">${esc(m.unit)}</td></tr>`;
+    });
+    html += `</tbody></table>`;
   }
 
-  const findingsSection = document.getElementById('m-findings-section');
-  const findingsDiv = document.getElementById('m-findings');
   if (d.findings || d.recommendations) {
-    findingsSection.style.display = 'block';
-    findingsDiv.textContent = `Findings:\n${d.findings || '-'}\n\nRecommendations:\n${d.recommendations || '-'}`;
-  } else {
-    findingsSection.style.display = 'none';
+    html += `<div class="detail-section-title">Findings & Recommendations</div>
+    <div style="font-size:13px;color:var(--txt2);white-space:pre-wrap;padding:12px;background:rgba(74,122,90,0.06);border-radius:6px">`;
+    if (d.findings) html += `<div style="margin-bottom:8px"><span style="color:var(--txt3);font-family:var(--mono);font-size:10px;letter-spacing:1px">FINDINGS</span><br>${esc(d.findings)}</div>`;
+    if (d.recommendations) html += `<div><span style="color:var(--txt3);font-family:var(--mono);font-size:10px;letter-spacing:1px">RECOMMENDATIONS</span><br>${esc(d.recommendations)}</div>`;
+    html += `</div>`;
   }
 
+  document.getElementById('m-content').innerHTML = html;
   document.getElementById('modal').classList.add('show');
 }
 
@@ -469,69 +465,120 @@ function closeModal() {
 }
 
 function exportExcel() {
-  const data = (filteredData.length > 0 ? filteredData : allData).map((d, i) => ({
+  const src = filteredData.length > 0 ? filteredData : allData;
+  if (src.length === 0) { alert('Tidak ada data untuk di-export.'); return; }
+
+  const wb = XLSX.utils.book_new();
+
+  // SHEET 1: Ringkasan per submission — like PDF cover info
+  const summaryData = src.map((d, i) => ({
     'No': i + 1,
     'Tanggal': d.executionDate || '',
     'Asset Tag': d.assetTag || '',
     'Asset Name': d.assetName || '',
     'Frequency': d.frequency || '',
     'WO Number': d.woNumber || '',
+    'Shift': d.shift || '',
+    'Waktu Mulai': d.timeStart || '',
+    'Waktu Selesai': d.timeEnd || '',
     'Checked By': d.checkedBy || '',
     'NIK': d.nik || '',
     'Reviewed By': d.reviewedBy || '',
-    'Shift': d.shift || '',
-    'Time Start': d.timeStart || '',
-    'Time End': d.timeEnd || '',
-    'OK Count': d.countOk || 0,
-    'NG Count': d.countNg || 0,
-    'N/A Count': d.countNa || 0,
-    'Overall Status': d.overallStatus || '',
+    'Total OK': d.countOk || 0,
+    'Total NG': d.countNg || 0,
+    'Total N/A': d.countNa || 0,
+    'Status': d.overallStatus || '',
     'Findings': d.findings || '',
     'Recommendations': d.recommendations || ''
   }));
+  const ws1 = XLSX.utils.json_to_sheet(summaryData);
+  ws1['!cols'] = Object.keys(summaryData[0]).map(k => ({ wch: Math.max(k.length + 2, 14) }));
+  XLSX.utils.book_append_sheet(wb, ws1, 'Ringkasan');
 
-  if (data.length === 0) {
-    alert('Tidak ada data untuk di-export.');
-    return;
-  }
+  // SHEET 2: Detail per submission — each submission as a mini report
+  const ws2Data = [];
+  src.forEach((d, idx) => {
+    ws2Data.push(['CHECK SHEET REPORT #' + (idx + 1)]);
+    ws2Data.push([]);
+    ws2Data.push(['WORK ORDER INFORMATION']);
+    ws2Data.push(['Work Order', d.woNumber || '-', '', 'Tanggal', d.executionDate || '-']);
+    ws2Data.push(['Shift', d.shift || '-', '', 'Waktu', (d.timeStart || '-') + ' - ' + (d.timeEnd || '-')]);
+    ws2Data.push(['Checked By', d.checkedBy || '-', '', 'NIK', d.nik || '-']);
+    ws2Data.push(['Reviewed By', d.reviewedBy || '-']);
+    ws2Data.push(['Asset Tag', d.assetTag || '-', '', 'Asset Name', d.assetName || '-']);
+    ws2Data.push(['Frequency', d.frequency || '-', '', 'Status', d.overallStatus || '-']);
+    ws2Data.push([]);
+    ws2Data.push(['SUMMARY', '', 'Total OK', d.countOk || 0, 'Total NG', d.countNg || 0, 'Total N/A', d.countNa || 0]);
+    ws2Data.push([]);
 
-  const ws = XLSX.utils.json_to_sheet(data);
-  const colWidths = Object.keys(data[0]).map(k => ({ wch: Math.max(k.length + 2, 14) }));
-  ws['!cols'] = colWidths;
+    if (d.items && d.items.length > 0) {
+      ws2Data.push(['INSPECTION ITEMS']);
+      ws2Data.push(['No', 'Task Description', 'Result']);
+      d.items.forEach((it, i) => {
+        ws2Data.push([i + 1, it.label || '', it.result || '']);
+      });
+      ws2Data.push([]);
+    }
 
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Check Sheets');
+    if (d.measurements && d.measurements.length > 0) {
+      ws2Data.push(['MEASUREMENTS']);
+      ws2Data.push(['Parameter', 'Value', 'Unit']);
+      d.measurements.forEach(m => {
+        ws2Data.push([m.label || '', m.value || '', m.unit || '']);
+      });
+      ws2Data.push([]);
+    }
 
+    if (d.findings || d.recommendations) {
+      ws2Data.push(['FINDINGS & RECOMMENDATIONS']);
+      if (d.findings) ws2Data.push(['Findings:', d.findings]);
+      if (d.recommendations) ws2Data.push(['Recommendations:', d.recommendations]);
+      ws2Data.push([]);
+    }
+
+    ws2Data.push(['', '', '', '', '', '', '', '']);
+    ws2Data.push([]);
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(ws2Data);
+  ws2['!cols'] = [{ wch: 18 }, { wch: 45 }, { wch: 14 }, { wch: 14 }, { wch: 20 }, { wch: 12 }, { wch: 12 }, { wch: 12 }];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Detail Report');
+
+  // SHEET 3: All inspection items flat — with full context headers
   const allItems = [];
-  (filteredData.length > 0 ? filteredData : allData).forEach(d => {
+  src.forEach(d => {
     if (d.items) {
       d.items.forEach((it, idx) => {
         allItems.push({
           'Asset Tag': d.assetTag || '',
+          'Asset Name': d.assetName || '',
           'WO Number': d.woNumber || '',
           'Tanggal': d.executionDate || '',
+          'Checked By': d.checkedBy || '',
           'Item No': idx + 1,
-          'Item': it.label || '',
+          'Task Description': it.label || '',
           'Result': it.result || ''
         });
       });
     }
   });
   if (allItems.length > 0) {
-    const ws2 = XLSX.utils.json_to_sheet(allItems);
-    ws2['!cols'] = Object.keys(allItems[0]).map(k => ({ wch: Math.max(k.length + 2, 14) }));
-    XLSX.utils.book_append_sheet(wb, ws2, 'Detail Items');
+    const ws3 = XLSX.utils.json_to_sheet(allItems);
+    ws3['!cols'] = Object.keys(allItems[0]).map(k => ({ wch: k === 'Task Description' ? 45 : Math.max(k.length + 2, 14) }));
+    XLSX.utils.book_append_sheet(wb, ws3, 'Inspection Items');
   }
 
+  // SHEET 4: All measurements flat — with full context headers
   const allMeas = [];
-  (filteredData.length > 0 ? filteredData : allData).forEach(d => {
+  src.forEach(d => {
     if (d.measurements) {
       d.measurements.forEach(m => {
         allMeas.push({
           'Asset Tag': d.assetTag || '',
+          'Asset Name': d.assetName || '',
           'WO Number': d.woNumber || '',
           'Tanggal': d.executionDate || '',
-          'Item': m.label || '',
+          'Checked By': d.checkedBy || '',
+          'Parameter': m.label || '',
           'Value': m.value || '',
           'Unit': m.unit || ''
         });
@@ -539,9 +586,9 @@ function exportExcel() {
     }
   });
   if (allMeas.length > 0) {
-    const ws3 = XLSX.utils.json_to_sheet(allMeas);
-    ws3['!cols'] = Object.keys(allMeas[0]).map(k => ({ wch: Math.max(k.length + 2, 14) }));
-    XLSX.utils.book_append_sheet(wb, ws3, 'Measurements');
+    const ws4 = XLSX.utils.json_to_sheet(allMeas);
+    ws4['!cols'] = Object.keys(allMeas[0]).map(k => ({ wch: k === 'Parameter' ? 40 : Math.max(k.length + 2, 14) }));
+    XLSX.utils.book_append_sheet(wb, ws4, 'Measurements');
   }
 
   const today = new Date().toISOString().slice(0, 10);
