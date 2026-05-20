@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Kelola User Dashboard</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+:root{--bg:#0f1510;--surf:#1a2420;--bdr:rgba(80,130,95,0.18);--ok:#27ae60;--acc:#c0392b;
+  --txt:#d4e8db;--txt2:#8fb89a;--txt3:#4a6a54;--mono:'Courier New',monospace;--sans:system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:100vh;display:flex;
+  align-items:center;justify-content:center;padding:20px}
+.card{background:var(--surf);border:1px solid var(--bdr);border-radius:14px;padding:32px;
+  max-width:500px;width:100%}
+h1{font-size:22px;color:#fff;margin-bottom:4px}
+.sub{font-size:13px;color:var(--txt3);margin-bottom:24px}
+label{font-size:12px;color:var(--txt2);display:block;margin-bottom:4px;letter-spacing:1px;text-transform:uppercase}
+input{width:100%;background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:10px 14px;
+  color:var(--txt);font-size:14px;outline:none;margin-bottom:14px}
+input:focus{border-color:var(--ok)}
+.btn{width:100%;padding:12px;border:none;border-radius:8px;background:var(--ok);color:#fff;
+  font-size:15px;font-weight:700;cursor:pointer;transition:all 0.15s;letter-spacing:1px}
+.btn:hover{background:#219a52}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-del{background:var(--acc);margin-top:6px}
+.btn-del:hover{background:#a93226}
+.msg{font-size:13px;margin-top:14px;min-height:20px;font-family:var(--mono);text-align:center}
+.msg.ok{color:var(--ok)}.msg.err{color:var(--acc)}
+hr{border:none;border-top:1px solid var(--bdr);margin:24px 0}
+h2{font-size:16px;color:#fff;margin-bottom:14px}
+.user-list{list-style:none}
+.user-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+  border:1px solid var(--bdr);border-radius:8px;margin-bottom:8px;font-family:var(--mono);font-size:13px}
+.user-item .name{color:#fff}
+.user-item .role{font-size:11px;color:var(--txt3);margin-left:8px}
+.del-btn{background:rgba(192,57,43,0.15);border:1px solid rgba(192,57,43,0.3);color:var(--acc);
+  padding:4px 12px;border-radius:5px;cursor:pointer;font-size:11px;transition:all 0.15s}
+.del-btn:hover{background:rgba(192,57,43,0.3)}
+.empty{text-align:center;color:var(--txt3);font-size:13px;padding:20px}
+.back{display:inline-block;margin-bottom:16px;color:var(--txt3);text-decoration:none;font-size:13px}
+.back:hover{color:var(--ok)}
+</style>
+</head>
+<body>
+<div class="card">
+  <a href="dashboard.html" class="back">&larr; Kembali ke Dashboard</a>
+  <h1>Kelola User Dashboard</h1>
+  <div class="sub">Tambah, lihat, atau hapus user yang bisa mengakses dashboard</div>
+
+  <label>Username</label>
+  <input type="text" id="new-user" placeholder="contoh: admin">
+  <label>Password</label>
+  <input type="password" id="new-pass" placeholder="Password baru">
+  <label>Role (opsional)</label>
+  <input type="text" id="new-role" placeholder="admin / viewer" value="admin">
+  <button class="btn" id="add-btn" onclick="addUser()">Tambah User</button>
+  <div class="msg" id="msg"></div>
+
+  <hr>
+  <h2>Daftar User</h2>
+  <ul class="user-list" id="user-list">
+    <li class="empty">Memuat...</li>
+  </ul>
+</div>
+
+<script>
+async function hashPass(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function addUser() {
+  const user = document.getElementById('new-user').value.trim().toLowerCase();
+  const pass = document.getElementById('new-pass').value;
+  const role = document.getElementById('new-role').value.trim() || 'viewer';
+  const msg = document.getElementById('msg');
+  const btn = document.getElementById('add-btn');
+
+  if (!user || !pass) { msg.className='msg err'; msg.textContent='Username dan password wajib diisi.'; return; }
+  if (pass.length < 4) { msg.className='msg err'; msg.textContent='Password minimal 4 karakter.'; return; }
+
+  btn.disabled = true;
+  msg.className='msg'; msg.textContent='Menyimpan...';
+
+  try {
+    // Check if username exists
+    const existing = await db.collection('dashboard_users').where('username','==',user).limit(1).get();
+    if (!existing.empty) {
+      msg.className='msg err'; msg.textContent='Username "'+user+'" sudah ada.';
+      btn.disabled=false; return;
+    }
+
+    const hashed = await hashPass(pass);
+    await db.collection('dashboard_users').add({
+      username: user,
+      password: hashed,
+      role: role,
+      createdAt: new Date().toISOString()
+    });
+
+    msg.className='msg ok'; msg.textContent='User "'+user+'" berhasil ditambahkan!';
+    document.getElementById('new-user').value='';
+    document.getElementById('new-pass').value='';
+    loadUsers();
+  } catch(e) {
+    console.error(e);
+    msg.className='msg err'; msg.textContent='Error: '+e.message;
+  }
+  btn.disabled=false;
+}
+
+async function loadUsers() {
+  const list = document.getElementById('user-list');
+  try {
+    const snap = await db.collection('dashboard_users').orderBy('createdAt','desc').get();
+    if (snap.empty) { list.innerHTML='<li class="empty">Belum ada user.</li>'; return; }
+    list.innerHTML = snap.docs.map(doc => {
+      const d = doc.data();
+      return `<li class="user-item">
+        <div><span class="name">${d.username}</span><span class="role">${d.role||'viewer'}</span></div>
+        <button class="del-btn" onclick="delUser('${doc.id}','${d.username}')">Hapus</button>
+      </li>`;
+    }).join('');
+  } catch(e) {
+    list.innerHTML='<li class="empty">Error: '+e.message+'</li>';
+  }
+}
+
+async function delUser(id, name) {
+  if (!confirm('Hapus user "'+name+'"?')) return;
+  try {
+    await db.collection('dashboard_users').doc(id).delete();
+    loadUsers();
+  } catch(e) { alert('Error: '+e.message); }
+}
+
+loadUsers();
+</script>
+</body>
+</html>
