@@ -832,6 +832,12 @@ buildF();
 loadDraft();
 updateStats();
 
+// Auto-load last submission from database
+setTimeout(async()=>{
+  const d=await DB.loadLastSubmission('7BG-PCP-800A/B');
+  if(d)showNote('📂 Data terakhir dimuat dari database.','ok');
+},800);
+
 async function submitToDb(){
   const data=DB.collectCheckSheetData('esp2','7BG-PCP-800A/B','ESP Weekly Maintenance','WEEKLY');
   if(!data.executionDate){DB.showSubmitResult(false,'Isi tanggal eksekusi terlebih dahulu.');return;}

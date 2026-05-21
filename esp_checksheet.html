@@ -871,8 +871,14 @@ buildF();
 loadDraft();
 updateStats();
 
+// Auto-load last submission from database
+setTimeout(async()=>{
+  const d=await DB.loadLastSubmission('7BG-ESP-V1');
+  if(d)showNote('📂 Data terakhir dimuat dari database.','ok');
+},800);
+
 async function submitToDb(){
-  const data=DB.collectCheckSheetData('esp','7BG-PCP-800A/B','ESP Weekly Maintenance','WEEKLY');
+  const data=DB.collectCheckSheetData('esp','7BG-ESP-V1','ESP Weekly Maintenance (V1)','WEEKLY');
   if(!data.executionDate){DB.showSubmitResult(false,'Isi tanggal eksekusi terlebih dahulu.');return;}
   if(!data.checkedBy){DB.showSubmitResult(false,'Isi nama teknisi terlebih dahulu.');return;}
   try{

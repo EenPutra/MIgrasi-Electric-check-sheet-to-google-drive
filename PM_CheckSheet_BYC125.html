@@ -778,6 +778,12 @@ buildToggles();
 initSig('sig-tech');initSig('sig-super');
 loadDraft();updateStats();
 
+// Auto-load last submission from database
+setTimeout(async()=>{
+  const d=await DB.loadLastSubmission('7EB-BYC-125 A/B');
+  if(d)showNotice('📂 Data terakhir dimuat dari database.','ok');
+},800);
+
 async function submitToDb(){
   const data=DB.collectCheckSheetData('byc125','7EB-BYC-125 A/B','Battery Charger Unit 125 A/B','2 YEARLY');
   if(!data.executionDate){DB.showSubmitResult(false,'Isi tanggal eksekusi terlebih dahulu.');return;}

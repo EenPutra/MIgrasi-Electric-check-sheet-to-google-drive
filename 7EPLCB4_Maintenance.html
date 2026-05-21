@@ -751,6 +751,12 @@ buildPhotos();
 loadDraft();
 updateStats();
 
+// Auto-load last submission from database
+setTimeout(async()=>{
+  const d=await DB.loadLastSubmission('7EP-LC-B4');
+  if(d)showNote('📂 Data terakhir dimuat dari database.','ok');
+},800);
+
 async function submitToDb(){
   const data=DB.collectCheckSheetData('lcb4','7EP-LC-B4','Load Center B4 Switchgear','PERIODIC');
   if(!data.executionDate){DB.showSubmitResult(false,'Isi tanggal eksekusi terlebih dahulu.');return;}
@@ -1457,6 +1463,12 @@ buildPhotos();
 });
 loadDraft();
 updateStats();
+
+// Auto-load last submission from database
+setTimeout(async()=>{
+  const d=await DB.loadLastSubmission('7EP-LC-B4');
+  if(d)showNote('📂 Data terakhir dimuat dari database.','ok');
+},800);
 
 async function submitToDb(){
   const data=DB.collectCheckSheetData('lcb4','7EP-LC-B4','Load Center B4 Switchgear','PERIODIC');

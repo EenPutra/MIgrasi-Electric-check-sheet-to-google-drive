@@ -74,6 +74,7 @@ const DB = {
     return { total, totalOk, totalNg, totalNa, byAsset, byMonth };
   },
 
+  // ── Enhanced data collection with full state preservation ──
   collectCheckSheetData(formId, assetTag, assetName, frequency) {
     const data = {
       assetTag,
@@ -94,37 +95,127 @@ const DB = {
       overallStatus: 'OK'
     };
 
-    document.querySelectorAll('.r-btn.active, .rb.ok-act, .rb.ng-act').forEach(btn => {
+    // ── Save toggle states (ST or resultState object) for exact restoration ──
+    if (typeof ST !== 'undefined' && ST !== null && Object.keys(ST).length > 0) {
+      data.toggleStates = Object.assign({}, ST);
+    } else if (typeof resultState !== 'undefined' && resultState !== null && Object.keys(resultState).length > 0) {
+      data.toggleStates = Object.assign({}, resultState);
+    }
+
+    // ── Save all input values by ID for exact restoration ──
+    const inputValues = {};
+    document.querySelectorAll('input[type=number], input[type=text], input[type=date], select, textarea').forEach(input => {
+      if (input.id && input.value) {
+        inputValues[input.id] = input.value;
+      }
+    });
+    data.inputValues = inputValues;
+
+    // ── Collect items with column context ──
+    // Helper: determine column header for a button's cell
+    function getColumnHeader(btn) {
+      const td = btn.closest('td');
+      if (!td) return '';
+      const tr = td.closest('tr');
+      const table = td.closest('table');
+      if (!tr || !table) return '';
+      const tdIndex = [...tr.children].indexOf(td);
+      const thead = table.querySelector('thead tr');
+      if (thead && tdIndex >= 0 && thead.children[tdIndex]) {
+        return thead.children[tdIndex].textContent.trim();
+      }
+      return '';
+    }
+
+    // Helper: extract toggle ID from onclick attribute
+    function getToggleId(btn) {
+      const onclick = btn.getAttribute('onclick') || '';
+      const match = onclick.match(/(?:setBtn|setT|setResult|setLC)\(\s*'([^']+)'/);
+      return match ? match[1] : '';
+    }
+
+    // Collect .r-btn.active (BYC125 style)
+    document.querySelectorAll('.r-btn.active').forEach(btn => {
       const row = btn.closest('tr');
       if (!row) return;
       const labelCell = row.querySelector('.lbl, .task-desc, td:nth-child(2)');
       const label = labelCell ? labelCell.textContent.trim() : '';
-      const isOk = btn.classList.contains('ok-act') || btn.classList.contains('active') && btn.textContent.trim() === 'OK';
-      const isNg = btn.classList.contains('ng-act') || btn.classList.contains('active') && btn.textContent.trim() === 'NG';
+      const isOk = btn.classList.contains('ok-btn') || btn.textContent.trim() === 'OK';
+      const isNg = btn.classList.contains('ng-btn') || btn.textContent.trim() === 'NG';
+      const isNa = btn.classList.contains('na-btn') || btn.textContent.trim() === 'N/A';
 
       if (isOk) data.countOk++;
       if (isNg) data.countNg++;
-      data.items.push({ label, result: isOk ? 'OK' : isNg ? 'NG' : 'N/A' });
+      if (isNa) data.countNa++;
+
+      const toggleId = getToggleId(btn) || btn.dataset.id || '';
+      const column = getColumnHeader(btn);
+
+      data.items.push({
+        label,
+        result: isOk ? 'OK' : isNg ? 'NG' : 'N/A',
+        id: toggleId,
+        column: column
+      });
     });
 
-    document.querySelectorAll('.r-btn.na-btn.active').forEach(() => data.countNa++);
+    // Collect .rb.ok-act / .rb.ng-act (most checksheets)
+    document.querySelectorAll('.rb.ok-act, .rb.ng-act').forEach(btn => {
+      const row = btn.closest('tr');
+      if (!row) return;
+      const labelCell = row.querySelector('.lbl, .task-desc, td:nth-child(2)');
+      const label = labelCell ? labelCell.textContent.trim() : '';
+      const isOk = btn.classList.contains('ok-act');
+      const isNg = btn.classList.contains('ng-act');
+
+      if (isOk) data.countOk++;
+      if (isNg) data.countNg++;
+
+      const toggleId = getToggleId(btn) || btn.dataset.id || '';
+      const column = getColumnHeader(btn);
+
+      data.items.push({
+        label,
+        result: isOk ? 'OK' : 'NG',
+        id: toggleId,
+        column: column
+      });
+    });
 
     if (data.countNg > 0) data.overallStatus = 'NG';
 
+    // ── Collect measurements with ID ──
     const measurements = [];
     document.querySelectorAll('.mi, .meas-input').forEach(input => {
       if (input.value) {
         const row = input.closest('tr');
         const labelCell = row ? row.querySelector('.lbl, .task-desc, td:nth-child(2)') : null;
+        const label = labelCell ? labelCell.textContent.trim() : input.name || input.id || '';
+
+        // Get column header
+        let column = '';
+        const td = input.closest('td');
+        if (td && row) {
+          const table = td.closest('table');
+          const tdIndex = [...row.children].indexOf(td);
+          const thead = table?.querySelector('thead tr');
+          if (thead && tdIndex >= 0 && thead.children[tdIndex]) {
+            column = thead.children[tdIndex].textContent.trim();
+          }
+        }
+
         measurements.push({
-          label: labelCell ? labelCell.textContent.trim() : input.name || input.id || '',
+          id: input.id || '',
+          label,
           value: input.value,
-          unit: input.dataset.unit || ''
+          unit: input.dataset.unit || '',
+          column: column
         });
       }
     });
     data.measurements = measurements;
 
+    // ── Collect findings/recommendations ──
     const findings = document.getElementById('findings')?.value ||
                      document.querySelector('textarea[placeholder*="finding" i], textarea[placeholder*="temuan" i]')?.value || '';
     const recommendations = document.getElementById('recommendations')?.value ||
@@ -133,6 +224,91 @@ const DB = {
     data.recommendations = recommendations;
 
     return data;
+  },
+
+  // ── Load last submission back into a checksheet ──
+  async loadLastSubmission(assetTag, options = {}) {
+    try {
+      const snap = await db.collection('checksheets')
+        .where('assetTag', '==', assetTag)
+        .orderBy('createdAt', 'desc').limit(1).get();
+      if (snap.empty) return null;
+
+      const d = snap.docs[0].data();
+
+      // Restore header fields
+      const headerMap = {
+        'wo-no': d.woNumber,
+        'wo-date': d.executionDate,
+        'time-start': d.timeStart,
+        'time-end': d.timeEnd,
+        'checked-by': d.checkedBy,
+        'nik': d.nik,
+        'reviewed-by': d.reviewedBy,
+        'shift': d.shift
+      };
+      Object.entries(headerMap).forEach(([elId, val]) => {
+        if (val) {
+          const el = document.getElementById(elId);
+          if (el) el.value = val;
+        }
+      });
+
+      // Restore all input values by ID (most reliable)
+      if (d.inputValues) {
+        Object.entries(d.inputValues).forEach(([id, val]) => {
+          const el = document.getElementById(id);
+          if (el) el.value = val;
+        });
+      }
+
+      // Restore toggle states
+      if (d.toggleStates) {
+        // Assign to the correct state object
+        if (typeof ST !== 'undefined' && ST !== null) Object.entries(d.toggleStates).forEach(([k,v]) => { ST[k] = v; });
+        if (typeof resultState !== 'undefined' && resultState !== null) Object.entries(d.toggleStates).forEach(([k,v]) => { resultState[k] = v; });
+
+        Object.entries(d.toggleStates).forEach(([id, val]) => {
+
+          let found = false;
+
+          // Strategy 1: .tog .rb with onclick match (7EPLCB4, 7EPMCC, DRY_TRAFO, ESP)
+          if (!found) {
+            const sel = `.rb[data-v="${val}"][onclick*="'${id}'"]`;
+            const btn = document.querySelector(sel);
+            if (btn) { btn.className = 'rb ' + (val === 'OK' ? 'ok-act' : 'ng-act'); found = true; }
+          }
+
+          // Strategy 2: buttons with data-id attribute (Transformer style)
+          if (!found) {
+            document.querySelectorAll(`[data-id="${id}"]`).forEach(btn => {
+              if (btn.dataset.v === val || btn.textContent.trim() === val) {
+                btn.classList.add('a');
+                found = true;
+              }
+            });
+          }
+
+          // Strategy 3: .r-btn buttons with data-id (BYC125 style)
+          if (!found) {
+            document.querySelectorAll(`.r-btn[data-id="${id}"]`).forEach(btn => {
+              const btnType = btn.dataset.type;
+              const match = (val.toLowerCase() === btnType);
+              if (match) { btn.classList.add('active'); found = true; }
+            });
+          }
+        });
+      }
+
+      // Update stats if the function exists
+      if (typeof updateStats === 'function') updateStats();
+      if (typeof upStats === 'function') upStats();
+
+      return d;
+    } catch (e) {
+      console.log('Auto-load skip:', e.message);
+      return null;
+    }
   },
 
   showSubmitResult(success, message) {

@@ -636,26 +636,37 @@ async function showDetail(id) {
       }
     });
   } else if (d.items && d.items.length > 0) {
+    // Check if items have column info (multi-column checksheets)
+    const hasColumns = d.items.some(it => it.column);
     html += `
     <div class="detail-section-title">Inspection Items</div>
     <table class="detail-items-table" style="margin-bottom:18px">
-      <thead><tr><th style="width:40px;text-align:center">No</th><th>Task Description</th><th style="width:60px;text-align:center">Result</th></tr></thead>
+      <thead><tr><th style="width:40px;text-align:center">No</th>${hasColumns ? '<th style="width:90px;text-align:center">Column</th>' : ''}<th>Task Description</th>${hasColumns && d.items[0].id ? '<th style="width:100px">ID</th>' : ''}<th style="width:60px;text-align:center">Result</th></tr></thead>
       <tbody>`;
     d.items.forEach((it, i) => {
       const rc = it.result === 'OK' ? 'tag-ok' : it.result === 'NG' ? 'tag-ng' : '';
-      html += `<tr><td style="text-align:center;font-family:var(--mono);color:var(--txt3)">${i + 1}</td><td>${esc(it.label)}</td><td style="text-align:center"><span class="tag ${rc}">${it.result}</span></td></tr>`;
+      html += `<tr><td style="text-align:center;font-family:var(--mono);color:var(--txt3)">${i + 1}</td>`;
+      if (hasColumns) html += `<td style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--steel2)">${esc(it.column || '')}</td>`;
+      html += `<td>${esc(it.label)}</td>`;
+      if (hasColumns && d.items[0].id) html += `<td style="font-family:var(--mono);font-size:10px;color:var(--txt3)">${esc(it.id || '')}</td>`;
+      html += `<td style="text-align:center"><span class="tag ${rc}">${it.result}</span></td></tr>`;
     });
     html += `</tbody></table>`;
   }
 
   if (!d.sheets && d.measurements && d.measurements.length > 0) {
+    const measHasCol = d.measurements.some(m => m.column);
     html += `
     <div class="detail-section-title">Measurements</div>
     <table class="detail-items-table" style="margin-bottom:18px">
-      <thead><tr><th>Parameter</th><th style="width:100px;text-align:center">Value</th><th style="width:60px;text-align:center">Unit</th></tr></thead>
+      <thead><tr>${measHasCol ? '<th style="width:90px;text-align:center">Column</th>' : ''}<th>Parameter</th>${d.measurements[0].id ? '<th style="width:100px">ID</th>' : ''}<th style="width:100px;text-align:center">Value</th><th style="width:60px;text-align:center">Unit</th></tr></thead>
       <tbody>`;
     d.measurements.forEach(m => {
-      html += `<tr><td>${esc(m.label)}</td><td style="text-align:center;font-family:var(--mono);color:#fff">${esc(m.value)}</td><td style="text-align:center;color:var(--txt3);font-family:var(--mono)">${esc(m.unit)}</td></tr>`;
+      html += `<tr>`;
+      if (measHasCol) html += `<td style="text-align:center;font-family:var(--mono);font-size:10px;color:var(--steel2)">${esc(m.column || '')}</td>`;
+      html += `<td>${esc(m.label)}</td>`;
+      if (d.measurements[0].id) html += `<td style="font-family:var(--mono);font-size:10px;color:var(--txt3)">${esc(m.id || '')}</td>`;
+      html += `<td style="text-align:center;font-family:var(--mono);color:#fff">${esc(m.value)}</td><td style="text-align:center;color:var(--txt3);font-family:var(--mono)">${esc(m.unit)}</td></tr>`;
     });
     html += `</tbody></table>`;
   }
@@ -752,18 +763,24 @@ function exportExcel() {
       });
     } else {
       if (d.items && d.items.length > 0) {
+        const itemHasCol = d.items.some(it => it.column);
         ws2Data.push(['INSPECTION ITEMS']);
-        ws2Data.push(['No', 'Task Description', 'Result']);
+        ws2Data.push(itemHasCol ? ['No', 'Column', 'ID', 'Task Description', 'Result'] : ['No', 'Task Description', 'Result']);
         d.items.forEach((it, i) => {
-          ws2Data.push([i + 1, it.label || '', it.result || '']);
+          ws2Data.push(itemHasCol
+            ? [i + 1, it.column || '', it.id || '', it.label || '', it.result || '']
+            : [i + 1, it.label || '', it.result || '']);
         });
         ws2Data.push([]);
       }
       if (d.measurements && d.measurements.length > 0) {
+        const measHasCol = d.measurements.some(m => m.column);
         ws2Data.push(['MEASUREMENTS']);
-        ws2Data.push(['Parameter', 'Value', 'Unit']);
+        ws2Data.push(measHasCol ? ['Column', 'ID', 'Parameter', 'Value', 'Unit'] : ['Parameter', 'Value', 'Unit']);
         d.measurements.forEach(m => {
-          ws2Data.push([m.label || '', m.value || '', m.unit || '']);
+          ws2Data.push(measHasCol
+            ? [m.column || '', m.id || '', m.label || '', m.value || '', m.unit || '']
+            : [m.label || '', m.value || '', m.unit || '']);
         });
         ws2Data.push([]);
       }
@@ -795,6 +812,8 @@ function exportExcel() {
           'Tanggal': d.executionDate || '',
           'Checked By': d.checkedBy || '',
           'Item No': idx + 1,
+          'Column': it.column || '',
+          'Item ID': it.id || '',
           'Task Description': it.label || '',
           'Result': it.result || ''
         });
@@ -818,6 +837,8 @@ function exportExcel() {
           'WO Number': d.woNumber || '',
           'Tanggal': d.executionDate || '',
           'Checked By': d.checkedBy || '',
+          'Column': m.column || '',
+          'Meas ID': m.id || '',
           'Parameter': m.label || '',
           'Value': m.value || '',
           'Unit': m.unit || ''
