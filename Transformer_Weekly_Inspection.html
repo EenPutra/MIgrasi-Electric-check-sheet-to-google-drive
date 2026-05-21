@@ -605,9 +605,10 @@ async function generatePDF(selSet){
       const vals=tds.slice(2).map(td=>{
         if(td.querySelector('.nac'))return'N/A';
         const a=td.querySelector('.rb.a,.lb.a');if(a)return a.textContent;
-        // collect pct inputs
         const pctInps=td.querySelectorAll('.pct-inp');
         if(pctInps.length>0)return[...pctInps].map(i=>i.value?i.value+'%':'—').join('/');
+        const miInps=td.querySelectorAll('.mi');
+        if(miInps.length>1)return[...miInps].map(i=>i.value||'—').join('/');
         const inp=td.querySelector('input[type=number]');
         return inp&&inp.value?inp.value:'—';
       });
