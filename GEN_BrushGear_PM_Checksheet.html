@@ -954,25 +954,46 @@ async function saveToDatabase(){
   if(!gv2('checked-by')){showNotice('⚠️ Isi nama teknisi terlebih dahulu.','err');return;}
   showNotice('⏳ Menyimpan ke database…','info');
   try{
-    const payload=collectFormData();
-    // Also save in shared checksheets collection for dashboard
-    payload.assetTag='7TG-GEN-100';
-    payload.assetName='Generator Brush Gear PM';
-    payload.frequency='WEEKLY';
-    payload.woNumber=payload.woNo;
-    payload.executionDate=payload.date;
-    payload.checkedBy=payload.checkedBy;
-    payload.reviewedBy=payload.reviewedBy;
-    payload.shift=payload.shift;
-    payload.countOk=payload.statsOK;
-    payload.countNg=payload.statsNG;
-    payload.countNa=0;
-    payload.overallStatus=payload.statsNG>0?'NG':'OK';
-    payload.items=[];
-    payload.measurements=[];
-    payload.createdAt=new Date().toISOString();
-    const id=await DB.save(payload);
-    showNotice('✅ Data berhasil disimpan! ID: '+id,'ok');
+    const raw=collectFormData();
+
+    // Build items array from inspection results (for dashboard detail view)
+    const items=[];
+    INS_ITEMS.forEach(item=>{
+      const pv=raw.inspectionPos[item.no]?.val;
+      const nv=raw.inspectionNeg[item.no]?.val;
+      if(pv) items.push({label:item.desc,result:pv,id:'pos_'+item.no,column:'Pole +'});
+      if(nv) items.push({label:item.desc,result:nv,id:'neg_'+item.no,column:'Pole −'});
+    });
+
+    // Build measurements array from brush data (for dashboard detail view)
+    const measurements=[];
+    raw.brushData.forEach(mag=>{
+      for(let b=1;b<=6;b++){
+        const br=mag['b'+b];
+        const lbl=`Mag #${String(mag.mag).padStart(2,'0')} / Brush #${b}`;
+        if(br?.len) measurements.push({id:`m${mag.mag}_b${b}_len`,label:lbl,value:br.len,unit:'mm',column:'Length'});
+        if(br?.spring) measurements.push({id:`m${mag.mag}_b${b}_spring`,label:lbl,value:br.spring,unit:'lb',column:'Spring'});
+      }
+    });
+
+    const payload={
+      ...raw,
+      assetTag:'7TG-GEN-100',
+      assetName:'Generator Brush Gear PM',
+      frequency:'WEEKLY',
+      woNumber:raw.woNo,
+      executionDate:raw.date,
+      countOk:raw.statsOK,
+      countNg:raw.statsNG,
+      countNa:0,
+      overallStatus:raw.statsNG>0?'NG':'OK',
+      items,
+      measurements,
+      toggleStates:Object.assign({},ST),
+      createdAt:new Date().toISOString(),
+    };
+    const docId=await DB.save(payload);
+    showNotice('✅ Data berhasil disimpan! ID: '+docId,'ok');
   }catch(e){showNotice('❌ Gagal menyimpan: '+e.message,'err');}
 }
 
