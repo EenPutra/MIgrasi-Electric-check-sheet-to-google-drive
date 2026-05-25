@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Work Activity Record — POMI</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 /* ═══════════════════════════════ VARIABLES ══════════════════════════════ */
 :root{
@@ -240,10 +241,25 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 @media(max-width:640px){
   .tb-sub,.tb-sep{display:none}
   .hero{flex-direction:column;gap:10px}
+  .hero-logos{align-self:flex-start}
   .form-grid{grid-template-columns:1fr 1fr}
+  .blocks-list{grid-template-columns:1fr}
+  /* Photo grid: S=2/row, M/L=full on mobile */
+  .photo-grid{grid-template-columns:1fr 1fr}
+  .photo-item-wrap[data-size="s"]{grid-column:span 1}
+  .photo-item-wrap[data-size="m"],.photo-item-wrap[data-size="l"]{grid-column:span 2}
+  /* Editor modal full-screen on mobile */
+  .ed-overlay{padding:0;align-items:flex-end}
+  .ed-box{border-radius:12px 12px 0 0;max-height:92vh}
+  .ed-tb{gap:6px;padding:6px 10px}
+  .ed-t{width:28px;height:28px;font-size:12px}
 }
 @media(max-width:420px){
   .form-grid{grid-template-columns:1fr}
+  .photo-grid{grid-template-columns:1fr}
+  .photo-item-wrap[data-size="s"],.photo-item-wrap[data-size="m"],.photo-item-wrap[data-size="l"]{grid-column:span 1}
+  .builder-toolbar{gap:5px}
+  .btn-add{padding:6px 10px;font-size:11px}
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
@@ -353,7 +369,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
   <div class="tb-right">
     <span class="tb-time" id="clock">--:--:--</span>
     <button class="btn btn-ghost btn-sm" onclick="saveDraft()">💾 Draft</button>
-    <button class="btn btn-blue btn-sm" onclick="doPrint()">🖨️ Print / PDF</button>
+    <button class="btn btn-blue btn-sm" onclick="generatePDF()">📄 Download PDF</button>
   </div>
 </div>
 
@@ -486,7 +502,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 <div class="action-row">
   <button class="btn" style="background:#f1f5f9;color:var(--navy);border:1px solid var(--bdr)" onclick="resetAll()">🔄 Reset</button>
   <button class="btn btn-ghost" style="background:var(--navy2);color:#fff" onclick="saveDraft()">💾 Save Draft</button>
-  <button class="btn btn-blue" onclick="doPrint()">🖨️ Print / Save PDF</button>
+  <button class="btn btn-blue" onclick="generatePDF()">📄 Download PDF</button>
 </div>
 
 </div><!-- /wrap -->
@@ -1046,7 +1062,230 @@ window.addEventListener('beforeprint',()=>{
   });
 });
 
-function doPrint(){syncPrint();window.print();}
+function doPrint(){syncPrint();window.print();} // Ctrl+P fallback
+
+// ═══════════════════════════════════════════════════
+//  PDF GENERATOR  (jsPDF — A4 Portrait)
+// ═══════════════════════════════════════════════════
+async function generatePDF(){
+  if(!window.jspdf){showNotice('❌ Library PDF belum dimuat','err');return;}
+  showNotice('⏳ Membuat PDF…','info');
+  await new Promise(r=>setTimeout(r,150));
+
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,H=297,M=13,CW=184;
+
+  const NAVY=[15,39,68],NAVY2=[10,25,50],BLUE=[37,99,235],SKY=[147,197,253];
+  const LGRAY=[240,247,255],MGRAY=[200,215,235],DARK=[15,23,42],WHITE=[255,255,255];
+  const GRAY=[100,116,139];
+
+  let y=M;
+  const gv=id=>{const e=document.getElementById(id);return e?e.value.trim():'';};
+
+  function checkY(need){
+    if(y+need>H-M-10){pdf.addPage();y=M;miniHdr();}
+  }
+  function miniHdr(){
+    pdf.setFillColor(...NAVY2);pdf.rect(0,0,W,9,'F');
+    pdf.setFillColor(...BLUE);pdf.rect(0,8.5,W,0.5,'F');
+    pdf.setTextColor(...SKY);pdf.setFont('helvetica','bold');pdf.setFontSize(7);
+    pdf.text('WORK ACTIVITY RECORD',M,6);
+    const wo=gv('wo-no');
+    pdf.setFont('helvetica','normal');pdf.setFontSize(6.5);
+    pdf.text((wo?'WO: '+wo+' · ':'')+'POMI Electrical',W-M,6,{align:'right'});
+    y=13;
+  }
+
+  // Load local logo → DataURL via canvas
+  async function imgToDataUrl(src){
+    return new Promise(res=>{
+      const img=new Image();
+      img.crossOrigin='anonymous';
+      img.onload=()=>{
+        try{const cv=document.createElement('canvas');cv.width=img.naturalWidth;cv.height=img.naturalHeight;
+          cv.getContext('2d').drawImage(img,0,0);res(cv.toDataURL('image/png'));}
+        catch{res(null);}
+      };
+      img.onerror=()=>res(null);
+      img.src=src+'?'+Date.now();
+    });
+  }
+  async function getImgInfo(src){
+    return new Promise(res=>{
+      const img=new Image();
+      img.onload=()=>res({w:img.naturalWidth||4,h:img.naturalHeight||3});
+      img.onerror=()=>res({w:4,h:3});
+      img.src=src;
+    });
+  }
+
+  const [logo1,logoPE,logoPOMI]=await Promise.all([
+    imgToDataUrl('image.png'),imgToDataUrl('logo PE.png'),imgToDataUrl('LOGO POMI.png')
+  ]);
+
+  // ── COVER HEADER (page 1 only) ──
+  pdf.setFillColor(...NAVY2);pdf.rect(0,0,W,44,'F');
+  pdf.setFillColor(...BLUE);pdf.rect(0,42.5,W,1.5,'F');
+  if(logo1)  try{pdf.addImage(logo1,'PNG',M,5,28,16);}catch{}
+  if(logoPE) try{pdf.addImage(logoPE,'PNG',W-M-46,5,22,16);}catch{}
+  if(logoPOMI)try{pdf.addImage(logoPOMI,'PNG',W-M-22,5,20,16);}catch{}
+  pdf.setTextColor(...WHITE);pdf.setFont('helvetica','bold');pdf.setFontSize(20);
+  pdf.text('WORK ACTIVITY RECORD',W/2,24,{align:'center'});
+  pdf.setFontSize(9);pdf.setTextColor(...SKY);
+  pdf.text('Corrective Maintenance Documentation',W/2,32,{align:'center'});
+  pdf.setFontSize(7);pdf.setTextColor(120,160,210);
+  pdf.text('Generated: '+new Date().toLocaleString('id-ID'),M,39);
+  pdf.text('POMI — Electrical Maintenance',W-M,39,{align:'right'});
+  y=50;
+
+  // ── INFO TABLE ──
+  const LBL_W=54;
+  [['Asset',gv('asset')],['Description',gv('desc')],['Work Order No',gv('wo-no')],
+   ['Failure Description',gv('failure-desc')],['PIC',gv('pic')],['Date',gv('wo-date')]]
+  .forEach(([lbl,val])=>{
+    const vLines=pdf.splitTextToSize(val||'—',CW-LBL_W-4);
+    const rh=Math.max(7,vLines.length*4.8+3);
+    checkY(rh);
+    pdf.setFillColor(...LGRAY);pdf.rect(M,y,LBL_W,rh,'F');
+    pdf.setFillColor(...WHITE);pdf.rect(M+LBL_W,y,CW-LBL_W,rh,'F');
+    pdf.setDrawColor(...MGRAY);pdf.setLineWidth(0.2);
+    pdf.rect(M,y,CW,rh,'D');pdf.line(M+LBL_W,y,M+LBL_W,y+rh);
+    pdf.setFont('helvetica','bold');pdf.setFontSize(8);pdf.setTextColor(...NAVY);
+    pdf.text(lbl,M+2,y+rh/2+1.5);
+    pdf.setFont('helvetica','normal');pdf.setTextColor(...DARK);
+    vLines.forEach((l,i)=>pdf.text(l,M+LBL_W+3,y+4.5+i*4.8));
+    y+=rh;
+  });
+  y+=6;
+
+  // ── CONTENT BLOCKS ──
+  for(const block of BLOCKS){
+
+    if(block.type==='text'){
+      const hType=block.headingType, hLabel=hType==='custom'?block.heading:(HTYPE_LABELS[hType]||'');
+      if(hLabel&&hType!=='none'){
+        checkY(9);
+        const bg=hType==='preparation'||hType==='workprocess'?[254,240,138]:
+                 hType==='finding'?[254,226,226]:hType==='note'?[219,234,254]:LGRAY;
+        const fg=hType==='finding'?[153,27,27]:hType==='note'?[30,64,175]:NAVY;
+        pdf.setFillColor(...bg);pdf.rect(M,y,CW,7,'F');
+        if(hType==='note'){pdf.setDrawColor(...BLUE);pdf.setLineWidth(1.2);pdf.line(M,y,M,y+7);}
+        pdf.setFont('helvetica','bold');pdf.setFontSize(9);pdf.setTextColor(...fg);
+        pdf.text(hLabel,M+(hType==='note'?4:3),y+5);
+        y+=8;
+      }
+      if(block.content){
+        pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.setTextColor(...DARK);
+        const lines=pdf.splitTextToSize(block.content,CW);
+        lines.forEach(ln=>{checkY(5);pdf.text(ln,M,y+4);y+=4.8;});
+        y+=3;
+      }
+    }
+
+    else if(block.type==='image'){
+      const photos=(block.photos||[]).filter(p=>p.src);
+      if(!photos.length) continue;
+      // Group photos into rows by size fraction
+      const rows=[];let cur=[],curW=0;
+      for(const p of photos){
+        const frac=p.size==='s'?1/3:p.size==='l'?1:1/2;
+        if(curW+frac>1.001&&cur.length){rows.push(cur);cur=[];curW=0;}
+        cur.push({p,frac});curW+=frac;
+        if(Math.abs(curW-1)<0.001){rows.push(cur);cur=[];curW=0;}
+      }
+      if(cur.length)rows.push(cur);
+
+      for(const row of rows){
+        const infos=await Promise.all(row.map(({p})=>getImgInfo(p.src)));
+        const maxH=row[0].p.size==='s'?42:row[0].p.size==='l'?95:65;
+        // Row height = smallest constrained height across cells
+        let rowH=maxH;
+        row.forEach(({p,frac},i)=>{
+          const cellW=frac*CW-1;
+          const asp=infos[i].w/infos[i].h||1;
+          rowH=Math.min(rowH,Math.min(maxH,cellW/asp));
+        });
+        rowH=Math.max(rowH,10);
+        const hasCap=row.some(({p})=>p.caption);
+        checkY(rowH+(hasCap?8:3));
+        let rx=M;
+        row.forEach(({p,frac},i)=>{
+          const cellW=frac*CW;
+          const asp=infos[i].w/infos[i].h||1;
+          let iw=Math.min(cellW-1,rowH*asp);
+          let ih=iw/asp;
+          if(ih>rowH){ih=rowH;iw=ih*asp;}
+          const ix=rx+(cellW-iw)/2;
+          try{pdf.addImage(p.src,p.src.startsWith('data:image/png')?'PNG':'JPEG',ix,y,iw,ih);}catch{}
+          if(p.caption){
+            pdf.setFont('helvetica','italic');pdf.setFontSize(6);pdf.setTextColor(...GRAY);
+            pdf.text(p.caption,rx+cellW/2,y+rowH+4.5,{align:'center',maxWidth:cellW-2});
+          }
+          rx+=cellW;
+        });
+        y+=rowH+(hasCap?7:2);
+      }
+      y+=2;
+    }
+
+    else if(block.type==='file'){
+      if(!block.name)continue;
+      checkY(10);
+      pdf.setFillColor(250,245,255);pdf.setDrawColor(196,181,253);pdf.setLineWidth(0.3);
+      pdf.roundedRect(M,y,CW,8,1.5,1.5,'FD');
+      pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);pdf.setTextColor(124,58,237);
+      pdf.text(block.name,M+3,y+5.5,{maxWidth:CW-6});
+      if(block.note){
+        pdf.setFont('helvetica','italic');pdf.setFontSize(7);pdf.setTextColor(100,80,150);
+        pdf.text(block.note,W-M-3,y+5.5,{align:'right',maxWidth:CW-40});
+      }
+      y+=10;
+    }
+  }
+
+  // ── CONCLUSION TABLE ──
+  const concl=gv('conclusion'),reco=gv('recommendations');
+  if(concl||reco){
+    y+=5;checkY(14);
+    pdf.setFillColor(...NAVY);pdf.rect(M,y,CW,7,'F');
+    pdf.setTextColor(...WHITE);pdf.setFont('helvetica','bold');pdf.setFontSize(8.5);
+    pdf.text('CONCLUSION & RECOMMENDATIONS',M+3,y+5);
+    y+=7;
+    const LW=52;
+    [['Conclusion',concl],['Recommendations',reco]].forEach(([lbl,val])=>{
+      if(!val)return;
+      const lines=pdf.splitTextToSize(val,CW-LW-4);
+      const rh=Math.max(10,lines.length*5+4);
+      checkY(rh);
+      pdf.setFillColor(...LGRAY);pdf.rect(M,y,LW,rh,'F');
+      pdf.setFillColor(...WHITE);pdf.rect(M+LW,y,CW-LW,rh,'F');
+      pdf.setDrawColor(...MGRAY);pdf.setLineWidth(0.2);
+      pdf.rect(M,y,CW,rh,'D');pdf.line(M+LW,y,M+LW,y+rh);
+      pdf.setFont('helvetica','bold');pdf.setFontSize(8);pdf.setTextColor(...NAVY);
+      pdf.text(lbl,M+2,y+6);
+      pdf.setFont('helvetica','normal');pdf.setTextColor(...DARK);
+      lines.forEach((l,i)=>pdf.text(l,M+LW+3,y+5.5+i*5));
+      y+=rh;
+    });
+  }
+
+  // ── FOOTER ON ALL PAGES ──
+  const total=pdf.internal.getNumberOfPages();
+  for(let pg=1;pg<=total;pg++){
+    pdf.setPage(pg);
+    pdf.setFillColor(...NAVY2);pdf.rect(0,H-9,W,9,'F');
+    pdf.setTextColor(100,140,190);pdf.setFont('helvetica','normal');pdf.setFontSize(6.5);
+    pdf.text('POMI — Work Activity Record · Corrective Maintenance',M,H-3.5);
+    pdf.text(`Page ${pg} of ${total}`,W-M,H-3.5,{align:'right'});
+  }
+
+  // ── SAVE FILE ──
+  const wo=gv('wo-no')||'WAR';
+  const dt=gv('wo-date')||new Date().toISOString().split('T')[0];
+  pdf.save(`WAR_${wo}_${dt}.pdf`);
+  showNotice('✅ PDF berhasil diunduh!','ok');
+}
 
 // ═══════════════════════════════════════════════════
 //  DRAFT  (localStorage — images not stored due to size)
