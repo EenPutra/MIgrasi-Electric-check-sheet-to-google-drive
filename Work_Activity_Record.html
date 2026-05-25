@@ -299,7 +299,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
   .findings-grid{display:none!important}
 
   /* ── PHOTO GRID print ── */
-  .photo-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:4pt!important}
+  .photo-grid.print-only{display:grid!important;grid-template-columns:1fr 1fr!important;gap:4pt!important}
   .photo-item-print{break-inside:avoid;page-break-inside:avoid}
   .photo-item-print.span-2{grid-column:1/-1!important}
   .photo-item-print img{max-width:100%!important;height:auto!important;display:block!important;object-fit:contain!important}
