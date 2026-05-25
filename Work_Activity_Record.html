@@ -544,7 +544,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
         <input type="range" id="ed-lw" min="1" max="8" value="2" style="width:72px;accent-color:var(--blue)"
           oninput="ED.lineWidth=+this.value">
       </div>
-      <button class="ed-t" onclick="edUndo()" title="Undo last" style="margin-left:auto">↩</button>
+      <div style="margin-left:auto;display:flex;gap:4px">
+        <button class="ed-t" onclick="edRotate(-90)" title="Rotate counter-clockwise 90°">↺</button>
+        <button class="ed-t" onclick="edRotate(90)"  title="Rotate clockwise 90°">↻</button>
+        <button class="ed-t" onclick="edUndo()" title="Undo last">↩</button>
+      </div>
     </div>
     <div class="ed-cw">
       <canvas id="ed-cv"
@@ -1063,6 +1067,41 @@ function edScaleOp(op,sx,sy){
   if(op.type==='arrow'){o.x1*=sx;o.y1*=sy;o.x2*=sx;o.y2*=sy;o.lw=Math.max(1,o.lw*sx);}
   if(op.type==='text'){o.x*=sx;o.y*=sy;o.fs=Math.round(op.fs*sx);}
   return o;
+}
+
+function edRotate(deg){
+  const cv=document.getElementById('ed-cv');
+  const orig=ED.baseImg;
+  // Flatten base + current ops at full resolution
+  const fCV=document.createElement('canvas');
+  fCV.width=orig.naturalWidth; fCV.height=orig.naturalHeight;
+  const fCtx=fCV.getContext('2d');
+  const sx=orig.naturalWidth/cv.width, sy=orig.naturalHeight/cv.height;
+  fCtx.drawImage(orig,0,0);
+  ED.ops.forEach(op=>edDrawOp(fCtx,edScaleOp(op,sx,sy)));
+  // Rotate the flattened image
+  const norm=((deg%360)+360)%360;
+  const rad=deg*Math.PI/180;
+  const swap=norm===90||norm===270;
+  const rCV=document.createElement('canvas');
+  rCV.width=swap?orig.naturalHeight:orig.naturalWidth;
+  rCV.height=swap?orig.naturalWidth:orig.naturalHeight;
+  const rCtx=rCV.getContext('2d');
+  rCtx.translate(rCV.width/2,rCV.height/2);
+  rCtx.rotate(rad);
+  rCtx.drawImage(fCV,-orig.naturalWidth/2,-orig.naturalHeight/2);
+  // Reload as new base image, resize display canvas
+  const newImg=new Image();
+  newImg.onload=()=>{
+    const maxW=Math.min(800,cv.parentElement.clientWidth-20);
+    const maxH=Math.min(480,window.innerHeight-280);
+    const r=Math.min(1,maxW/newImg.naturalWidth,maxH/newImg.naturalHeight);
+    cv.width=Math.round(newImg.naturalWidth*r);
+    cv.height=Math.round(newImg.naturalHeight*r);
+    ED.baseImg=newImg; ED.scale=r; ED.ops=[];
+    edDraw();
+  };
+  newImg.src=rCV.toDataURL('image/jpeg',0.92);
 }
 
 function applyEdit(){
