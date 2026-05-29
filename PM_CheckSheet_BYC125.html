@@ -94,14 +94,39 @@ canvas.sig-canvas{border:1.5px solid var(--panel-border);border-radius:8px;backg
 @media(max-width:900px){.meta-grid{grid-template-columns:repeat(2,1fr)}.photo-section-grid{grid-template-columns:1fr}.sig-wrap{grid-template-columns:1fr}}
 @media(max-width:600px){.wrapper{padding:14px 10px 60px}.meta-grid{grid-template-columns:1fr 1fr}.check-table{font-size:11px}}
 @media print{
-  .topbar,.btn-row,.btn,.r-btn{display:none!important}
-  body{background:#fff!important}
-  .panel{box-shadow:none!important;border:1px solid #ccc!important;break-inside:avoid}
-  .topbar{display:none!important}
+  @page{size:A4 portrait;margin:12mm 15mm}
+  *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .topbar,.btn-row,.btn-row,.action-row,.footer,
+  .photo-drop-icon,.photo-drop-hint,.photo-del-btn,
+  .topbar-right,.live-dot{display:none!important}
+  .print-header{display:flex!important}
+  body{background:#fff!important;font-size:11px}
+  .wrapper{padding:10px 0 0;max-width:100%}
+  .panel{box-shadow:none!important;border:1px solid var(--panel-border)!important;
+    margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
+  input[type=text],input[type=date],input[type=number],select,textarea{
+    background:transparent!important;border:none!important;
+    border-bottom:1px solid #b4c8bc!important;border-radius:0!important;
+    padding:2px 0!important;color:#1a2620!important;font-size:11px!important}
+  .result-btn,.r-btn{border:none!important;border-radius:3px!important;padding:2px 6px!important;font-size:10px!important;-webkit-appearance:none;appearance:none}
+  .meas-input,.meas-inp{background:transparent!important;border:none!important;
+    border-bottom:1px solid #b4c8bc!important;border-radius:0!important;padding:2px 0!important;font-size:10px!important}
+  .check-table{width:100%}
+  .check-table th,.check-table td{font-size:10px!important;padding:5px 7px!important}
+  .photo-drop{border:1px solid #b4c8bc!important;background:#fff!important;
+    min-height:unset!important;padding:4px!important}
+  .photo-drop img{max-width:100%!important;max-height:150px!important;object-fit:contain!important}
+  .meta-grid{gap:8px;padding:10px}
 }
 </style>
 </head>
 <body>
+<div class="print-header" id="print-header">
+  <div><strong>POMI — 7EB-BYC-125 BATTERY CHARGER PM</strong><br>
+    <span id="ph-tag">—</span></div>
+  <div style="text-align:right">Date: <span id="ph-date">—</span><br>
+    WO: <span id="ph-wo">—</span></div>
+</div>
 <div class="topbar">
   <span class="topbar-logo">PLTU</span>
   <div class="topbar-sep"></div>
@@ -113,7 +138,7 @@ canvas.sig-canvas{border:1.5px solid var(--panel-border);border-radius:8px;backg
     <span class="topbar-time" id="clock">--:--:--</span>
     <div class="topbar-sep"></div>
     <button class="btn btn-outline btn-sm" onclick="saveDraft()">Save Draft</button>
-    <button class="btn btn-pdf btn-sm" onclick="generatePDF()">Download PDF</button>
+    <button class="btn btn-pdf btn-sm" onclick="printPage()">🖨️ Print / PDF</button>
     <button class="btn btn-sm" style="background:#27ae60;color:#fff" onclick="submitToDb()">Submit to DB</button>
   </div>
 </div>
@@ -282,7 +307,7 @@ canvas.sig-canvas{border:1.5px solid var(--panel-border);border-radius:8px;backg
   <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;padding-bottom:16px">
     <button class="btn btn-outline" onclick="saveDraft()">Save Draft</button>
     <button class="btn btn-primary" onclick="resetForm()">Reset Form</button>
-    <button class="btn btn-pdf" onclick="generatePDF()">Download PDF Report</button>
+    <button class="btn btn-pdf" onclick="printPage()">🖨️ Print / Save PDF</button>
     <button class="btn" style="background:#27ae60;color:#fff;font-size:15px;padding:10px 24px" onclick="submitToDb()">&#128202; Submit to Database</button>
   </div>
   <div id="pdf-notice" class="notice" style="display:none"></div>
@@ -783,6 +808,41 @@ setTimeout(async()=>{
   const d=await DB.loadLastSubmission('7EB-BYC-125 A/B');
   if(d)showNotice('📂 Data terakhir dimuat dari database.','ok');
 },800);
+
+function printPage(){
+  const date = document.querySelector('input[type=date]')?.value || '—';
+  const wo   = document.querySelector('[id*=wo],[id*=work-order]')?.value || '—';
+  document.getElementById('ph-date').textContent = date;
+  document.getElementById('ph-wo').textContent   = wo;
+  const MAX_PX = 560, QUALITY = 0.45;
+  const imgs = Array.from(document.querySelectorAll('.photo-drop img'));
+  const origSrcs = imgs.map(el => el.src);
+  function compressDataUrl(src){
+    return new Promise(resolve => {
+      const im = new Image();
+      im.onload = () => {
+        const W = im.naturalWidth, H = im.naturalHeight;
+        const scale = Math.min(1, MAX_PX / Math.max(W, H));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(W * scale); cv.height = Math.round(H * scale);
+        cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+        resolve(cv.toDataURL('image/jpeg', QUALITY));
+      };
+      im.onerror = () => resolve(src);
+      im.src = src;
+    });
+  }
+  if(!imgs.length){ window.print(); return; }
+  Promise.all(origSrcs.map(compressDataUrl)).then(compressed => {
+    imgs.forEach((el, i) => { el.src = compressed[i]; });
+    const restore = () => {
+      imgs.forEach((el, i) => { el.src = origSrcs[i]; });
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
+    window.print();
+  });
+}
 
 async function submitToDb(){
   const data=DB.collectCheckSheetData('byc125','7EB-BYC-125 A/B','Battery Charger Unit 125 A/B','2 YEARLY');

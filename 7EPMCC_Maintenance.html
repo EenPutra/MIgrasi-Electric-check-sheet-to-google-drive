@@ -144,18 +144,41 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 
 /* PRINT STYLES */
 @media print{
-  .topbar,.action-row,.btn-add-photo,.del-btn,.tb-right{display:none!important}
-  body{background:#fff!important;font-size:11pt}
-  .panel{box-shadow:none!important;border:1px solid #ccc!important;break-inside:avoid}
-  .hero{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .sec-hdr{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .ct th{background:#1e3a5f!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .rb.ok-act{background:#16a34a!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  .rb.ng-act{background:#dc2626!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  @page{size:A4 portrait;margin:12mm 15mm}
+  *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .topbar,.action-row,.footer,.btn-add-photo,.del-btn,.tb-right,
+  .sec-hdr-arrow,.live-dot,.hero-stats,.ss-drop{display:none!important}
+  .print-header{display:flex!important}
+  body{background:#fff!important;font-size:11px}
+  .hero{padding:14px 20px 12px}
+  .wrap{padding:10px 0 0;max-width:100%!important}
+  .sec-body{display:block!important}
+  .panel{box-shadow:none!important;border:1px solid #bfdbfe;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
+  .sec-hdr{cursor:default;padding:8px 14px}
+  input[type=text],input[type=date],input[type=number],select,textarea{
+    background:transparent!important;border:none!important;
+    border-bottom:1px solid #dbeafe!important;border-radius:0!important;
+    padding:2px 0!important;color:#0f172a!important;font-size:11px!important}
+  .rb{border:none!important;border-radius:3px!important;padding:2px 6px!important;font-size:10px!important;-webkit-appearance:none;appearance:none}
+  .rb.ok-act{background:#dcfce7!important;color:#16a34a!important}
+  .rb.ng-act{background:#fee2e2!important;color:#dc2626!important}
+  .rb.na-act{background:#fef3c7!important;color:#92400e!important}
+  .rmk-inp,.meas-inp,.meas-input{background:transparent!important;border:none!important;
+    border-bottom:1px solid #dbeafe!important;border-radius:0!important;padding:2px 0!important;font-size:10px!important}
+  .tbl-wrap{overflow:visible}
+  .ct{min-width:unset!important;width:100%}
+  .ct th,.ct td{font-size:10px!important;padding:5px 7px!important}
+  .photo-drop{border:1px solid #dbeafe!important;background:#fff!important;
+    aspect-ratio:unset!important;min-height:unset!important;padding:4px!important}
+  .photo-drop img{position:static!important;width:auto!important;height:auto!important;
+    max-width:100%!important;max-height:150px!important;object-fit:contain!important}
   .photo-dynamic-grid{grid-template-columns:repeat(2,1fr)!important}
   .findings-grid{grid-template-columns:1fr 1fr!important}
-  .wrap{padding:0!important;max-width:100%!important}
 }
+.print-header{display:none;font-family:var(--mono);font-size:10px;color:var(--txt4);
+  padding:4px 0 8px;border-bottom:2px solid var(--navy);margin-bottom:8px;
+  justify-content:space-between;align-items:center}
+.print-header strong{font-size:13px;color:var(--navy);font-family:var(--raj);letter-spacing:1px}
 
 @media(max-width:640px){
   .tb-sub,.tb-sep{display:none}
@@ -165,7 +188,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 </style>
 </head>
 <body>
-
+<div class="print-header" id="print-header">
+  <div><strong>POMI — 7EP-MCC SHUTDOWN MAINTENANCE</strong><br>
+    <span id="ph-tag">—</span> · <span id="ph-desc">—</span></div>
+  <div style="text-align:right">Date: <span id="ph-date">—</span><br>
+    WO: <span id="ph-wo">—</span></div>
+</div>
 <!-- TOPBAR -->
 <div class="topbar">
   <div class="live-dot"></div>
@@ -175,7 +203,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
   <div class="tb-right">
     <span class="tb-time" id="clock">--:--:--</span>
     <button class="btn btn-ol btn-sm" onclick="saveDraft()">💾 Draft</button>
-    <button class="btn btn-pdf btn-sm" onclick="generatePDF()">📄 PDF</button>
+    <button class="btn btn-pdf btn-sm" onclick="printPage()">🖨️ Print / PDF</button>
     <button class="btn btn-sm" style="background:#16a34a;color:#fff;border:none" onclick="submitToDb()">🗄️ Submit DB</button>
   </div>
 </div>
@@ -328,7 +356,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 <div class="action-row">
   <button class="btn" style="background:#f1f5f9;color:var(--navy);border:1px solid var(--bdr)" onclick="resetForm()">🔄 Reset</button>
   <button class="btn btn-ol" style="background:var(--navy)" onclick="saveDraft()">💾 Save Draft</button>
-  <button class="btn btn-pdf" onclick="generatePDF()">📄 Download PDF</button>
+  <button class="btn btn-pdf" onclick="printPage()">🖨️ Print / Save PDF</button>
   <button class="btn" style="background:#16a34a;color:#fff;font-size:15px;padding:10px 24px" onclick="submitToDb()">&#128202; Submit to Database</button>
 </div>
 <div id="notice" class="notice"></div>
@@ -859,6 +887,45 @@ setTimeout(async()=>{
   const d=await DB.loadLastSubmission('7EP-MCC');
   if(d)showNote('📂 Data terakhir dimuat dari database.','ok');
 },800);
+
+function printPage(){
+  const tag  = document.querySelector('[id*=tag],[id*=equip],[id*=asset]')?.value || '—';
+  const date = document.querySelector('input[type=date]')?.value || '—';
+  const wo   = document.querySelector('[id*=wo],[id*=work-order]')?.value || '—';
+  document.getElementById('ph-tag').textContent  = tag;
+  document.getElementById('ph-date').textContent = date;
+  document.getElementById('ph-wo').textContent   = wo;
+  document.querySelectorAll('.sec-hdr').forEach(h => h.classList.add('open'));
+  document.querySelectorAll('.sec-body').forEach(b => b.style.display = 'block');
+  const MAX_PX = 560, QUALITY = 0.45;
+  const imgs = Array.from(document.querySelectorAll('.photo-drop img'));
+  const origSrcs = imgs.map(el => el.src);
+  function compressDataUrl(src){
+    return new Promise(resolve => {
+      const im = new Image();
+      im.onload = () => {
+        const W = im.naturalWidth, H = im.naturalHeight;
+        const scale = Math.min(1, MAX_PX / Math.max(W, H));
+        const cv = document.createElement('canvas');
+        cv.width = Math.round(W * scale); cv.height = Math.round(H * scale);
+        cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+        resolve(cv.toDataURL('image/jpeg', QUALITY));
+      };
+      im.onerror = () => resolve(src);
+      im.src = src;
+    });
+  }
+  if(!imgs.length){ window.print(); return; }
+  Promise.all(origSrcs.map(compressDataUrl)).then(compressed => {
+    imgs.forEach((el, i) => { el.src = compressed[i]; });
+    const restore = () => {
+      imgs.forEach((el, i) => { el.src = origSrcs[i]; });
+      window.removeEventListener('afterprint', restore);
+    };
+    window.addEventListener('afterprint', restore);
+    window.print();
+  });
+}
 
 async function submitToDb(){
   const data=DB.collectCheckSheetData('mcc','7EP-MCC','MCC Switchboard PM','4 YEARLY');

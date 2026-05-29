@@ -179,9 +179,38 @@ canvas.sigc{border:1.5px solid var(--pb);border-radius:8px;background:#f4f8f5;wi
   .mg4{grid-template-columns:1fr 1fr}
   .ph-title{font-size:20px}
 }
+@media print{
+  @page{size:A4 portrait;margin:12mm 15mm}
+  *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .topbar,.tr,.ldot,.action-row,.btn-row,.stats,#pdf-modal-overlay{display:none!important}
+  .print-header{display:flex!important}
+  body{background:#fff!important;font-size:11px}
+  .wrap{padding:10px 0 0;max-width:100%}
+  .panel,.ph-panel,.card,.section{box-shadow:none!important;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
+  input[type=text],input[type=date],input[type=number],select,textarea{
+    background:transparent!important;border:none!important;
+    border-bottom:1px solid #b4c8bc!important;border-radius:0!important;
+    padding:2px 0!important;color:#1a2620!important;font-size:11px!important}
+  .rb,.r-btn,.tog-btn{border:none!important;border-radius:3px!important;
+    padding:2px 6px!important;font-size:10px!important;-webkit-appearance:none;appearance:none}
+  .meas-inp,.mi{background:transparent!important;border:none!important;
+    border-bottom:1px solid #b4c8bc!important;border-radius:0!important;
+    padding:2px 0!important;font-size:10px!important}
+  .mg4{grid-template-columns:1fr 1fr!important}
+}
+.print-header{display:none;font-family:monospace;font-size:10px;color:#3d5248;
+  padding:4px 0 8px;border-bottom:2px solid #4a5e52;margin-bottom:8px;
+  justify-content:space-between;align-items:center}
+.print-header strong{font-size:13px;color:#4a5e52;letter-spacing:1px}
 </style>
 </head>
 <body>
+<div class="print-header" id="print-header">
+  <div><strong>POMI — TRANSFORMER WEEKLY INSPECTION</strong><br>
+    Unit 7/8 · AT+DGA · USST · COMMON SST · GIS</div>
+  <div style="text-align:right">Date: <span id="ph-date">—</span><br>
+    WO: <span id="ph-wo">—</span></div>
+</div>
 <div class="topbar">
   <span class="tl">PLTU</span><div class="tsep"></div>
   <span class="tsub">TRANSFORMER WEEKLY INSPECTION</span><div class="tsep"></div>
@@ -189,7 +218,7 @@ canvas.sigc{border:1.5px solid var(--pb);border-radius:8px;background:#f4f8f5;wi
   <div class="tr">
     <div class="ldot"></div><span class="tclock" id="clock">--:--:--</span><div class="tsep"></div>
     <button class="btn bo bsm" onclick="saveDraft()">💾 Draft</button>
-    <button class="btn br bsm" onclick="openPdfModal()">📄 PDF ▾</button>
+    <button class="btn br bsm" onclick="printPage()">🖨️ Print / PDF</button>
     <button class="btn bsm" style="background:#27ae60;color:#fff;border:none" onclick="submitToDb()">🗄️ Submit DB</button>
   </div>
 </div>
@@ -354,7 +383,7 @@ canvas.sigc{border:1.5px solid var(--pb);border-radius:8px;background:#f4f8f5;wi
     <button class="btn bo" onclick="saveDraft()">💾 Save Draft</button>
     <button class="btn" style="background:#27ae60;color:#fff;font-size:15px;padding:10px 24px;border:none;border-radius:6px;cursor:pointer" onclick="submitToDb()">&#128202; Submit to Database</button>
     <button class="btn bp" onclick="resetForm()">🔄 Reset</button>
-    <button class="btn br" onclick="generatePDF()">📄 Download PDF Report</button>
+    <button class="btn br" onclick="printPage()">🖨️ Print / Save PDF</button>
   </div>
   <div id="notice" class="notice"></div>
 </div>
@@ -829,6 +858,20 @@ function collectGISData(tbId, pfx) {
   return rows;
 }
 
+function printPage(){
+  const date = document.querySelector('input[type=date]')?.value || '—';
+  const wo   = document.querySelector('[id*=wo],[id*=work]')?.value || '—';
+  const ph = document.getElementById('print-header');
+  if(ph){
+    document.getElementById('ph-date').textContent = date;
+    document.getElementById('ph-wo').textContent   = wo;
+  }
+  // close PDF modal if open, expand all sections
+  document.getElementById('pdf-modal-overlay').style.display = 'none';
+  document.querySelectorAll('.sec-body,.panel-body,.section-body').forEach(b => b.style.display = 'block');
+  window.print();
+}
+
 async function submitToDb(){
   const data = {
     assetTag: '7EX-XFMR',
@@ -972,7 +1015,7 @@ async function loadLastSubmission() {
     </div>
     <div style="padding:14px 18px 18px;display:flex;gap:10px;justify-content:flex-end;border-top:1px solid #dde3de;margin-top:10px">
       <button onclick="closePdfModal()" class="btn bo">Batal</button>
-      <button onclick="generatePDFSelected()" class="btn br" style="min-width:140px">📄 Download PDF</button>
+      <button onclick="printPage()" class="btn br" style="min-width:140px">🖨️ Print / Save PDF</button>
     </div>
   </div>
 </div>
