@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1 Monthly PM UPS — 7EB-UPS-A/B</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="db-helper.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1e3a5f;--navy2:#0f2744;--blue:#2563eb;--sky:#7dd3fc;--sky2:#bfdbfe;
+  --bg:#f8fbff;--bg2:#f0f7ff;--surf:#ffffff;--bdr:#bfdbfe;--bdr2:#dbeafe;
+  --ok:#16a34a;--ok-bg:#dcfce7;--ok-ring:#bbf7d0;
+  --ng:#dc2626;--ng-bg:#fee2e2;--ng-ring:#fecaca;
+  --idle:#e5e7eb;--idle-txt:#9ca3af;
+  --txt:#0f172a;--txt2:#1e3a5f;--txt4:#64748b;
+  --mono:'Share Tech Mono',monospace;--sans:'Barlow',sans-serif;--raj:'Rajdhani',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:100vh}
+.topbar{position:sticky;top:0;z-index:100;background:var(--navy2);height:52px;
+  display:flex;align-items:center;padding:0 20px;gap:12px;border-bottom:2px solid var(--blue)}
+.tb-logo{font-family:var(--raj);font-size:20px;font-weight:700;letter-spacing:3px;color:#fff}
+.tb-logo em{color:var(--sky);font-style:normal}
+.tb-sep{width:1px;height:26px;background:rgba(255,255,255,0.15);flex-shrink:0}
+.tb-sub{font-size:11px;color:var(--sky);font-family:var(--mono);letter-spacing:1px;white-space:nowrap}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--sky);animation:pulse 2s ease-in-out infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.tb-time{font-family:var(--mono);font-size:12px;color:var(--sky);white-space:nowrap}
+.btn{padding:6px 14px;border-radius:5px;border:none;cursor:pointer;
+  font-family:var(--raj);font-size:13px;font-weight:600;letter-spacing:1px;
+  transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-draft{background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.2)}
+.btn-draft:hover{background:rgba(255,255,255,0.2)}
+.btn-pdf{background:var(--blue);color:#fff}
+.btn-pdf:hover{background:#1d4ed8;transform:translateY(-1px)}
+.btn-sm{padding:4px 10px;font-size:12px}
+.hero{background:var(--navy);padding:24px 20px 20px;color:#fff}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;color:var(--sky);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.hero-eyebrow::before{content:'';width:20px;height:1px;background:var(--sky)}
+.hero-title{font-family:var(--raj);font-size:clamp(28px,6vw,52px);font-weight:700;line-height:1;color:#fff;letter-spacing:1px}
+.hero-title em{color:var(--sky);font-style:normal}
+.hero-sub{font-size:13px;color:rgba(255,255,255,0.6);margin-top:8px;font-weight:300}
+.hero-stats{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.hstat{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:8px;padding:10px 16px;text-align:center;min-width:72px}
+.hstat-n{font-family:var(--raj);font-size:26px;font-weight:700;color:#fff;line-height:1;display:block}
+.hstat-n.ok{color:#4ade80}.hstat-n.ng{color:#f87171}.hstat-n.pend{color:var(--sky)}.hstat-n.ph{color:#fb923c}
+.hstat-l{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;display:block}
+.wrap{max-width:980px;margin:0 auto;padding:20px 16px 80px}
+.panel{background:var(--surf);border:1px solid var(--bdr);border-radius:10px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 6px rgba(30,58,95,0.06)}
+.wo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:16px}
+.mf{display:flex;flex-direction:column;gap:4px}
+.mf label{font-size:10px;color:var(--txt4);font-weight:500;letter-spacing:1px;text-transform:uppercase}
+.mf input,.mf select{border:1.5px solid var(--bdr);border-radius:5px;padding:7px 10px;
+  font-family:var(--sans);font-size:13px;background:var(--bg2);color:var(--txt);transition:border-color .18s;width:100%}
+.mf input:focus,.mf select:focus{outline:none;border-color:var(--blue);background:#fff}
+.mf input[type=date]{font-family:var(--mono)}
+.mf textarea{border:1.5px solid var(--bdr);border-radius:5px;padding:8px 10px;
+  font-family:var(--sans);font-size:13px;background:var(--bg2);color:var(--txt);
+  resize:vertical;min-height:80px;width:100%;transition:border-color .18s}
+.mf textarea:focus{outline:none;border-color:var(--blue);background:#fff}
+.sec-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--navy);cursor:pointer;user-select:none}
+.sec-hdr-icon{width:28px;height:28px;border-radius:6px;background:rgba(37,99,235,0.3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.sec-hdr-title{font-family:var(--raj);font-size:15px;font-weight:700;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
+.sec-hdr-sub{font-family:var(--mono);font-size:10px;color:var(--sky);letter-spacing:1px;margin-left:4px}
+.sec-hdr-cnt{margin-left:auto;font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.4);padding:2px 8px;border:1px solid rgba(255,255,255,0.15);border-radius:10px}
+.sec-hdr-arrow{color:rgba(255,255,255,0.4);font-size:14px;transition:transform .2s;margin-left:6px}
+.sec-hdr.open .sec-hdr-arrow{transform:rotate(180deg)}
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tbl-wrap::-webkit-scrollbar{height:4px}
+.tbl-wrap::-webkit-scrollbar-thumb{background:var(--sky2);border-radius:2px}
+.ct{width:100%;border-collapse:collapse;font-size:12px}
+.ct th{background:var(--navy);color:var(--sky2);padding:8px 10px;text-align:center;
+  font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;
+  white-space:nowrap;border-right:1px solid rgba(255,255,255,0.08)}
+.ct th:last-child{border-right:none}
+.ct td{padding:7px 10px;border-bottom:1px solid var(--bdr2);background:var(--surf);
+  vertical-align:middle;text-align:center;border-right:1px solid var(--bdr2)}
+.ct td:last-child{border-right:none}
+.ct tr:last-child td{border-bottom:none}
+.ct tr:hover td{background:var(--bg2)}
+.ct td.grp{background:rgba(37,99,235,0.07)!important;font-family:var(--raj);font-size:13px;font-weight:700;color:var(--navy);letter-spacing:1px}
+.ct td.sub{font-size:10px;font-weight:700;color:var(--navy);text-align:left;padding-left:10px;font-family:var(--mono)}
+.ct td.prm{font-size:11px;color:var(--txt4);text-align:left;padding-left:18px;font-family:var(--mono)}
+.ct td.grp-hdr{background:rgba(37,99,235,0.1)!important;font-family:var(--raj);font-size:12px;font-weight:700;color:var(--navy);text-align:left;padding:8px 12px;letter-spacing:1px;border-bottom:2px solid var(--bdr)}
+.ct th.ua{background:#162d4a;border-bottom:3px solid #3b82f6}
+.ct th.ub{background:#132a1f;border-bottom:3px solid #16a34a}
+.ct td.ua{background:rgba(37,99,235,0.03)}
+.ct td.ub{background:rgba(22,163,74,0.03)}
+.mi{font-size:11px;padding:4px 6px;border-radius:3px;font-family:var(--mono);
+  text-align:center;border:1.5px solid var(--bdr);background:var(--bg2);color:var(--txt);
+  transition:border-color .15s;width:72px}
+.mi:focus{outline:none;border-color:var(--blue);background:#fff}
+.tog{display:inline-flex;gap:3px;justify-content:center}
+.rb{font-size:10px;padding:4px 8px;border-radius:4px;cursor:pointer;font-weight:700;
+  letter-spacing:.5px;border:none;transition:all .15s;font-family:var(--mono)}
+.rb.ok-idle{background:var(--idle);color:var(--idle-txt)}
+.rb.ng-idle{background:var(--idle);color:var(--idle-txt)}
+.rb.ok-act{background:var(--ok);color:#fff;box-shadow:0 0 0 2px var(--ok-ring)}
+.rb.ng-act{background:var(--ng);color:#fff;box-shadow:0 0 0 2px var(--ng-ring)}
+.rb:hover{opacity:0.85;transform:translateY(-1px)}
+.chk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;padding:14px 16px}
+.chk-item{background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.chk-label{font-size:12px;color:var(--txt);font-weight:500;line-height:1.4}
+.chk-sub{font-size:10px;color:var(--txt4);margin-top:2px;font-family:var(--mono)}
+.dual{display:flex;gap:10px}
+.dual-itm{display:flex;flex-direction:column;align-items:center;gap:2px}
+.dual-lbl{font-family:var(--mono);font-size:9px;color:var(--txt4);letter-spacing:1px;text-transform:uppercase}
+.env-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;padding:16px}
+.env-card{background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:12px 14px}
+.env-lbl{font-size:10px;color:var(--txt4);font-weight:500;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.env-spec{font-family:var(--mono);font-size:9px;color:var(--blue);margin-bottom:6px;display:block}
+.env-inp{border:1.5px solid var(--bdr);border-radius:5px;padding:7px 10px;
+  font-family:var(--mono);font-size:13px;background:var(--surf);color:var(--txt);width:100%;transition:border-color .18s}
+.env-inp:focus{outline:none;border-color:var(--blue);background:#fff}
+.photo-drop{border:2px dashed var(--bdr);border-radius:10px;padding:32px 20px;text-align:center;
+  cursor:pointer;transition:all .2s;background:var(--bg2);margin:14px 16px 0}
+.photo-drop:hover,.photo-drop.dov{border-color:var(--blue);background:#eff6ff}
+.photo-drop-icon{font-size:32px;margin-bottom:8px}
+.photo-drop-txt{font-size:13px;color:var(--txt4);font-weight:500}
+.photo-drop-sub{font-size:11px;color:var(--txt4);margin-top:3px;font-family:var(--mono)}
+.photo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px;padding:14px 16px}
+.pcard{border:1px solid var(--bdr);border-radius:8px;overflow:hidden;background:var(--surf);box-shadow:0 1px 4px rgba(30,58,95,0.08)}
+.pcard img{width:100%;height:130px;object-fit:cover;display:block;cursor:zoom-in}
+.pcard-body{padding:8px 10px;display:flex;flex-direction:column;gap:5px}
+.pcap{font-size:11px;border:1px solid var(--bdr);border-radius:4px;padding:4px 7px;width:100%;font-family:var(--sans);color:var(--txt);background:var(--bg2)}
+.pcap:focus{outline:none;border-color:var(--blue)}
+.pdel{font-size:10px;color:var(--ng);cursor:pointer;background:none;border:none;font-family:var(--mono);padding:0;text-align:left}
+.pdel:hover{text-decoration:underline}
+.findings-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.notice{padding:10px 16px;border-radius:6px;font-size:13px;display:none;margin:12px 0 0}
+.notice.ok{background:#dcfce7;border:1px solid #86efac;color:#15803d;display:block}
+.notice.err{background:#fee2e2;border:1px solid #fca5a5;color:#b91c1c;display:block}
+.notice.info{background:#dbeafe;border:1px solid #93c5fd;color:#1e40af;display:block}
+.footer{background:var(--navy2);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:20px}
+.footer-l,.footer-r{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px}
+.print-header{display:none;font-family:var(--mono);font-size:10px;color:var(--txt4);
+  padding:4px 0 8px;border-bottom:2px solid var(--navy);margin-bottom:8px;justify-content:space-between;align-items:center}
+.print-header strong{font-size:13px;color:var(--navy);font-family:var(--raj);letter-spacing:1px}
+@media(max-width:640px){
+  .tb-sub{display:none}.tb-sep{display:none}
+  .findings-grid{grid-template-columns:1fr}
+  .btn-draft{display:none}
+}
+@media print{
+  @page{size:A4 portrait;margin:12mm 15mm}
+  *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .topbar,.footer,.notice,.sec-hdr-arrow,.live-dot,.hero-stats,
+  .photo-drop,.pdel,.tb-right{display:none!important}
+  .print-header{display:flex!important}
+  body{background:#fff!important;font-size:11px}
+  .hero{padding:14px 20px 12px}
+  .wrap{padding:10px 0 0;max-width:100%}
+  .sec-body{display:block!important}
+  .panel{box-shadow:none!important;border:1px solid #bfdbfe;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
+  .sec-hdr{cursor:default;padding:8px 14px}
+  .mf input,.mf select,.mf textarea,.env-inp{
+    background:transparent!important;border:none!important;
+    border-bottom:1px solid #dbeafe!important;border-radius:0!important;
+    padding:2px 0!important;color:#0f172a!important;font-size:11px!important}
+  .tbl-wrap{overflow:visible}
+  .ct{min-width:unset!important;width:100%}
+  .ct th,.ct td{font-size:10px!important;padding:4px 6px!important}
+  .photo-grid{grid-template-columns:repeat(3,1fr)}
+  .pcard img{height:100px}
+}
+</style>
+</head>
+<body>
+
+<div class="print-header" id="print-header">
+  <div><strong>POMI — 1 Monthly PM UPS — 7EB-UPS-A/B</strong><br>
+    <span id="ph-equip">—</span></div>
+  <div style="text-align:right">Date: <span id="ph-date">—</span><br>
+    Checked by: <span id="ph-checked">—</span></div>
+</div>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="live-dot"></div>
+  <span class="tb-logo">UPS <em>PM</em></span>
+  <div class="tb-sep"></div>
+  <span class="tb-sub">7EB-UPS-A/B · 1 MONTHLY PREVENTIVE MAINTENANCE</span>
+  <div class="tb-right">
+    <span class="tb-time" id="clock">--:--:--</span>
+    <button class="btn btn-draft btn-sm" onclick="saveDraft()">💾 Draft</button>
+    <button class="btn btn-pdf btn-sm" onclick="generatePDF()">📄 Export PDF</button>
+    <button class="btn btn-sm" style="background:#059669;color:#fff;border:none" onclick="printPage()">🖨️ Print</button>
+    <button class="btn btn-sm" style="background:#16a34a;color:#fff;border:none" onclick="submitToDb()">🗄️ Submit DB</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">1 Monthly Preventive Maintenance</div>
+  <div class="hero-title">7EB-<em>UPS</em>-A/B</div>
+  <div class="hero-sub">Unit 7 · Uninterruptible Power Supply A &amp; B · 3-Cabinet: Rectifier (CAB1) / Inverter (CAB2) / Manual Back Pass (CAB3)</div>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-n" id="h-total">0</span><span class="hstat-l">Total</span></div>
+    <div class="hstat"><span class="hstat-n ok" id="h-ok">0</span><span class="hstat-l">OK</span></div>
+    <div class="hstat"><span class="hstat-n ng" id="h-ng">0</span><span class="hstat-l">NG</span></div>
+    <div class="hstat"><span class="hstat-n pend" id="h-pend">0</span><span class="hstat-l">Pending</span></div>
+    <div class="hstat"><span class="hstat-n ph" id="h-photos">0</span><span class="hstat-l">Photos</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- WORK ORDER -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">📋</div>
+    <div><div class="sec-hdr-title">Work Order Information</div></div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="wo-grid">
+      <div class="mf"><label>Date</label><input type="date" id="wo-date"></div>
+      <div class="mf"><label>Time</label><input type="time" id="wo-time"></div>
+      <div class="mf"><label>Unit</label>
+        <select id="wo-unit"><option>7</option><option>8</option><option>7/8</option></select>
+      </div>
+      <div class="mf"><label>Equipment</label>
+        <select id="wo-equip">
+          <option>7EB-UPS-A/B</option><option>7EB-UPS-A</option><option>7EB-UPS-B</option>
+        </select>
+      </div>
+      <div class="mf"><label>Checked By</label><input type="text" id="checked-by" placeholder="Full name"></div>
+      <div class="mf"><label>Reviewed By</label><input type="text" id="reviewed-by" placeholder="Supervisor name"></div>
+      <div class="mf"><label>Shift</label>
+        <select id="shift">
+          <option>Shift 1 (07:00–15:00)</option><option>Shift 2 (15:00–23:00)</option>
+          <option>Shift 3 (23:00–07:00)</option><option>Normal Hours</option>
+        </select>
+      </div>
+      <div class="mf"><label>WO Number</label><input type="text" id="wo-no" placeholder="WO-2026-XXXX"></div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION A: COOLING FANS -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🌀</div>
+    <div>
+      <div class="sec-hdr-title">A — Cooling Fans Check</div>
+      <span class="sec-hdr-sub">≥90% Design Speed · Accepted RPM &gt;2600</span>
+    </div>
+    <span class="sec-hdr-cnt">8 fans</span>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+      <table class="ct">
+        <thead>
+          <tr>
+            <th style="width:110px">Cabinet</th>
+            <th style="width:90px">Fan</th>
+            <th class="ua" style="width:110px">UPS-A RPM</th>
+            <th class="ub" style="width:110px">UPS-B RPM</th>
+            <th class="ua" style="width:90px">UPS-A Status</th>
+            <th class="ub" style="width:90px">UPS-B Status</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-fans"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION B: ELECTRICAL -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">⚡</div>
+    <div>
+      <div class="sec-hdr-title">B — Electrical Measurements</div>
+      <span class="sec-hdr-sub">Rectifier · Inverter · Manual Back Pass</span>
+    </div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+      <table class="ct">
+        <thead>
+          <tr>
+            <th style="width:90px">Group</th>
+            <th style="width:110px">Parameter</th>
+            <th style="width:55px">Unit</th>
+            <th class="ua" style="width:110px">UPS-A</th>
+            <th class="ub" style="width:110px">UPS-B</th>
+            <th style="width:120px">Spec / Ref</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-elec"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION C: VISUAL & FUNCTIONAL -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🔍</div>
+    <div>
+      <div class="sec-hdr-title">C — Visual &amp; Functional Checks</div>
+      <span class="sec-hdr-sub">Alarms · Filters · Capacitor Safety Vent</span>
+    </div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body" id="sec-visual"></div>
+</div>
+
+<!-- SECTION D: TEMPERATURE -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🌡️</div>
+    <div>
+      <div class="sec-hdr-title">D — Temperature Checks</div>
+      <span class="sec-hdr-sub">IR Thermal · Transformers · Inductors · SCRs · Capacitors</span>
+    </div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+      <table class="ct">
+        <thead>
+          <tr>
+            <th style="width:120px">Cabinet</th>
+            <th style="width:130px">Component</th>
+            <th class="ua" style="width:130px">UPS-A Temp (°C)</th>
+            <th class="ub" style="width:130px">UPS-B Temp (°C)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-temp"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION E: COMPONENT CONDITION -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🔧</div>
+    <div>
+      <div class="sec-hdr-title">E — Component Condition</div>
+      <span class="sec-hdr-sub">Visual Inspection per Component per UPS</span>
+    </div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+      <table class="ct">
+        <thead>
+          <tr>
+            <th style="width:120px">Cabinet</th>
+            <th style="width:130px">Component</th>
+            <th class="ua" style="width:130px">UPS-A Condition</th>
+            <th class="ub" style="width:130px">UPS-B Condition</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-cond"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION F: ENVIRONMENTAL -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🏭</div>
+    <div>
+      <div class="sec-hdr-title">F — Environmental Conditions</div>
+      <span class="sec-hdr-sub">UPS Room · Temperature · Humidity · Noise</span>
+    </div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="env-grid">
+      <div class="env-card">
+        <div class="env-lbl">Room Temperature</div>
+        <span class="env-spec">Spec: ≤20 °C</span>
+        <input class="env-inp" type="number" step="0.1" id="env-temp" placeholder="°C">
+      </div>
+      <div class="env-card">
+        <div class="env-lbl">Relative Humidity</div>
+        <span class="env-spec">Ref: record value (%)</span>
+        <input class="env-inp" type="number" step="0.01" id="env-rh" placeholder="e.g. 58">
+      </div>
+      <div class="env-card">
+        <div class="env-lbl">Audible Noise</div>
+        <span class="env-spec">Spec: &lt;65 dB(A) @ ≤1.5 m</span>
+        <input class="env-inp" type="number" step="0.1" id="env-noise" placeholder="dB(A)">
+      </div>
+      <div class="env-card">
+        <div class="env-lbl">AC Unit Status</div>
+        <span class="env-spec">Room cooling unit</span>
+        <div style="margin-top:6px" id="env-ac"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION G: PHOTOS -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">📷</div>
+    <div><div class="sec-hdr-title">G — Photos &amp; Documentation</div></div>
+    <span class="sec-hdr-cnt" id="photo-cnt">0 photos</span>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotoInput(this)">
+    <div class="photo-drop" id="photo-drop" onclick="document.getElementById('photo-input').click()">
+      <div class="photo-drop-icon">📷</div>
+      <div class="photo-drop-txt">Click to add photos, or drag &amp; drop here</div>
+      <div class="photo-drop-sub">JPG · PNG · HEIC · Multiple files supported</div>
+    </div>
+    <div class="photo-grid" id="photo-grid"></div>
+  </div>
+</div>
+
+<!-- SECTION H: FINDINGS -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">📊</div>
+    <div><div class="sec-hdr-title">H — Findings &amp; Conclusion</div></div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="wo-grid" style="padding-bottom:0">
+      <div class="mf">
+        <label>Overall Condition</label>
+        <select id="overall">
+          <option>✅ GOOD — Normal Operation</option>
+          <option>⚠️ FAIR — Requires Monitoring</option>
+          <option>🔧 POOR — Maintenance Required</option>
+          <option>🛑 CRITICAL — Must Shutdown</option>
+        </select>
+      </div>
+      <div class="mf"><label>Next PM Due</label><input type="date" id="next-pm"></div>
+    </div>
+    <div class="findings-grid">
+      <div class="mf"><label>Findings / Observations</label>
+        <textarea id="findings" placeholder="Catat semua temuan, abnormalitas, atau observasi…"></textarea>
+      </div>
+      <div class="mf"><label>Corrective Actions / Recommendations</label>
+        <textarea id="recommendations" placeholder="Tindakan yang diambil dan rekomendasi tindak lanjut…"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIONS -->
+<div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;padding:4px 0 8px">
+  <button class="btn" style="background:#f1f5f9;color:var(--navy);border:1px solid var(--bdr)" onclick="resetForm()">🔄 Reset</button>
+  <button class="btn btn-draft" style="background:var(--navy);color:#fff" onclick="saveDraft()">💾 Save Draft</button>
+  <button class="btn" style="background:#059669;color:#fff" onclick="printPage()">🖨️ Print</button>
+  <button class="btn btn-pdf" onclick="generatePDF()">📄 Export PDF</button>
+  <button class="btn" style="background:#16a34a;color:#fff;font-size:15px;padding:10px 24px" onclick="submitToDb()">📊 Submit to Database</button>
+</div>
+<div id="notice" class="notice"></div>
+</div>
+
+<footer class="footer">
+  <div class="footer-l">UNIT 7 · 7EB-UPS-A/B · 1 MONTHLY PREVENTIVE MAINTENANCE</div>
+  <div class="footer-r" id="fdate">—</div>
+</footer>
+
+<script>
+// ── CLOCK ─────────────────────────────────────────
+function tick(){
+  const n=new Date();
+  document.getElementById('clock').textContent=n.toLocaleTimeString('id-ID');
+  document.getElementById('fdate').textContent=n.toLocaleDateString('en-GB',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+setInterval(tick,1000);tick();
+
+// ── SECTION TOGGLE ────────────────────────────────
+function toggleSec(hdr){
+  hdr.classList.toggle('open');
+  hdr.nextElementSibling.style.display=hdr.classList.contains('open')?'':'none';
+}
+
+// ── STATE ─────────────────────────────────────────
+const ST={};
+function setBtn(id,val,btn){
+  btn.closest('.tog').querySelectorAll('.rb').forEach(b=>b.className='rb '+(b.dataset.v==='OK'?'ok-idle':'ng-idle'));
+  if(ST[id]===val){delete ST[id];}
+  else{btn.className='rb '+(val==='OK'?'ok-act':'ng-act');ST[id]=val;}
+  updateStats();
+}
+function mkTog(id){
+  return `<div class="tog">
+    <button class="rb ok-idle" data-v="OK" onclick="setBtn('${id}','OK',this)">✓ OK</button>
+    <button class="rb ng-idle" data-v="NG" onclick="setBtn('${id}','NG',this)">✗ NG</button>
+  </div>`;
+}
+function mkInp(id,w){
+  return `<input class="mi" style="width:${w||72}px" type="number" step="0.01" id="${id}" placeholder="—">`;
+}
+function getT(id){return ST[id]||'—';}
+function getV(id){const e=document.getElementById(id);return e&&e.value?e.value:'—';}
+const fv=id=>{const e=document.getElementById(id);return e?e.value.trim():'';};
+const tr2=(s,n)=>s&&s.length>n?s.slice(0,n)+'…':(s||'');
+
+// ── STATS ─────────────────────────────────────────
+function updateStats(){
+  const vals=Object.values(ST);
+  const ok=vals.filter(x=>x==='OK').length;
+  const ng=vals.filter(x=>x==='NG').length;
+  const total=document.querySelectorAll('.tog').length;
+  document.getElementById('h-total').textContent=total;
+  document.getElementById('h-ok').textContent=ok;
+  document.getElementById('h-ng').textContent=ng;
+  document.getElementById('h-pend').textContent=total-ok-ng;
+  document.getElementById('h-photos').textContent=PHOTOS.length;
+}
+
+// ── DATA DEFINITIONS ──────────────────────────────
+const FANS=[
+  {cab:'CAB 1',desc:'Rectifier',id:'c1',fans:['Fan 1','Fan 2']},
+  {cab:'CAB 2',desc:'Inverter',id:'c2',fans:['Fan 1','Fan 2','Fan 3','Fan 4']},
+  {cab:'CAB 3',desc:'Manual Back Pass',id:'c3',fans:['Fan 1','Fan 2']},
+];
+
+const ELEC_GROUPS=[
+  {title:'RECTIFIER (CAB 1) — DC Output Spec: 286 VDC ±5% (272–300 VDC)',rows:[
+    {sub:'DC OUTPUT', param:'Current',   unit:'A',   spec:'—',            idA:'rec_dc_ia',  idB:'rec_dc_ib'},
+    {sub:'',          param:'Voltage',   unit:'VDC', spec:'272–300 VDC',  idA:'rec_dc_va',  idB:'rec_dc_vb'},
+    {sub:'AC INPUT',  param:'Current A', unit:'A',   spec:'—',            idA:'rec_aci_aa', idB:'rec_aci_ab'},
+    {sub:'',          param:'Current B', unit:'A',   spec:'—',            idA:'rec_aci_ba', idB:'rec_aci_bb'},
+    {sub:'',          param:'Current C', unit:'A',   spec:'—',            idA:'rec_aci_ca', idB:'rec_aci_cb'},
+    {sub:'',          param:'Volt A-B',  unit:'VAC', spec:'—',            idA:'rec_vab_a',  idB:'rec_vab_b'},
+    {sub:'',          param:'Volt B-C',  unit:'VAC', spec:'—',            idA:'rec_vbc_a',  idB:'rec_vbc_b'},
+    {sub:'',          param:'Volt C-A',  unit:'VAC', spec:'—',            idA:'rec_vca_a',  idB:'rec_vca_b'},
+  ]},
+  {title:'INVERTER (CAB 2) — Output: 120 VAC ±1% (118.8–121.2 VAC), 50 Hz ±0.1%',rows:[
+    {sub:'DC INPUT',    param:'Current',   unit:'A',   spec:'—',                idA:'inv_dc_ia',  idB:'inv_dc_ib'},
+    {sub:'',            param:'Voltage',   unit:'VDC', spec:'272–300 VDC',      idA:'inv_dc_va',  idB:'inv_dc_vb'},
+    {sub:'INV OUTPUT',  param:'Current',   unit:'A',   spec:'—',                idA:'inv_out_ia', idB:'inv_out_ib'},
+    {sub:'',            param:'Voltage',   unit:'VAC', spec:'118.8–121.2 VAC',  idA:'inv_out_va', idB:'inv_out_vb'},
+    {sub:'',            param:'Frequency', unit:'Hz',  spec:'49.95–50.05 Hz',   idA:'inv_out_fa', idB:'inv_out_fb'},
+  ]},
+  {title:'MANUAL BACK PASS SWITCH (CAB 3)',rows:[
+    {sub:'OUTPUT', param:'Current', unit:'A',   spec:'—',               idA:'mbp_ia', idB:'mbp_ib'},
+    {sub:'',       param:'Voltage', unit:'VAC', spec:'118.8–121.2 VAC', idA:'mbp_va', idB:'mbp_vb'},
+  ]},
+];
+
+const VISUAL=[
+  {id:'vc_alarm',   label:'Alarms / Errors Light ON',   sub:'Check & reset — record reason & action'},
+  {id:'vc_filter',  label:'Air Filters Condition',       sub:'Check & clean/replace as needed'},
+  {id:'vc_capvent', label:'Power Capacitor Safety Vent', sub:'Visual check — any safety vent operated?'},
+];
+
+const TEMP_ROWS=[
+  {cab:'CAB 1 (Rectifier)',cab2:'',comp:'Transformer',idA:'tmp_rec_tra',idB:'tmp_rec_trb'},
+  {cab:'',                 cab2:'',comp:'Inductor',   idA:'tmp_rec_ina',idB:'tmp_rec_inb'},
+  {cab:'CAB 2 (Inverter)', cab2:'',comp:'Transformer',idA:'tmp_inv_tra',idB:'tmp_inv_trb'},
+  {cab:'',                 cab2:'',comp:'Inductor',   idA:'tmp_inv_ina',idB:'tmp_inv_inb'},
+  {cab:'CAB 2 (Inverter)', cab2:'',comp:'SCR',             idA:'tmp_scr_a',  idB:'tmp_scr_b'},
+  {cab:'',                 cab2:'',comp:'Power Capacitor',  idA:'tmp_cap_a',  idB:'tmp_cap_b'},
+];
+
+const COND_ROWS=[
+  {cab:'CAB 1 (Rectifier)',comp:'Transformer',      idA:'cnd_rec_tra',idB:'cnd_rec_trb'},
+  {cab:'',                 comp:'Inductor',         idA:'cnd_rec_ina',idB:'cnd_rec_inb'},
+  {cab:'CAB 2 (Inverter)', comp:'Transformer',      idA:'cnd_inv_tra',idB:'cnd_inv_trb'},
+  {cab:'',                 comp:'Inductor',         idA:'cnd_inv_ina',idB:'cnd_inv_inb'},
+  {cab:'CAB 2 (Inverter)', comp:'SCR',              idA:'cnd_scr_a',  idB:'cnd_scr_b'},
+  {cab:'',                 comp:'Power Capacitor',  idA:'cnd_cap_a',  idB:'cnd_cap_b'},
+];
+
+// ── BUILD TABLES ──────────────────────────────────
+function buildFans(){
+  const tb=document.getElementById('tbody-fans');
+  FANS.forEach(c=>{
+    c.fans.forEach((fn,fi)=>{
+      const ra=`fan_${c.id}_f${fi}_a`,rb=`fan_${c.id}_f${fi}_b`;
+      const sa=`fanst_${c.id}_f${fi}_a`,sb=`fanst_${c.id}_f${fi}_b`;
+      const tr=document.createElement('tr');
+      const cabCell=fi===0?`<td class="grp" rowspan="${c.fans.length}" style="vertical-align:middle">${c.cab}<br><span style="font-size:9px;font-weight:400;color:var(--txt4)">${c.desc}</span></td>`:'';
+      tr.innerHTML=`${cabCell}
+        <td class="prm" style="padding-left:10px">${fn}</td>
+        <td class="ua">${mkInp(ra,68)}<span style="font-size:9px;color:var(--txt4);display:block;margin-top:1px">RPM</span></td>
+        <td class="ub">${mkInp(rb,68)}<span style="font-size:9px;color:var(--txt4);display:block;margin-top:1px">RPM</span></td>
+        <td class="ua">${mkTog(sa)}</td>
+        <td class="ub">${mkTog(sb)}</td>`;
+      tb.appendChild(tr);
+    });
+  });
+}
+
+function buildElec(){
+  const tb=document.getElementById('tbody-elec');
+  ELEC_GROUPS.forEach(g=>{
+    const hdr=document.createElement('tr');
+    hdr.innerHTML=`<td colspan="6" class="grp-hdr">${g.title}</td>`;
+    tb.appendChild(hdr);
+    g.rows.forEach(r=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`
+        <td class="sub">${r.sub}</td>
+        <td class="prm" style="padding-left:10px">${r.param}</td>
+        <td style="font-family:var(--mono);font-size:9.5px;color:var(--txt4)">${r.unit}</td>
+        <td class="ua">${mkInp(r.idA,72)}</td>
+        <td class="ub">${mkInp(r.idB,72)}</td>
+        <td style="font-family:var(--mono);font-size:9px;color:var(--blue)">${r.spec}</td>`;
+      tb.appendChild(tr);
+    });
+  });
+}
+
+function buildVisual(){
+  const sec=document.getElementById('sec-visual');
+  const grid=document.createElement('div');
+  grid.className='chk-grid';
+  VISUAL.forEach(c=>{
+    grid.innerHTML+=`<div class="chk-item">
+      <div>
+        <div class="chk-label">${c.label}</div>
+        <div class="chk-sub">${c.sub}</div>
+      </div>
+      <div class="dual">
+        <div class="dual-itm"><span class="dual-lbl">UPS-A</span>${mkTog(c.id+'_a')}</div>
+        <div class="dual-itm"><span class="dual-lbl">UPS-B</span>${mkTog(c.id+'_b')}</div>
+      </div>
+    </div>`;
+  });
+  sec.appendChild(grid);
+  const note=document.createElement('div');
+  note.className='wo-grid';note.style.paddingTop='0';
+  note.innerHTML=`<div class="mf" style="grid-column:1/-1">
+    <label>Alarm / Error Notes (describe if NG)</label>
+    <input type="text" id="vc-note" placeholder="Alarm code, reason, action taken…">
+  </div>`;
+  sec.appendChild(note);
+}
+
+function buildRowspanTable(tbodyId,rows){
+  const tb=document.getElementById(tbodyId);
+  const spans={};
+  let cur='';
+  rows.forEach(r=>{
+    const k=r.cab||cur;if(r.cab)cur=r.cab;
+    spans[k]=(spans[k]||0)+1;
+  });
+  const seen={};cur='';
+  rows.forEach(r=>{
+    const k=r.cab||cur;if(r.cab)cur=r.cab;
+    const tr=document.createElement('tr');
+    let cabCell='';
+    if(r.cab){
+      seen[r.cab]=(seen[r.cab]||0);
+      if(seen[r.cab]===0)
+        cabCell=`<td class="grp" rowspan="${spans[r.cab]}" style="vertical-align:middle">${r.cab}</td>`;
+      seen[r.cab]++;
+    }
+    const hasTogA=typeof r.idA!=='undefined'&&tbodyId==='tbody-cond';
+    const hasTogB=typeof r.idB!=='undefined'&&tbodyId==='tbody-cond';
+    tr.innerHTML=`${r.cab?cabCell:''}
+      <td class="prm" style="padding-left:10px">${r.comp}</td>
+      <td class="ua">${tbodyId==='tbody-cond'?mkTog(r.idA):mkInp(r.idA,80)+'<span style="font-size:9px;color:var(--txt4);display:block;margin-top:1px">°C</span>'}</td>
+      <td class="ub">${tbodyId==='tbody-cond'?mkTog(r.idB):mkInp(r.idB,80)+'<span style="font-size:9px;color:var(--txt4);display:block;margin-top:1px">°C</span>'}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// ── PHOTOS ────────────────────────────────────────
+const PHOTOS=[];
+function handlePhotoInput(inp){Array.from(inp.files).forEach(addPhoto);inp.value='';}
+function addPhoto(file){
+  const rd=new FileReader();
+  rd.onload=e=>{PHOTOS.push({dataUrl:e.target.result,caption:''});renderPhotos();};
+  rd.readAsDataURL(file);
+}
+function renderPhotos(){
+  const grid=document.getElementById('photo-grid');
+  grid.innerHTML='';
+  PHOTOS.forEach((p,i)=>{
+    const card=document.createElement('div');
+    card.className='pcard';
+    card.innerHTML=`<img src="${p.dataUrl}" alt="Photo ${i+1}" onclick="zoomPhoto(${i})">
+      <div class="pcard-body">
+        <input class="pcap" type="text" placeholder="Caption…" value="${p.caption.replace(/"/g,'&quot;')}" oninput="PHOTOS[${i}].caption=this.value">
+        <button class="pdel" onclick="delPhoto(${i})">✕ Hapus foto</button>
+      </div>`;
+    grid.appendChild(card);
+  });
+  document.getElementById('photo-cnt').textContent=PHOTOS.length+' photo'+(PHOTOS.length!==1?'s':'');
+  updateStats();
+}
+function delPhoto(i){if(!confirm('Hapus foto ini?'))return;PHOTOS.splice(i,1);renderPhotos();}
+function zoomPhoto(i){
+  const w=window.open('','_blank','width=1000,height=750');
+  w.document.write(`<html><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;height:100vh">
+    <img src="${PHOTOS[i].dataUrl}" style="max-width:100%;max-height:100%;object-fit:contain">
+    <div style="position:fixed;bottom:10px;left:50%;transform:translateX(-50%);color:#fff;font:12px monospace;background:rgba(0,0,0,.6);padding:4px 10px;border-radius:4px">
+      [${i+1}] ${PHOTOS[i].caption||'No caption'}</div>
+    </body></html>`);
+}
+// Drag-drop
+const pd=document.getElementById('photo-drop');
+pd.addEventListener('dragover',e=>{e.preventDefault();pd.classList.add('dov');});
+pd.addEventListener('dragleave',()=>pd.classList.remove('dov'));
+pd.addEventListener('drop',e=>{
+  e.preventDefault();pd.classList.remove('dov');
+  Array.from(e.dataTransfer.files).filter(f=>f.type.startsWith('image/')).forEach(addPhoto);
+});
+
+// ── DRAFT ─────────────────────────────────────────
+function saveDraft(){
+  const d={};
+  document.querySelectorAll('input[type=text],input[type=date],input[type=time],input[type=number],select,textarea').forEach((el,i)=>d['f'+i]=el.value);
+  d._st=JSON.parse(JSON.stringify(ST));
+  d._ph=PHOTOS.map(p=>({dataUrl:p.dataUrl,caption:p.caption}));
+  try{
+    localStorage.setItem('ups_7eb_draft',JSON.stringify(d));
+    showNote('💾 Draft tersimpan.','ok');
+  }catch(e){
+    if(e.name==='QuotaExceededError'){
+      d._ph=[];localStorage.setItem('ups_7eb_draft',JSON.stringify(d));
+      showNote('⚠️ Draft tersimpan (foto dilewati — kapasitas penuh).','info');
+    }else{showNote('❌ Gagal: '+e.message,'err');}
+  }
+}
+function loadDraft(){
+  try{
+    const raw=localStorage.getItem('ups_7eb_draft');if(!raw)return;
+    const d=JSON.parse(raw);
+    document.querySelectorAll('input[type=text],input[type=date],input[type=time],input[type=number],select,textarea').forEach((el,i)=>{if(d['f'+i]!==undefined)el.value=d['f'+i];});
+    if(d._st){Object.entries(d._st).forEach(([id,val])=>{ST[id]=val;const b=document.querySelector(`.tog .rb[data-v="${val}"][onclick*="'${id}'"]`);if(b)b.className='rb '+(val==='OK'?'ok-act':'ng-act');});}
+    if(d._ph&&d._ph.length){d._ph.forEach(p=>PHOTOS.push(p));renderPhotos();}
+    updateStats();
+  }catch(e){}
+}
+function resetForm(){
+  if(!confirm('Reset semua data? Tidak bisa dibatalkan.'))return;
+  document.querySelectorAll('input,select,textarea').forEach(el=>{if(el.type!=='file')el.value='';});
+  Object.keys(ST).forEach(k=>delete ST[k]);
+  document.querySelectorAll('.rb').forEach(b=>b.className='rb '+(b.dataset.v==='OK'?'ok-idle':'ng-idle'));
+  PHOTOS.length=0;renderPhotos();updateStats();
+}
+function showNote(msg,t){
+  const n=document.getElementById('notice');n.textContent=msg;n.className='notice '+t;
+  setTimeout(()=>n.className='notice',4500);
+}
+
+// ── PDF EXPORT ────────────────────────────────────
+async function generatePDF(){
+  showNote('⏳ Membuat PDF…','info');
+  await new Promise(r=>setTimeout(r,200));
+  const{jsPDF}=window.jspdf;
+  const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+  const W=210,H=297,M=12;let y=M;
+  const NAVY=[30,58,95],BLUE=[37,99,235],SKY=[125,211,252],LT=[240,247,255],
+        OK=[22,163,74],NG=[220,38,38],GRAY=[100,116,139],WHITE=[255,255,255];
+
+  function nPage(){pdf.addPage();y=M;miniHdr();}
+  function ckY(n){if(y+n>H-M)nPage();}
+  function miniHdr(){
+    pdf.setFillColor(...NAVY);pdf.rect(0,0,W,8,'F');
+    pdf.setTextColor(...SKY);pdf.setFont('times','bold');pdf.setFontSize(7);
+    pdf.text('1 MONTHLY PM UPS — 7EB-UPS-A/B',M,5.5);
+    pdf.setFont('times','normal');pdf.setFontSize(6.5);
+    pdf.text(`Date: ${fv('wo-date')||'—'}  By: ${fv('checked-by')||'—'}`,W-M,5.5,{align:'right'});
+    y=12;
+  }
+
+  // Cover
+  pdf.setFillColor(...NAVY);pdf.rect(0,0,W,35,'F');
+  pdf.setFillColor(...BLUE);pdf.rect(0,33,W,2,'F');
+  pdf.setTextColor(255,255,255);pdf.setFont('times','bold');pdf.setFontSize(18);
+  pdf.text('7EB-UPS-A/B',M,13);
+  pdf.setFontSize(10);pdf.setTextColor(...SKY);
+  pdf.text('1 Monthly Preventive Maintenance — Uninterruptible Power Supply',M,21);
+  pdf.setFontSize(7.5);pdf.setFont('times','normal');
+  pdf.text('Generated: '+new Date().toLocaleString('en-GB'),M,29);
+  pdf.text('POMI — Unit 7 Electrical Maintenance',W-M,29,{align:'right'});
+  y=40;
+
+  // Info box
+  pdf.setFillColor(...LT);pdf.setDrawColor(...SKY);pdf.setLineWidth(0.25);
+  pdf.roundedRect(M,y,W-M*2,26,2,2,'FD');
+  function ib(lbl,val,x,yy){
+    pdf.setFont('times','bold');pdf.setFontSize(6);pdf.setTextColor(...GRAY);pdf.text(lbl.toUpperCase(),x,yy);
+    pdf.setFont('times','normal');pdf.setFontSize(8.5);pdf.setTextColor(...NAVY);pdf.text(tr2(val||'—',26),x,yy+5);
+  }
+  const cx=[M+3,52,100,148];
+  ib('Date',fv('wo-date'),cx[0],y+8);ib('Unit',fv('wo-unit'),cx[1],y+8);
+  ib('Equipment',fv('wo-equip'),cx[2],y+8);ib('Shift',fv('shift').split(' ')[0],cx[3],y+8);
+  ib('WO No.',fv('wo-no'),cx[0],y+20);ib('Checked By',fv('checked-by'),cx[1],y+20);
+  ib('Reviewed By',fv('reviewed-by'),cx[2],y+20);ib('Condition',fv('overall').replace(/[✅⚠️🔧🛑]/g,'').trim(),cx[3],y+20);
+  y+=32;
+
+  // Stats boxes
+  const ok_c=Object.values(ST).filter(x=>x==='OK').length;
+  const ng_c=Object.values(ST).filter(x=>x==='NG').length;
+  const tot=document.querySelectorAll('.tog').length;
+  [[M,'TOTAL',String(tot),NAVY],[M+34,'OK',String(ok_c),OK],[M+68,'NG',String(ng_c),NG],[M+102,'PHOTOS',String(PHOTOS.length),BLUE]].forEach(([x,l,val,cl])=>{
+    pdf.setFillColor(...cl);pdf.setDrawColor(...cl);pdf.setLineWidth(0.3);
+    pdf.roundedRect(x,y,28,10,1.5,1.5,'FD');
+    pdf.setFont('times','bold');pdf.setFontSize(6);pdf.setTextColor(...WHITE);pdf.text(l,x+2,y+4);
+    pdf.setFontSize(10);pdf.text(val,x+2,y+9);
+  });
+  y+=18;
+
+  function secHdr(title){
+    ckY(14);
+    pdf.setFillColor(...NAVY);pdf.rect(M,y,W-M*2,7,'F');
+    pdf.setTextColor(255,255,255);pdf.setFont('times','bold');pdf.setFontSize(8.5);
+    pdf.text('▶  '+title,M+3,y+5);y+=10;
+  }
+  function tbl(head,body,colStyles){
+    ckY(20);
+    pdf.autoTable({startY:y,head:[head],body,theme:'grid',
+      styles:{font:'times',fontSize:8,cellPadding:2.5,textColor:[15,23,42],lineColor:[191,219,254],lineWidth:0.18},
+      headStyles:{fillColor:NAVY,textColor:SKY,fontStyle:'bold',fontSize:7,halign:'center'},
+      columnStyles:colStyles||{},
+      didParseCell:d=>{const v=d.cell.text[0];
+        if(v==='OK'){d.cell.styles.textColor=[...OK];d.cell.styles.fontStyle='bold';}
+        if(v==='NG'){d.cell.styles.textColor=[...NG];d.cell.styles.fontStyle='bold';}},
+      margin:{left:M,right:M}});
+    y=pdf.lastAutoTable.finalY+5;
+  }
+
+  // A: Fans
+  secHdr('A — Cooling Fans Check  (Accepted: RPM >2600)');
+  const fanRows=[];
+  FANS.forEach(c=>{c.fans.forEach((fn,fi)=>{
+    const ra=`fan_${c.id}_f${fi}_a`,rb=`fan_${c.id}_f${fi}_b`;
+    const sa=`fanst_${c.id}_f${fi}_a`,sb=`fanst_${c.id}_f${fi}_b`;
+    fanRows.push([fi===0?c.cab+' ('+c.desc+')':'',fn,getV(ra),getT(sa),getV(rb),getT(sb)]);
+  });});
+  tbl(['Cabinet','Fan','UPS-A RPM','UPS-A','UPS-B RPM','UPS-B'],fanRows,
+    {0:{cellWidth:35,fontStyle:'bold',fillColor:LT,textColor:NAVY},2:{halign:'center'},3:{halign:'center'},4:{halign:'center'},5:{halign:'center'}});
+
+  // B: Electrical
+  secHdr('B — Electrical Measurements');
+  ELEC_GROUPS.forEach(g=>{
+    ckY(12);
+    pdf.setFillColor(...LT);pdf.rect(M,y,W-M*2,6,'F');
+    pdf.setFont('times','bold');pdf.setFontSize(7.5);pdf.setTextColor(...NAVY);
+    pdf.text(g.title,M+2,y+4.5);y+=8;
+    tbl(['Group','Parameter','Unit','UPS-A','UPS-B','Spec/Ref'],
+      g.rows.map(r=>[r.sub,r.param,r.unit,getV(r.idA),getV(r.idB),r.spec]),
+      {0:{cellWidth:22,fontStyle:'bold',fillColor:LT},3:{halign:'center'},4:{halign:'center'},5:{cellWidth:30,halign:'center',fontStyle:'italic',textColor:BLUE}});
+  });
+
+  // C: Visual
+  secHdr('C — Visual & Functional Checks');
+  tbl(['Check Item','Description','UPS-A','UPS-B'],
+    VISUAL.map(c=>[c.label,c.sub,getT(c.id+'_a'),getT(c.id+'_b')]),
+    {0:{cellWidth:50},1:{cellWidth:60},2:{halign:'center'},3:{halign:'center'}});
+  if(fv('vc-note')){
+    ckY(8);pdf.setFont('times','italic');pdf.setFontSize(8);pdf.setTextColor(...GRAY);
+    pdf.text('Note: '+fv('vc-note'),M,y);y+=8;
+  }
+
+  // D: Temperature
+  secHdr('D — Temperature Checks (IR Thermal Imager)');
+  tbl(['Cabinet','Component','UPS-A Temp (°C)','UPS-B Temp (°C)'],
+    TEMP_ROWS.map(r=>[r.cab,r.comp,getV(r.idA),getV(r.idB)]),
+    {0:{cellWidth:42,fontStyle:'bold',fillColor:LT,textColor:NAVY},2:{halign:'center'},3:{halign:'center'}});
+
+  // E: Condition
+  secHdr('E — Component Condition (Visual Inspection)');
+  tbl(['Cabinet','Component','UPS-A Condition','UPS-B Condition'],
+    COND_ROWS.map(r=>[r.cab,r.comp,getT(r.idA),getT(r.idB)]),
+    {0:{cellWidth:42,fontStyle:'bold',fillColor:LT,textColor:NAVY},2:{halign:'center'},3:{halign:'center'}});
+
+  // F: Environmental
+  secHdr('F — Environmental Conditions');
+  tbl(['Parameter','Spec','Reading'],
+    [
+      ['Room Temperature','≤ 20 °C',fv('env-temp')?(fv('env-temp')+' °C'):'—'],
+      ['Relative Humidity','Record value',fv('env-rh')?(fv('env-rh')+' %'):'—'],
+      ['Audible Noise','< 65 dB(A) @ ≤1.5 m',fv('env-noise')?(fv('env-noise')+' dB(A)'):'—'],
+      ['AC Unit (Room Cooling)','Operating',getT('env-ac')],
+    ],
+    {0:{cellWidth:55,fontStyle:'bold',fillColor:LT,textColor:NAVY},1:{cellWidth:45,fontStyle:'italic'},2:{halign:'center'}});
+
+  // H: Findings
+  ckY(30);secHdr('H — Findings & Conclusion');
+  pdf.autoTable({startY:y,
+    body:[['Overall Condition',fv('overall')],['Next PM Due',fv('next-pm')||'—'],['Findings',fv('findings')||'—'],['Corrective Actions',fv('recommendations')||'—']],
+    theme:'grid',
+    styles:{font:'times',fontSize:8.5,cellPadding:3,textColor:[15,23,42],lineColor:[191,219,254],lineWidth:0.18},
+    columnStyles:{0:{cellWidth:46,fontStyle:'bold',fillColor:LT,textColor:NAVY}},
+    margin:{left:M,right:M}});
+  y=pdf.lastAutoTable.finalY+8;
+
+  // G: Photos
+  if(PHOTOS.length>0){
+    pdf.addPage();y=M;miniHdr();
+    secHdr('G — Photos & Documentation');
+    const PW=85,PH=65,GAP=8,ROW_H=80;
+    let rowY=y;
+    PHOTOS.forEach((p,i)=>{
+      const col=i%2;
+      if(col===0&&i>0){
+        rowY+=ROW_H;
+        if(rowY+ROW_H>H-M){pdf.addPage();miniHdr();rowY=y;}
+      }
+      const x=M+(PW+GAP)*col;
+      try{pdf.addImage(p.dataUrl,'JPEG',x,rowY,PW,PH);}
+      catch(e){
+        pdf.setFillColor(220,220,220);pdf.rect(x,rowY,PW,PH,'F');
+        pdf.setFont('times','normal');pdf.setFontSize(8);pdf.setTextColor(150);
+        pdf.text('Photo '+(i+1),x+PW/2,rowY+PH/2,{align:'center'});
+      }
+      pdf.setFont('times','italic');pdf.setFontSize(7);pdf.setTextColor(...GRAY);
+      pdf.text(`[${i+1}] ${p.caption||'No caption'}`,x,rowY+PH+5,{maxWidth:PW});
+    });
+  }
+
+  // Page numbers
+  const pages=pdf.internal.getNumberOfPages();
+  for(let pg=1;pg<=pages;pg++){
+    pdf.setPage(pg);
+    pdf.setFont('times','normal');pdf.setFontSize(6.5);pdf.setTextColor(150);
+    pdf.text(`Page ${pg}/${pages}`,W-M,H-5,{align:'right'});
+    pdf.text('POMI — Unit 7 · 7EB-UPS-A/B · 1 Monthly PM',M,H-5);
+  }
+
+  const fname=`UPS_PM_${fv('wo-unit')||'7'}_${(fv('wo-date')||new Date().toISOString().slice(0,10)).replace(/-/g,'')}.pdf`;
+  pdf.save(fname);
+  showNote('✅ PDF tersimpan: '+fname,'ok');
+}
+
+// ── PRINT ─────────────────────────────────────────
+function printPage(){
+  document.getElementById('ph-date').textContent=fv('wo-date')||'—';
+  document.getElementById('ph-equip').textContent=fv('wo-equip')||'7EB-UPS-A/B';
+  document.getElementById('ph-checked').textContent=fv('checked-by')||'—';
+  document.querySelectorAll('.sec-hdr').forEach(h=>h.classList.add('open'));
+  document.querySelectorAll('.sec-body').forEach(b=>b.style.display='block');
+  window.print();
+}
+
+// ── SUBMIT DB ──────────────────────────────────────
+async function submitToDb(){
+  if(typeof DB==='undefined'){showNote('⚠️ DB helper tidak tersedia.','err');return;}
+  const data=DB.collectCheckSheetData('ups','7EB-UPS-A/B','1 Monthly PM UPS','PERIODIC');
+  if(!data.executionDate){DB.showSubmitResult(false,'Isi tanggal eksekusi terlebih dahulu.');return;}
+  if(!data.checkedBy){DB.showSubmitResult(false,'Isi nama teknisi terlebih dahulu.');return;}
+  try{const id=await DB.save(data);DB.showSubmitResult(true,'Data berhasil disimpan! ID: '+id);}
+  catch(e){DB.showSubmitResult(false,'Gagal menyimpan: '+e.message);}
+}
+
+// ── INIT ──────────────────────────────────────────
+buildFans();
+buildElec();
+buildVisual();
+buildRowspanTable('tbody-temp',TEMP_ROWS);
+buildRowspanTable('tbody-cond',COND_ROWS);
+document.getElementById('env-ac').innerHTML=mkTog('env-ac');
+loadDraft();
+updateStats();
+
+setTimeout(async()=>{
+  if(typeof DB==='undefined')return;
+  const d=await DB.loadLastSubmission('7EB-UPS-A/B');
+  if(d)showNote('📂 Data terakhir dimuat dari database.','ok');
+},800);
+</script>
+</body>
+</html>
