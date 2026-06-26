@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hoist Inspection & Maintenance — PM Check Sheet</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#1e3a5f;--navy2:#0f2744;--blue:#2563eb;--sky:#7dd3fc;--sky2:#bfdbfe;
+  --bg:#f8fbff;--bg2:#f0f7ff;--surf:#ffffff;--bdr:#bfdbfe;--bdr2:#dbeafe;
+  --ok:#16a34a;--ng:#dc2626;--na:#f59e0b;
+  --ok-bg:#dcfce7;--ng-bg:#fee2e2;--na-bg:#fef3c7;
+  --txt:#0f172a;--txt2:#1e3a5f;--txt4:#64748b;
+  --mono:'Share Tech Mono',monospace;--sans:'Barlow',sans-serif;--raj:'Rajdhani',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:100vh}
+
+/* TOPBAR */
+.topbar{position:sticky;top:0;z-index:100;background:var(--navy2);height:52px;
+  display:flex;align-items:center;padding:0 20px;gap:12px;border-bottom:2px solid var(--blue)}
+.tb-logo{font-family:var(--raj);font-size:18px;font-weight:700;letter-spacing:2px;color:#fff}
+.tb-logo em{color:var(--sky);font-style:normal}
+.tb-sep{width:1px;height:26px;background:rgba(255,255,255,0.15);flex-shrink:0}
+.tb-sub{font-size:11px;color:var(--sky);font-family:var(--mono);letter-spacing:1px;white-space:nowrap}
+.tb-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.tb-time{font-family:var(--mono);font-size:12px;color:var(--sky)}
+.btn{padding:6px 14px;border-radius:5px;border:none;cursor:pointer;font-family:var(--raj);
+  font-size:13px;font-weight:600;letter-spacing:1px;transition:all .15s;
+  display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.btn-draft{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.btn-draft:hover{background:rgba(255,255,255,.2)}
+.btn-pdf{background:var(--blue);color:#fff}.btn-pdf:hover{background:#1d4ed8}
+.btn-submit{background:#16a34a;color:#fff}.btn-submit:hover{background:#15803d}
+.btn-sm{padding:4px 10px;font-size:12px}
+
+/* HERO */
+.hero{background:var(--navy);padding:24px 20px 20px;color:#fff}
+.hero-eyebrow{font-family:var(--mono);font-size:10px;color:var(--sky);letter-spacing:3px;
+  text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.hero-eyebrow::before{content:'';width:20px;height:1px;background:var(--sky)}
+.hero-title{font-family:var(--raj);font-size:clamp(24px,5vw,48px);font-weight:700;line-height:1;color:#fff;letter-spacing:1px}
+.hero-title em{color:var(--sky);font-style:normal}
+.hero-sub{font-size:13px;color:rgba(255,255,255,.6);margin-top:8px;font-weight:300}
+.hero-stats{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.hstat{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);
+  border-radius:8px;padding:10px 16px;text-align:center;min-width:72px}
+.hstat-n{font-family:var(--raj);font-size:26px;font-weight:700;color:#fff;line-height:1;display:block}
+.hstat-n.ok{color:#4ade80}.hstat-n.ng{color:#f87171}.hstat-n.na{color:#fbbf24}.hstat-n.pend{color:var(--sky)}
+.hstat-l{font-family:var(--mono);font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;display:block}
+
+/* LAYOUT */
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px 80px}
+.panel{background:var(--surf);border:1px solid var(--bdr);border-radius:10px;margin-bottom:16px;overflow:hidden;box-shadow:0 1px 6px rgba(30,58,95,.06)}
+.sec-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--navy);cursor:pointer;user-select:none}
+.sec-hdr-icon{width:28px;height:28px;border-radius:6px;background:rgba(37,99,235,.3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.sec-hdr-title{font-family:var(--raj);font-size:15px;font-weight:700;color:#fff;letter-spacing:1.5px;text-transform:uppercase}
+.sec-hdr-arrow{color:rgba(255,255,255,.4);font-size:14px;transition:transform .2s;margin-left:auto}
+.sec-hdr.open .sec-hdr-arrow{transform:rotate(180deg)}
+
+/* FORMS */
+.wo-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;padding:16px}
+.mf{display:flex;flex-direction:column;gap:4px}
+.mf label{font-size:10px;color:var(--txt4);font-weight:500;letter-spacing:1px;text-transform:uppercase}
+.mf input,.mf select,.mf textarea{border:1.5px solid var(--bdr);border-radius:5px;padding:7px 10px;
+  font-family:var(--sans);font-size:13px;background:var(--bg2);color:var(--txt);transition:border-color .18s;width:100%}
+.mf input:focus,.mf select:focus,.mf textarea:focus{outline:none;border-color:var(--blue);background:#fff}
+.mf input[readonly]{background:#f1f5f9;color:var(--txt2)}
+.mf input[type=date]{font-family:var(--mono)}
+.mf textarea{resize:vertical;min-height:80px}
+.mf-wide{grid-column:1/-1}
+
+/* CHECK TABLE */
+.tbl-wrap{overflow-x:auto}
+.ct{width:100%;border-collapse:collapse;font-size:12px;min-width:680px}
+.ct th{background:var(--navy);color:var(--sky2);padding:8px 10px;text-align:center;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;
+  white-space:nowrap;border-right:1px solid rgba(255,255,255,.08)}
+.ct th.tl{text-align:left}
+.ct th:last-child{border-right:none}
+.ct td{padding:7px 10px;border-bottom:1px solid var(--bdr2);background:var(--surf);vertical-align:middle;border-right:1px solid var(--bdr2)}
+.ct td:last-child{border-right:none}
+.ct tr:last-child td{border-bottom:none}
+.ct tr:hover td{background:#fafcff}
+.ct td.no{font-family:var(--mono);font-size:11px;color:var(--txt4);text-align:center;width:36px}
+.ct td.task{font-size:11px;color:var(--txt);line-height:1.5}
+.ct td.crit{font-size:10px;color:var(--txt4);font-style:italic;min-width:140px}
+.ct td.res{width:96px;text-align:center}
+.ct td.rmk{width:160px}
+
+/* RESULT SELECT */
+.r-sel{font-size:11px;padding:4px 6px;border-radius:4px;border:1.5px solid var(--bdr);
+  background:var(--bg2);color:var(--txt);font-family:var(--mono);width:82px;transition:border-color .15s}
+.r-sel:focus{outline:none;border-color:var(--blue)}
+.r-sel.ok{background:var(--ok-bg);border-color:var(--ok);color:var(--ok)}
+.r-sel.ng{background:var(--ng-bg);border-color:var(--ng);color:var(--ng)}
+.r-sel.na{background:var(--na-bg);border-color:var(--na);color:#92400e}
+.rmk-inp{font-size:11px;padding:4px 6px;border-radius:4px;border:1.5px solid var(--bdr);
+  background:var(--bg2);color:var(--txt);font-family:var(--sans);width:100%;transition:border-color .15s}
+.rmk-inp:focus{outline:none;border-color:var(--blue);background:#fff}
+
+/* MEASUREMENT TABLE */
+.meas-tbl{width:100%;border-collapse:collapse;font-size:11px}
+.meas-tbl th{background:rgba(30,58,95,.08);padding:7px 10px;text-align:center;
+  font-family:var(--mono);font-size:9.5px;letter-spacing:1px;color:var(--navy);border:1px solid var(--bdr2)}
+.meas-tbl th.tl{text-align:left}
+.meas-tbl td{border:1px solid var(--bdr2);padding:6px 10px;text-align:center;font-size:11px;color:var(--txt)}
+.meas-tbl td.lbl{text-align:left;font-size:11px;color:var(--txt2);font-family:var(--sans)}
+.meas-tbl td.spec{font-family:var(--mono);font-size:10px;color:var(--txt4);font-style:italic}
+.mi{border:1.5px solid var(--bdr);border-radius:4px;padding:4px 6px;
+  font-family:var(--mono);font-size:11px;background:var(--bg2);color:var(--txt);
+  width:80px;text-align:center;transition:border-color .15s}
+.mi:focus{outline:none;border-color:var(--blue);background:#fff}
+.mi-sm{width:64px}
+.mi-lg{width:110px}
+.meas-wrap{padding:16px}
+.meas-sec-lbl{font-family:var(--raj);font-size:13px;font-weight:700;color:var(--navy2);
+  letter-spacing:1px;text-transform:uppercase;margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.meas-sec-lbl::after{content:'';flex:1;height:1px;background:var(--bdr)}
+
+/* CONCLUSION */
+.conc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px}
+.notice{padding:10px 16px;border-radius:6px;font-size:13px;margin:12px 0;display:none}
+.notice.ok{background:#dcfce7;border:1px solid #86efac;color:#15803d;display:block}
+.notice.err{background:#fee2e2;border:1px solid #fca5a5;color:#b91c1c;display:block}
+.notice.info{background:#dbeafe;border:1px solid #93c5fd;color:#1e40af;display:block}
+.actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:flex-end;padding:20px 0 10px;border-top:1px solid var(--bdr2);margin-top:4px}
+.footer{background:var(--navy2);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:20px}
+.footer span{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.3);letter-spacing:1px}
+
+/* ── PHOTO GALLERY ───────────────────────────────── */
+.photo-add-bar{padding:14px 16px;border-bottom:1px solid var(--bdr2);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.photo-add-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 18px;
+  background:var(--blue);color:#fff;border:none;border-radius:7px;cursor:pointer;
+  font-family:var(--raj);font-size:14px;font-weight:600;letter-spacing:1px;transition:background .15s}
+.photo-add-btn:hover{background:#1d4ed8}
+.photo-add-hint{font-size:12px;color:var(--txt4)}
+.photo-grid{display:flex;flex-wrap:wrap;gap:14px;padding:16px}
+.photo-item{flex:0 0 calc(50% - 7px);border:1px solid var(--bdr);border-radius:10px;
+  overflow:hidden;background:var(--surf);display:flex;flex-direction:column;min-width:0}
+.photo-img-wrap{display:flex;align-items:center;justify-content:center;background:#f1f5f9;
+  padding:6px;min-height:90px;cursor:pointer;transition:background .15s}
+.photo-img-wrap:hover{background:#e2e8f0}
+.photo-img-wrap img{max-width:100%;height:auto;max-height:230px;display:block;object-fit:contain;border-radius:6px}
+.photo-ctrl{display:flex;align-items:center;gap:5px;padding:8px 10px 5px;flex-wrap:wrap}
+.p-btn{padding:4px 10px;border-radius:4px;border:1.5px solid var(--bdr);background:var(--bg2);
+  font-size:11px;cursor:pointer;color:var(--txt4);font-family:var(--mono);transition:all .15s;white-space:nowrap}
+.p-btn:hover{border-color:var(--blue);color:var(--blue)}
+.p-btn.del:hover{border-color:#dc2626;color:#dc2626}
+.p-btn.edit-btn{border-color:#7c3aed;color:#7c3aed}
+.p-btn.edit-btn:hover{background:#f5f3ff;border-color:#6d28d9}
+.photo-cap{width:100%;border:0;border-top:1px solid var(--bdr2);padding:8px 12px;
+  font-size:12px;color:var(--txt);background:transparent;font-family:var(--sans)}
+.photo-cap:focus{outline:none;background:var(--bg2)}
+.photo-cap::placeholder{color:var(--txt4)}
+.photo-empty{padding:36px 20px;text-align:center;color:var(--txt4);font-size:13px;width:100%}
+.photo-empty strong{color:var(--txt2);display:block;margin-bottom:6px;font-size:15px}
+.photo-badge{display:inline-block;background:var(--navy);color:#fff;font-family:var(--mono);
+  font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:10px;margin-left:8px;vertical-align:middle}
+
+/* ── IMAGE EDITOR MODAL ──────────────────────────── */
+#editor-modal{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:999;
+  align-items:center;justify-content:center;padding:12px}
+#editor-modal.show{display:flex}
+#editor-box{
+  background:#0f1923;border-radius:14px;width:100%;max-width:960px;
+  display:flex;flex-direction:column;max-height:96vh;overflow:hidden;
+  box-shadow:0 24px 64px rgba(0,0,0,.6)}
+#editor-topbar{
+  display:flex;align-items:center;gap:10px;padding:12px 16px;
+  background:rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0}
+#editor-topbar .etitle{font-family:var(--raj);font-size:16px;font-weight:700;
+  color:#e2e8f0;letter-spacing:1.5px}
+#editor-topbar .etitle em{color:var(--sky);font-style:normal}
+#editor-topbar .esub{font-family:var(--mono);font-size:10px;color:rgba(255,255,255,.35);margin-left:4px}
+#editor-main{display:flex;flex:1;min-height:0;overflow:hidden}
+#editor-canvas-area{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  background:#060d15;overflow:auto;position:relative;padding:16px}
+#ed-canvas-wrap{position:relative;display:inline-block;line-height:0}
+#ed-canvas{max-width:100%;max-height:calc(96vh - 160px);display:block;cursor:default}
+#sel-canvas{position:absolute;top:0;left:0;max-width:100%;max-height:calc(96vh - 160px);pointer-events:none}
+#editor-sidebar{
+  width:260px;flex-shrink:0;background:rgba(255,255,255,.04);
+  border-left:1px solid rgba(255,255,255,.08);overflow-y:auto;display:flex;flex-direction:column}
+.ectl-group{padding:14px 14px 6px;border-bottom:1px solid rgba(255,255,255,.06)}
+.ectl-group:last-child{border-bottom:none}
+.ectl-label{font-family:var(--mono);font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.35);
+  text-transform:uppercase;margin-bottom:8px}
+.ectl-row{display:flex;gap:6px;flex-wrap:wrap}
+.ebtn{padding:5px 11px;border-radius:5px;border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);color:rgba(255,255,255,.75);cursor:pointer;
+  font-family:var(--mono);font-size:11px;transition:all .14s;white-space:nowrap}
+.ebtn:hover{background:rgba(255,255,255,.14);border-color:var(--sky);color:#fff}
+.ebtn.active{background:rgba(37,99,235,.35);border-color:var(--blue);color:var(--sky)}
+.eslider-row{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.eslider-row label{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.55);font-family:var(--mono)}
+.eslider-row label span{color:rgba(255,255,255,.85);min-width:30px;text-align:right}
+input[type=range].esl{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;
+  background:rgba(255,255,255,.12);outline:none;cursor:pointer}
+input[type=range].esl::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+  background:var(--blue);cursor:pointer;border:2px solid #fff}
+.crop-info{font-size:10px;color:rgba(255,255,255,.35);font-family:var(--mono);
+  padding:6px 0;min-height:18px}
+#editor-footer{
+  padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);
+  display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;background:rgba(255,255,255,.03)}
+.ebtn-cancel{background:rgba(255,255,255,.07);color:rgba(255,255,255,.6);
+  border:1px solid rgba(255,255,255,.12);padding:8px 20px;border-radius:6px;
+  cursor:pointer;font-family:var(--raj);font-size:13px;font-weight:600;letter-spacing:1px;transition:all .14s}
+.ebtn-cancel:hover{background:rgba(255,255,255,.14)}
+.ebtn-use{background:var(--blue);color:#fff;border:none;padding:8px 24px;border-radius:6px;
+  cursor:pointer;font-family:var(--raj);font-size:13px;font-weight:700;letter-spacing:1px;transition:background .14s}
+.ebtn-use:hover{background:#1d4ed8}
+
+/* PRINT */
+@media print{
+  @page{size:A4 portrait;margin:12mm 14mm}
+  *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .topbar,.actions,.footer,.notice,.photo-add-bar,.photo-ctrl,
+  .sec-hdr-arrow,.live-dot,.hero-stats,#editor-modal{display:none!important}
+  .print-header{display:flex!important}
+  body{background:#fff!important;font-size:11px}
+  .hero{padding:14px 20px 12px}
+  .wrap{padding:10px 0 0;max-width:100%}
+  .sec-body{display:block!important}
+  .panel{box-shadow:none!important;border:1px solid #bfdbfe;margin-bottom:10px;break-inside:avoid}
+  .mf input,.mf select,.mf textarea,.rmk-inp{background:transparent!important;border:none!important;
+    border-bottom:1px solid #dbeafe!important;border-radius:0!important;padding:2px 0!important;
+    color:#0f172a!important;font-size:11px!important}
+  .r-sel{border:none!important;border-radius:3px!important;padding:2px 4px!important;font-size:10px!important;-webkit-appearance:none}
+  .r-sel.ok{background:var(--ok-bg)!important;color:var(--ok)!important}
+  .r-sel.ng{background:var(--ng-bg)!important;color:var(--ng)!important}
+  .r-sel.na{background:var(--na-bg)!important;color:#92400e!important}
+  .mi{background:transparent!important;border:none!important;border-bottom:1px solid #dbeafe!important;
+    border-radius:0!important;padding:2px 0!important;font-size:10px!important;width:60px!important}
+  .tbl-wrap{overflow:visible}
+  .ct{min-width:unset;width:100%}
+  .ct th,.ct td{font-size:10px!important;padding:5px 7px!important}
+  .meas-tbl th,.meas-tbl td{font-size:10px!important;padding:4px 6px!important}
+  .photo-item{flex:0 0 calc(50% - 6px);break-inside:avoid}
+  .photo-img-wrap img{max-height:140px}
+  .photo-cap{border-top:1px solid #dbeafe!important;padding:3px 6px!important;font-size:10px!important}
+  .photo-grid{gap:8px;padding:10px}
+  .conc-grid{grid-template-columns:1fr 1fr}
+  .mf textarea{border:none!important;border-bottom:1px solid #dbeafe!important;
+    border-radius:0!important;padding:2px 0!important;resize:none!important;min-height:unset!important}
+  .wo-grid{gap:8px;padding:10px}
+  .meas-wrap{padding:10px}
+}
+.print-header{display:none;font-family:var(--mono);font-size:10px;color:var(--txt4);
+  padding:4px 0 8px;border-bottom:2px solid var(--navy);margin-bottom:8px;
+  justify-content:space-between;align-items:center}
+.print-header strong{font-size:13px;color:var(--navy);font-family:var(--raj);letter-spacing:1px}
+@media(max-width:640px){
+  .tb-sub,.tb-sep{display:none}
+  .wo-grid{grid-template-columns:1fr 1fr}
+  .photo-item{flex:0 0 100%}
+  .conc-grid{grid-template-columns:1fr}
+  #editor-main{flex-direction:column}
+  #editor-sidebar{width:100%;border-left:none;border-top:1px solid rgba(255,255,255,.08);max-height:200px}
+}
+@media(max-width:420px){
+  .topbar{padding:0 12px}
+  .wrap{padding:12px 10px 60px}
+  .wo-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div class="print-header" id="print-header">
+  <div><strong>POMI — HOIST INSPECTION & MAINTENANCE CHECK SHEET</strong><br>
+    <span id="ph-tag">—</span> · <span id="ph-desc">—</span></div>
+  <div style="text-align:right">Date: <span id="ph-date">—</span><br>
+    WO: <span id="ph-wo">—</span></div>
+</div>
+
+<!-- ── TOP BAR ── -->
+<div class="topbar">
+  <div class="live-dot"></div>
+  <span class="tb-logo">HOIST <em>PM</em></span>
+  <div class="tb-sep"></div>
+  <span class="tb-sub">INSPECTION & MAINTENANCE · POMI</span>
+  <div class="tb-right">
+    <span class="tb-time" id="clock">--:--:--</span>
+    <button class="btn btn-draft btn-sm" onclick="saveDraft()">💾 Draft</button>
+    <button class="btn btn-pdf btn-sm" onclick="window.print()">🖨️ Print / PDF</button>
+    <button class="btn btn-submit btn-sm" onclick="submitToDb()">🗄️ Submit</button>
+  </div>
+</div>
+
+<!-- ── HERO ── -->
+<div class="hero">
+  <div class="hero-eyebrow">Preventive Maintenance — Hoist Equipment</div>
+  <div class="hero-title">HOIST <em>INSPECTION</em> & MAINTENANCE</div>
+  <div class="hero-sub">POMI · Hoist Inspection & Maintenance Check Sheet</div>
+  <div class="hero-stats">
+    <div class="hstat"><span class="hstat-n" id="h-total">0</span><span class="hstat-l">Total</span></div>
+    <div class="hstat"><span class="hstat-n ok" id="h-ok">0</span><span class="hstat-l">OK</span></div>
+    <div class="hstat"><span class="hstat-n ng" id="h-ng">0</span><span class="hstat-l">NG</span></div>
+    <div class="hstat"><span class="hstat-n na" id="h-na">0</span><span class="hstat-l">N/A</span></div>
+    <div class="hstat"><span class="hstat-n pend" id="h-pend">0</span><span class="hstat-l">Pending</span></div>
+  </div>
+</div>
+
+<div class="wrap">
+<div id="notice-area"></div>
+
+<!-- ══════════════════════════════════════════════
+     1. WORK INFO
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">📋</div>
+    <div class="sec-hdr-title">Work Information</div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="wo-grid">
+      <div class="mf"><label>Tag Number</label><input type="text" id="tag-no" placeholder="e.g. 7CRN-001"></div>
+      <div class="mf mf-wide"><label>Tag Description</label><input type="text" id="tag-desc" placeholder="e.g. Overhead Crane 5T — Bay A"></div>
+      <div class="mf"><label>Location</label><input type="text" id="location" placeholder="e.g. Warehouse Bay A"></div>
+      <div class="mf"><label>Date</label><input type="date" id="wo-date"></div>
+      <div class="mf"><label>Done By</label><input type="text" id="done-by" placeholder="Full name"></div>
+      <div class="mf"><label>WO Number</label><input type="text" id="wo-no" placeholder="WO-2026-XXXX"></div>
+      <div class="mf mf-wide"><label>Maintenance Purpose</label><input type="text" id="maint-purpose" value="PERIODIC HOIST INSPECTION AND MAINTENANCE"></div>
+      <div class="mf"><label>Acknowledge Date</label><input type="date" id="ack-date"></div>
+      <div class="mf"><label>Acknowledge By</label><input type="text" id="ack-by" placeholder="Full name"></div>
+      <div class="mf"><label>Signature / Initial</label><input type="text" id="ack-sign" placeholder="Sign or initial"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     2. BRAKE SYSTEM
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🔧</div>
+    <div class="sec-hdr-title">Brake System — Linings, Pawls, Ratchets, Coils</div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+      <table class="ct">
+        <thead>
+          <tr>
+            <th style="width:32px">No</th>
+            <th class="tl">Check Item / Activity</th>
+            <th class="tl">Acceptance Criteria</th>
+            <th>Result</th>
+            <th class="tl">Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="brake-tbody">
+          <!-- Rows inserted by JS -->
+        </tbody>
+      </table>
+    </div>
+    <!-- Brake pad / shoe measurement sub-table -->
+    <div class="meas-wrap">
+      <div class="meas-sec-lbl">Brake Pad & Shoe Thickness Measurement</div>
+      <table class="meas-tbl" style="max-width:480px">
+        <thead>
+          <tr>
+            <th class="tl">Component</th>
+            <th>Spec / Note</th>
+            <th>Measured (mm)</th>
+            <th>Unit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lbl">Brake Pad Thickness</td>
+            <td class="spec">within limits; no cracks</td>
+            <td><input class="mi" type="number" step="0.1" id="bp-pad" placeholder="—"></td>
+            <td style="font-family:var(--mono);font-size:11px">mm</td>
+          </tr>
+          <tr>
+            <td class="lbl">Brake Shoe Thickness</td>
+            <td class="spec">within limits; no wear</td>
+            <td><input class="mi" type="number" step="0.1" id="bp-shoe" placeholder="—"></td>
+            <td style="font-family:var(--mono);font-size:11px">mm</td>
+          </tr>
+          <tr>
+            <td class="lbl">Air Gap Clearance</td>
+            <td class="spec">adj. 0.60 (mfr. tolerance)</td>
+            <td><input class="mi" type="number" step="0.01" id="bp-gap" placeholder="—"></td>
+            <td style="font-family:var(--mono);font-size:11px">mm</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     3. ELECTRICAL SYSTEM — MEASUREMENTS
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">⚡</div>
+    <div class="sec-hdr-title">Electrical System — Measurement Data</div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="meas-wrap">
+
+      <!-- 3a. Transformer winding resistance -->
+      <div class="meas-sec-lbl">Transformer Winding Resistance (Ω)</div>
+      <table class="meas-tbl" style="max-width:420px">
+        <thead>
+          <tr><th class="tl">Winding</th><th>h1-h2</th><th>x1-x2</th><th>x3-x4</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lbl">Resistance (Ω)</td>
+            <td><input class="mi mi-sm" type="number" step="0.001" id="tr-h1h2" placeholder="—"></td>
+            <td><input class="mi mi-sm" type="number" step="0.001" id="tr-x1x2" placeholder="—"></td>
+            <td><input class="mi mi-sm" type="number" step="0.001" id="tr-x3x4" placeholder="—"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- 3b. Contactor resistance -->
+      <div class="meas-sec-lbl">Contactor Resistance (mΩ)</div>
+      <div class="tbl-wrap">
+        <table class="meas-tbl" style="min-width:500px">
+          <thead>
+            <tr>
+              <th class="tl">Contactor</th>
+              <th>T1 (mΩ)</th><th>T2 (mΩ)</th><th>T3 (mΩ)</th><th>COIL (Ω)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="lbl">HOIST UP</td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-up-t1" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-up-t2" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-up-t3" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-up-c" placeholder="—"></td></tr>
+            <tr><td class="lbl">HOIST DOWN</td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-dn-t1" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-dn-t2" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-dn-t3" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-dn-c" placeholder="—"></td></tr>
+            <tr><td class="lbl">TRAVEL LEFT</td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-tl-t1" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-tl-t2" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-tl-t3" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-tl-c" placeholder="—"></td></tr>
+            <tr><td class="lbl">TRAVEL RIGHT</td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-tr-t1" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-tr-t2" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-tr-t3" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-tr-c" placeholder="—"></td></tr>
+            <tr><td class="lbl">TROLLEY</td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-rl-t1" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-rl-t2" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-rl-t3" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.01" id="ct-rl-c" placeholder="—"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3c. Other electrical measurements -->
+      <div class="meas-sec-lbl">Other Electrical Measurements</div>
+      <table class="meas-tbl" style="max-width:500px">
+        <thead><tr><th class="tl">Item</th><th>Value</th><th>Unit</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">Resistor Box Resistance</td><td><input class="mi" type="number" step="0.01" id="m-res-box" placeholder="—"></td><td style="font-family:var(--mono);font-size:10px">Ω</td></tr>
+          <tr><td class="lbl">Overload Setting</td><td><input class="mi" type="number" step="0.1" id="m-ol-set" placeholder="—"></td><td style="font-family:var(--mono);font-size:10px">A</td></tr>
+          <tr><td class="lbl">Disconnect Switch Resistance</td><td><input class="mi" type="number" step="0.01" id="m-ds-res" placeholder="—"></td><td style="font-family:var(--mono);font-size:10px">mΩ</td></tr>
+        </tbody>
+      </table>
+
+      <!-- 3d. Pendant switch resistance -->
+      <div class="meas-sec-lbl">Pendant Switch Resistance (Ω)</div>
+      <div class="tbl-wrap">
+        <table class="meas-tbl" style="min-width:560px">
+          <thead>
+            <tr><th>Up</th><th>Down</th><th>Forward</th><th>Reverse</th><th>Travel Left</th><th>Travel Right</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="pb-up" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="pb-dn" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="pb-fw" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="pb-rv" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="pb-tl" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="pb-tr" placeholder="—"></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- 3e. E-stop & start/stop -->
+      <div class="meas-sec-lbl">E-Stop & Start/Stop Button Resistance</div>
+      <table class="meas-tbl" style="max-width:440px">
+        <thead><tr><th class="tl">Button</th><th>Resistance (Ω)</th><th>Spec (Ω)</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">E-Stop</td><td><input class="mi" type="number" step="0.01" id="m-estop" placeholder="—"></td><td class="spec">—</td></tr>
+          <tr><td class="lbl">Start</td><td><input class="mi" type="number" step="0.01" id="m-start" placeholder="—"></td><td class="spec">0.3</td></tr>
+          <tr><td class="lbl">Stop</td><td><input class="mi" type="number" step="0.01" id="m-stop" placeholder="—"></td><td class="spec">0.2</td></tr>
+        </tbody>
+      </table>
+
+      <!-- 3f. Current motor -->
+      <div class="meas-sec-lbl">Motor Current (Amp) — Per Direction</div>
+      <div class="tbl-wrap">
+        <table class="meas-tbl" style="min-width:360px">
+          <thead><tr><th class="tl">Direction</th><th>R (A)</th><th>S (A)</th><th>T (A)</th></tr></thead>
+          <tbody>
+            <tr><td class="lbl">Up</td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-up-r" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-up-s" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-up-t" placeholder="—"></td></tr>
+            <tr><td class="lbl">Down</td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-dn-r" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-dn-s" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-dn-t" placeholder="—"></td></tr>
+            <tr><td class="lbl">Travel Left</td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-tl-r" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-tl-s" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-tl-t" placeholder="—"></td></tr>
+            <tr><td class="lbl">Travel Right</td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-tr-r" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-tr-s" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-tr-t" placeholder="—"></td></tr>
+            <tr><td class="lbl">Forward (Trolley)</td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-fw-r" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-fw-s" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-fw-t" placeholder="—"></td></tr>
+            <tr><td class="lbl">Reverse (Trolley)</td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-rv-r" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-rv-s" placeholder="—"></td><td><input class="mi mi-sm" type="number" step="0.1" id="cur-rv-t" placeholder="—"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div><!-- /meas-wrap -->
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     4. MOTOR WINDING & INSULATION RESISTANCE
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">📊</div>
+    <div class="sec-hdr-title">Motor Winding & Insulation Resistance</div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="meas-wrap">
+      <div class="tbl-wrap">
+        <table class="meas-tbl" style="min-width:620px">
+          <thead>
+            <tr>
+              <th class="tl">Measurement</th>
+              <th>Spec</th>
+              <th>Hoist Low Spd</th>
+              <th>Hoist High Spd</th>
+              <th>Travel</th>
+              <th>Trolley</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td class="lbl">T1 – T2 (Ω)</td><td class="spec">≈1.1</td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-ls-t12" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-hs-t12" placeholder="—" title="N/A for High Speed typically"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-tv-t12" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-tr-t12" placeholder="—"></td></tr>
+            <tr><td class="lbl">T2 – T3 (Ω)</td><td class="spec">≈1.2</td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-ls-t23" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-hs-t23" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-tv-t23" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-tr-t23" placeholder="—"></td></tr>
+            <tr><td class="lbl">T3 – T1 (Ω)</td><td class="spec">≈1.2</td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-ls-t31" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-hs-t31" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-tv-t31" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="0.01" id="mw-tr-t31" placeholder="—"></td></tr>
+            <tr style="background:rgba(30,58,95,.03)">
+              <td class="lbl">A Phase – Earth (MΩ)</td><td class="spec">≥2000</td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-ls-a" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-hs-a" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-tv-a" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-tr-a" placeholder="—"></td></tr>
+            <tr style="background:rgba(30,58,95,.03)">
+              <td class="lbl">B Phase – Earth (MΩ)</td><td class="spec">≥2000</td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-ls-b" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-hs-b" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-tv-b" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-tr-b" placeholder="—"></td></tr>
+            <tr style="background:rgba(30,58,95,.03)">
+              <td class="lbl">C Phase – Earth (MΩ)</td><td class="spec">≥2000</td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-ls-c" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-hs-c" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-tv-c" placeholder="—"></td>
+              <td><input class="mi mi-sm" type="number" step="1" id="mi-tr-c" placeholder="—"></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Brake winding -->
+      <div class="meas-sec-lbl">Brake Winding Resistance & Insulation</div>
+      <table class="meas-tbl" style="max-width:440px">
+        <thead><tr><th class="tl">Measurement</th><th>Spec</th><th>Measured</th><th>Unit</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">T1 – T2 Winding</td><td class="spec">≈13.7</td>
+            <td><input class="mi" type="number" step="0.1" id="brk-t12" placeholder="—"></td>
+            <td style="font-family:var(--mono);font-size:10px">Ω</td></tr>
+          <tr><td class="lbl">T1/T2 – Earth Insulation</td><td class="spec">≥2000</td>
+            <td><input class="mi" type="number" step="1" id="brk-earth" placeholder="—"></td>
+            <td style="font-family:var(--mono);font-size:10px">MΩ</td></tr>
+        </tbody>
+      </table>
+
+      <!-- Limit switch -->
+      <div class="meas-sec-lbl">Limit Switch Resistance</div>
+      <table class="meas-tbl" style="max-width:360px">
+        <thead><tr><th class="tl">Switch</th><th>Resistance (Ω)</th></tr></thead>
+        <tbody>
+          <tr><td class="lbl">Limit Switch — Up</td><td><input class="mi" type="number" step="0.01" id="ls-up" placeholder="—"></td></tr>
+          <tr><td class="lbl">Limit Switch — Down</td><td><input class="mi" type="number" step="0.01" id="ls-dn" placeholder="—"></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     5. ELECTRICAL COMPONENT INSPECTION
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🔌</div>
+    <div class="sec-hdr-title">Electrical Component Inspection</div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+      <table class="ct">
+        <thead>
+          <tr>
+            <th style="width:32px">No</th>
+            <th class="tl">Component / Activity</th>
+            <th class="tl">Acceptance Criteria</th>
+            <th>Result</th>
+            <th class="tl">Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="elec-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     6. PANEL & MECHANICAL INSPECTION
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">🏗️</div>
+    <div class="sec-hdr-title">Panel & Mechanical Inspection</div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="tbl-wrap">
+      <table class="ct">
+        <thead>
+          <tr>
+            <th style="width:32px">No</th>
+            <th class="tl">Check Item / Activity</th>
+            <th class="tl">Acceptance Criteria</th>
+            <th>Result</th>
+            <th class="tl">Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="panel-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     7. PHOTO DOCUMENTATION
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">📷</div>
+    <div class="sec-hdr-title">Photo Documentation <span class="photo-badge" id="photo-count-badge">0 foto</span></div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="photo-add-bar">
+      <button class="photo-add-btn" onclick="triggerAddPhoto()">
+        <span style="font-size:18px;line-height:1">+</span> Add Photo
+      </button>
+      <span class="photo-add-hint">Setiap klik membuka file picker → editor → foto ditambahkan ke galeri</span>
+      <input type="file" id="photo-file-input" accept="image/*" style="display:none" onchange="onFileChosen(this)">
+    </div>
+    <div class="photo-grid" id="photo-grid">
+      <div class="photo-empty" id="photo-empty">
+        <strong>Belum ada foto</strong>
+        Tekan <strong>+ Add Photo</strong> untuk menambahkan foto. Setiap klik menambah satu foto baru.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     8. CONCLUSION
+══════════════════════════════════════════════ -->
+<div class="panel">
+  <div class="sec-hdr open" onclick="toggleSec(this)">
+    <div class="sec-hdr-icon">📝</div>
+    <div class="sec-hdr-title">Conclusion & Notes</div>
+    <span class="sec-hdr-arrow">▼</span>
+  </div>
+  <div class="sec-body">
+    <div class="conc-grid">
+      <div class="mf mf-wide">
+        <label>Overall Conclusion / Finding</label>
+        <textarea id="concl-finding" rows="4" placeholder="Describe findings, condition summary, items requiring follow-up..."></textarea>
+      </div>
+      <div class="mf">
+        <label>Corrective Action / Recommendation</label>
+        <textarea id="concl-action" rows="3" placeholder="Recommended actions, replacements, schedule..."></textarea>
+      </div>
+      <div class="mf">
+        <label>Next Maintenance Date</label>
+        <input type="date" id="next-maint">
+      </div>
+      <div class="mf">
+        <label>Equipment Status after PM</label>
+        <select id="equip-status">
+          <option value="">— Select —</option>
+          <option value="OK - Ready to Operate">OK - Ready to Operate</option>
+          <option value="OK - Minor Issue Noted">OK - Minor Issue Noted</option>
+          <option value="Restricted Operation">Restricted Operation</option>
+          <option value="Needs Repair Before Use">Needs Repair Before Use</option>
+          <option value="Out of Service">Out of Service</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-draft" onclick="saveDraft()">💾 Save Draft</button>
+      <button class="btn btn-pdf" onclick="window.print()">🖨️ Print / PDF</button>
+      <button class="btn btn-submit" onclick="submitToDb()">🗄️ Submit to Database</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /wrap -->
+
+<div class="footer">
+  <span>POMI · HOIST INSPECTION & MAINTENANCE CHECK SHEET · v2.0</span>
+  <span id="footer-time"></span>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     IMAGE EDITOR MODAL
+═══════════════════════════════════════════════════════ -->
+<div id="editor-modal">
+  <div id="editor-box">
+    <div id="editor-topbar">
+      <div>
+        <span class="etitle">IMAGE <em>EDITOR</em></span>
+        <span class="esub" id="editor-filename"></span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="ebtn" onclick="resetEditorState()" title="Reset semua perubahan">↺ Reset</button>
+      </div>
+    </div>
+
+    <div id="editor-main">
+      <!-- Canvas area -->
+      <div id="editor-canvas-area">
+        <div id="ed-canvas-wrap">
+          <canvas id="ed-canvas"></canvas>
+          <canvas id="sel-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Sidebar controls -->
+      <div id="editor-sidebar">
+
+        <!-- Transform -->
+        <div class="ectl-group">
+          <div class="ectl-label">Rotate & Flip</div>
+          <div class="ectl-row">
+            <button class="ebtn" onclick="edRotate(-90)" title="Rotate 90° counter-clockwise">↺ 90°</button>
+            <button class="ebtn" onclick="edRotate(90)" title="Rotate 90° clockwise">↻ 90°</button>
+            <button class="ebtn" onclick="edFlip('h')" title="Flip horizontal">⟺ H</button>
+            <button class="ebtn" onclick="edFlip('v')" title="Flip vertical">⇅ V</button>
+          </div>
+        </div>
+
+        <!-- Brightness / Contrast / Saturation -->
+        <div class="ectl-group">
+          <div class="ectl-label">Adjustments</div>
+          <div class="eslider-row">
+            <label>Brightness <span id="lbl-br">0</span></label>
+            <input type="range" class="esl" id="sl-br" min="-100" max="100" value="0" oninput="onSlider('br',this.value)">
+          </div>
+          <div class="eslider-row">
+            <label>Contrast <span id="lbl-ct">0</span></label>
+            <input type="range" class="esl" id="sl-ct" min="-100" max="100" value="0" oninput="onSlider('ct',this.value)">
+          </div>
+          <div class="eslider-row">
+            <label>Saturation <span id="lbl-sat">0</span></label>
+            <input type="range" class="esl" id="sl-sat" min="-100" max="100" value="0" oninput="onSlider('sat',this.value)">
+          </div>
+          <div class="eslider-row">
+            <label>Sharpness <span id="lbl-sharp">0</span></label>
+            <input type="range" class="esl" id="sl-sharp" min="0" max="10" value="0" step="1" oninput="onSlider('sharp',this.value)">
+          </div>
+        </div>
+
+        <!-- Crop -->
+        <div class="ectl-group">
+          <div class="ectl-label">Crop</div>
+          <div class="ectl-row" style="margin-bottom:8px">
+            <button class="ebtn" id="crop-toggle-btn" onclick="toggleCropMode()">✂ Crop Mode</button>
+            <button class="ebtn" id="apply-crop-btn" onclick="applyCrop()" style="display:none;border-color:#4ade80;color:#4ade80">✓ Apply</button>
+            <button class="ebtn" id="cancel-crop-btn" onclick="cancelCropMode()" style="display:none">✕ Cancel</button>
+          </div>
+          <div class="crop-info" id="crop-info">Klik "Crop Mode" lalu drag pada gambar untuk memilih area</div>
+        </div>
+
+        <!-- Compress -->
+        <div class="ectl-group">
+          <div class="ectl-label">Output Quality</div>
+          <div class="eslider-row">
+            <label>JPEG Quality <span id="lbl-q">85</span>%</label>
+            <input type="range" class="esl" id="sl-q" min="40" max="100" value="85" step="5" oninput="document.getElementById('lbl-q').textContent=this.value">
+          </div>
+        </div>
+
+      </div><!-- /sidebar -->
+    </div><!-- /editor-main -->
+
+    <div id="editor-footer">
+      <button class="ebtn-cancel" onclick="closeEditor(false)">Cancel</button>
+      <button class="ebtn-use" onclick="applyEditor()">✓ Use Photo</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SCRIPTS
+═══════════════════════════════════════════════════════ -->
+<script>
+/* ── CLOCK ──────────────────────────────────────── */
+function tick(){
+  const n=new Date();
+  const ts=n.toLocaleTimeString('id-ID');
+  document.getElementById('clock').textContent=ts;
+  document.getElementById('footer-time').textContent=n.toLocaleDateString('en-GB',{weekday:'short',year:'numeric',month:'short',day:'numeric'})+' '+ts;
+  // print header sync
+  const woDate=document.getElementById('wo-date').value;
+  document.getElementById('ph-tag').textContent=document.getElementById('tag-no').value||'—';
+  document.getElementById('ph-desc').textContent=document.getElementById('tag-desc').value||'—';
+  document.getElementById('ph-date').textContent=woDate||'—';
+  document.getElementById('ph-wo').textContent=document.getElementById('wo-no').value||'—';
+}
+setInterval(tick,1000);tick();
+
+/* ── SECTION TOGGLE ─────────────────────────────── */
+function toggleSec(hdr){
+  hdr.classList.toggle('open');
+  const body=hdr.nextElementSibling;
+  body.style.display=hdr.classList.contains('open')?'':'none';
+}
+
+/* ── CHECK ITEM DATA ────────────────────────────── */
+const BRAKE_ITEMS=[
+  {task:'Perform cleaning, flushing, and lubrication',crit:'All moving parts must be properly lubricated; no signs of dried or contaminated grease'},
+  {task:'Mechanical measurement — air gap, clearance check',crit:'Must be within manufacturer\'s specified tolerances (adj. 0.60 mm)'},
+  {task:'Check Brake pad and shoe: thickness, surface flatness, cracks, dimensional check, wear — replace if necessary',crit:'Thickness within limits; no cracks or uneven wear'},
+  {task:'Clean, flush, lubricate sprocket and surface disc — inspect for wear',crit:'All surfaces clean and lubricated; no abnormal wear'},
+  {task:'Inspect Coil: dimension, resistance, insulation, cable condition, wear',crit:'Resistance and insulation values within acceptable range; no damage'},
+  {task:'Inspect and tighten all bolt-nuts, locking devices, spring-nut, tensioner, etc.',crit:'All components clean, lubricated, and securely fastened'},
+];
+
+const ELEC_ITEMS=[
+  {task:'Motor 3-phase winding, coil brake, coil solenoid, coil transformer, heater panel, heater motor, temperature sensor, winding temperature protection',crit:'Contact, winding, and insulation resistance meet standards; no abnormality'},
+  {task:'Power bus bar — visual inspection',crit:'No cracks, burns, or loose connections'},
+  {task:'Panel control — vacuum cleaning, dust removal, panel sealant check',crit:'Dust-free, sealed, and properly grounded (ATTACH PICTURE)'},
+  {task:'Panel Power — vacuum cleaning, dust removal',crit:'Dust-free; panel sealant intact'},
+  {task:'Panel distribution — inspection',crit:'Clean, no damage; N/A if not present'},
+  {task:'Collector pad — condition check',crit:'No cracks or excessive wear; N/A if not applicable'},
+  {task:'DS Box (disconnected power box) — inspection',crit:'Properly sealed, contacts in good condition'},
+  {task:'Function operational test under load (record electrical data)',crit:'No abnormal vibration, noise, or H-beam contact; all functions normal'},
+];
+
+const PANEL_ITEMS=[
+  {task:'Panel surface inspection: Perform cleaning, inspection, and lubrication',crit:'Cleanliness; surfaces cleaned with electro-safe liquid'},
+  {task:'Lock panel, corrosive part, panel seal — inspect and repair',crit:'Dust-free, sealed, and properly grounded'},
+  {task:'Broken conduit, seal conduit — inspect and repair',crit:'Sealant/gland cable properly installed; no broken conduit'},
+  {task:'Panel support, tray cable/conduit support — inspection',crit:'Properly supported; no loose fittings'},
+  {task:'Bolt-nut mounting — inspect and tighten',crit:'All bolt-nuts fastened properly; no missing fasteners'},
+];
+
+/* ── BUILD CHECK TABLE ──────────────────────────── */
+function buildCheckTable(tbodyId,items,prefix){
+  const tb=document.getElementById(tbodyId);
+  items.forEach((item,i)=>{
+    const id=prefix+'_'+(i+1);
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td class="no">${i+1}</td>
+      <td class="task">${item.task}</td>
+      <td class="crit">${item.crit}</td>
+      <td class="res">
+        <select class="r-sel" id="${id}" onchange="onResult(this,'${id}')">
+          <option value="">—</option>
+          <option value="OK">OK</option>
+          <option value="NG">NG</option>
+          <option value="N/A">N/A</option>
+        </select>
+      </td>
+      <td class="rmk"><input class="rmk-inp" type="text" placeholder="Remark..." id="${id}_rmk"></td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+buildCheckTable('brake-tbody',BRAKE_ITEMS,'brk');
+buildCheckTable('elec-tbody',ELEC_ITEMS,'elc');
+buildCheckTable('panel-tbody',PANEL_ITEMS,'pnl');
+
+/* ── RESULT HANDLER ─────────────────────────────── */
+function onResult(sel,id){
+  sel.className='r-sel'+(sel.value==='OK'?' ok':sel.value==='NG'?' ng':sel.value==='N/A'?' na':'');
+  updateStats();
+}
+
+function updateStats(){
+  const sels=document.querySelectorAll('.r-sel');
+  let ok=0,ng=0,na=0,total=sels.length;
+  sels.forEach(s=>{
+    if(s.value==='OK')ok++;
+    else if(s.value==='NG')ng++;
+    else if(s.value==='N/A')na++;
+  });
+  const pend=total-ok-ng-na;
+  document.getElementById('h-total').textContent=total;
+  document.getElementById('h-ok').textContent=ok;
+  document.getElementById('h-ng').textContent=ng;
+  document.getElementById('h-na').textContent=na;
+  document.getElementById('h-pend').textContent=pend;
+}
+updateStats();
+
+/* ══════════════════════════════════════════════════
+   PHOTO SYSTEM
+══════════════════════════════════════════════════ */
+let PHOTOS=[]; // [{src,caption}]
+
+function triggerAddPhoto(){
+  const inp=document.getElementById('photo-file-input');
+  inp.value='';
+  inp.click();
+}
+
+function onFileChosen(inp){
+  if(!inp.files||!inp.files[0])return;
+  const file=inp.files[0];
+  if(file.size>30*1024*1024){showNotice('File terlalu besar (maks 30 MB)','err');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    editorTargetIdx=null; // new photo
+    editorFilename=file.name;
+    openEditorWithSrc(e.target.result);
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderPhotos(){
+  const grid=document.getElementById('photo-grid');
+  const empty=document.getElementById('photo-empty');
+  empty.style.display=PHOTOS.length?'none':'block';
+  // Remove old photo-items
+  grid.querySelectorAll('.photo-item').forEach(el=>el.remove());
+
+  PHOTOS.forEach((p,i)=>{
+    const item=document.createElement('div');
+    item.className='photo-item';
+    item.id='photo-item-'+i;
+    item.innerHTML=`
+      <div class="photo-img-wrap" onclick="openEditorForEdit(${i})" title="Klik untuk edit foto">
+        <img src="${p.src}" alt="Foto ${i+1}">
+      </div>
+      <div class="photo-ctrl">
+        <button class="p-btn edit-btn" onclick="openEditorForEdit(${i})">✏️ Edit</button>
+        <button class="p-btn" onclick="rotatePhotoInPlace(${i},-90)" title="Putar kiri">↺</button>
+        <button class="p-btn" onclick="rotatePhotoInPlace(${i},90)" title="Putar kanan">↻</button>
+        <button class="p-btn del" onclick="removePhoto(${i})">✕ Hapus</button>
+      </div>
+      <input class="photo-cap" type="text" placeholder="Caption / deskripsi foto..."
+        value="${(p.caption||'').replace(/"/g,'&quot;')}"
+        oninput="PHOTOS[${i}].caption=this.value">
+    `;
+    grid.appendChild(item);
+  });
+
+  document.getElementById('photo-count-badge').textContent=PHOTOS.length+' foto';
+}
+
+function removePhoto(idx){
+  if(!confirm('Hapus foto ini?'))return;
+  PHOTOS.splice(idx,1);
+  renderPhotos();
+}
+
+function rotatePhotoInPlace(idx,deg){
+  const img=new Image();
+  img.onload=()=>{
+    const r=deg*Math.PI/180;
+    const sw=img.width,sh=img.height;
+    const cw=Math.abs(sw*Math.cos(r))+Math.abs(sh*Math.sin(r));
+    const ch=Math.abs(sw*Math.sin(r))+Math.abs(sh*Math.cos(r));
+    const cv=document.createElement('canvas');
+    cv.width=Math.round(cw); cv.height=Math.round(ch);
+    const ctx=cv.getContext('2d');
+    ctx.translate(cv.width/2,cv.height/2);
+    ctx.rotate(r);
+    ctx.drawImage(img,-sw/2,-sh/2);
+    PHOTOS[idx].src=cv.toDataURL('image/jpeg',0.88);
+    renderPhotos();
+  };
+  img.src=PHOTOS[idx].src;
+}
+
+/* ══════════════════════════════════════════════════
+   IMAGE EDITOR
+══════════════════════════════════════════════════ */
+let editorTargetIdx=null; // null=new photo, number=edit existing
+let editorFilename='';
+let editorImg=null; // current Image element (may change after crop)
+let edState={rotation:0,flipH:false,flipV:false,br:0,ct:0,sat:0,sharp:0};
+let cropMode=false;
+let cropRect=null; // {x,y,w,h} in canvas image coords
+let cropDrawing=false;
+let cropStartX=0,cropStartY=0;
+
+function openEditorWithSrc(src){
+  edState={rotation:0,flipH:false,flipV:false,br:0,ct:0,sat:0,sharp:0};
+  cropMode=false; cropRect=null;
+  resetSliders();
+  document.getElementById('editor-filename').textContent=editorFilename?'— '+editorFilename:'';
+  const img=new Image();
+  img.onload=()=>{
+    editorImg=img;
+    renderEditorCanvas();
+    document.getElementById('editor-modal').classList.add('show');
+  };
+  img.src=src;
+}
+
+function openEditorForEdit(idx){
+  editorTargetIdx=idx;
+  editorFilename='Foto '+(idx+1);
+  edState={rotation:0,flipH:false,flipV:false,br:0,ct:0,sat:0,sharp:0};
+  cropMode=false; cropRect=null;
+  resetSliders();
+  document.getElementById('editor-filename').textContent='— Foto '+(idx+1);
+  const img=new Image();
+  img.onload=()=>{
+    editorImg=img;
+    renderEditorCanvas();
+    document.getElementById('editor-modal').classList.add('show');
+  };
+  img.src=PHOTOS[idx].src;
+}
+
+function resetSliders(){
+  ['br','ct','sat','sharp'].forEach(k=>{
+    const sl=document.getElementById('sl-'+k);
+    if(sl)sl.value=0;
+    const lb=document.getElementById('lbl-'+k);
+    if(lb)lb.textContent=0;
+  });
+  document.getElementById('sl-q').value=85;
+  document.getElementById('lbl-q').textContent=85;
+  exitCropUI();
+}
+
+function resetEditorState(){
+  edState={rotation:0,flipH:false,flipV:false,br:0,ct:0,sat:0,sharp:0};
+  cropMode=false; cropRect=null;
+  resetSliders();
+  renderEditorCanvas();
+}
+
+/* Sliders */
+function onSlider(key,val){
+  edState[key]=parseFloat(val);
+  document.getElementById('lbl-'+key).textContent=val;
+  renderEditorCanvas();
+}
+
+/* Rotate / Flip */
+function edRotate(deg){
+  edState.rotation=(edState.rotation+deg+360)%360;
+  renderEditorCanvas();
+}
+function edFlip(axis){
+  if(axis==='h')edState.flipH=!edState.flipH;
+  else edState.flipV=!edState.flipV;
+  renderEditorCanvas();
+}
+
+/* Main render */
+function renderEditorCanvas(){
+  const img=editorImg;
+  if(!img)return;
+  const c=document.getElementById('ed-canvas');
+  const ctx=c.getContext('2d');
+  const r=edState.rotation;
+  const sw=img.naturalWidth||img.width;
+  const sh=img.naturalHeight||img.height;
+  const canW=(r%180===0)?sw:sh;
+  const canH=(r%180===0)?sh:sw;
+  c.width=canW; c.height=canH;
+
+  ctx.save();
+  ctx.translate(canW/2,canH/2);
+  ctx.rotate(r*Math.PI/180);
+  const sx=edState.flipH?-1:1;
+  const sy=edState.flipV?-1:1;
+  ctx.scale(sx,sy);
+  const br=edState.br,ct=edState.ct,sat=edState.sat;
+  ctx.filter=`brightness(${100+br}%) contrast(${100+ct}%) saturate(${100+sat}%)`;
+  ctx.drawImage(img,-sw/2,-sh/2);
+  ctx.restore();
+
+  // Sharpness via unsharp mask approximation
+  if(edState.sharp>0){
+    applySharpness(ctx,c.width,c.height,edState.sharp);
+  }
+
+  // Sync sel-canvas
+  const s=document.getElementById('sel-canvas');
+  s.width=canW; s.height=canH;
+  if(cropMode)drawCropOverlay();
+}
+
+function applySharpness(ctx,w,h,amount){
+  try{
+    const id=ctx.getImageData(0,0,w,h);
+    const d=id.data;
+    const kf=amount*0.3;
+    const tmp=new Uint8ClampedArray(d);
+    for(let y=1;y<h-1;y++){
+      for(let x=1;x<w-1;x++){
+        const i=(y*w+x)*4;
+        for(let c=0;c<3;c++){
+          const lap=(-tmp[i-w*4+c]-tmp[i-4+c]-tmp[i+4+c]-tmp[i+w*4+c]+4*tmp[i+c]);
+          d[i+c]=Math.min(255,Math.max(0,tmp[i+c]+kf*lap));
+        }
+      }
+    }
+    ctx.putImageData(id,0,0);
+  }catch(e){}
+}
+
+/* ── CROP ──────────────────────────────────────── */
+function toggleCropMode(){
+  if(!cropMode){
+    cropMode=true; cropRect=null;
+    document.getElementById('crop-toggle-btn').classList.add('active');
+    document.getElementById('crop-toggle-btn').textContent='✂ Cropping...';
+    document.getElementById('apply-crop-btn').style.display='inline-block';
+    document.getElementById('cancel-crop-btn').style.display='inline-block';
+    document.getElementById('crop-info').textContent='Drag pada gambar untuk memilih area crop';
+    enableCropEvents();
+  } else {
+    cancelCropMode();
+  }
+}
+
+function cancelCropMode(){
+  exitCropUI();
+  cropMode=false; cropRect=null;
+  const s=document.getElementById('sel-canvas');
+  s.getContext('2d').clearRect(0,0,s.width,s.height);
+  s.style.pointerEvents='none';
+  s.style.cursor='default';
+}
+
+function exitCropUI(){
+  const btn=document.getElementById('crop-toggle-btn');
+  if(btn){btn.classList.remove('active');btn.textContent='✂ Crop Mode';}
+  const applyBtn=document.getElementById('apply-crop-btn');
+  if(applyBtn)applyBtn.style.display='none';
+  const cancelBtn=document.getElementById('cancel-crop-btn');
+  if(cancelBtn)cancelBtn.style.display='none';
+  document.getElementById('crop-info').textContent='Klik "Crop Mode" lalu drag pada gambar untuk memilih area';
+}
+
+function enableCropEvents(){
+  const s=document.getElementById('sel-canvas');
+  s.style.pointerEvents='auto';
+  s.style.cursor='crosshair';
+
+  s.onmousedown=e=>{e.preventDefault();cropDrawing=true;const p=getCanvasCoords(s,e.clientX,e.clientY);cropStartX=p.x;cropStartY=p.y;cropRect={x:p.x,y:p.y,w:0,h:0};};
+  s.onmousemove=e=>{if(!cropDrawing)return;e.preventDefault();const p=getCanvasCoords(s,e.clientX,e.clientY);cropRect={x:Math.min(cropStartX,p.x),y:Math.min(cropStartY,p.y),w:Math.abs(p.x-cropStartX),h:Math.abs(p.y-cropStartY)};drawCropOverlay();updateCropInfo();};
+  s.onmouseup=e=>{cropDrawing=false;};
+  s.onmouseleave=e=>{cropDrawing=false;};
+
+  s.ontouchstart=e=>{e.preventDefault();cropDrawing=true;const t=e.touches[0];const p=getCanvasCoords(s,t.clientX,t.clientY);cropStartX=p.x;cropStartY=p.y;cropRect={x:p.x,y:p.y,w:0,h:0};};
+  s.ontouchmove=e=>{if(!cropDrawing)return;e.preventDefault();const t=e.touches[0];const p=getCanvasCoords(s,t.clientX,t.clientY);cropRect={x:Math.min(cropStartX,p.x),y:Math.min(cropStartY,p.y),w:Math.abs(p.x-cropStartX),h:Math.abs(p.y-cropStartY)};drawCropOverlay();updateCropInfo();};
+  s.ontouchend=e=>{cropDrawing=false;};
+}
+
+function getCanvasCoords(canvas,clientX,clientY){
+  const rect=canvas.getBoundingClientRect();
+  const scaleX=canvas.width/rect.width;
+  const scaleY=canvas.height/rect.height;
+  return{
+    x:Math.max(0,Math.min(canvas.width,(clientX-rect.left)*scaleX)),
+    y:Math.max(0,Math.min(canvas.height,(clientY-rect.top)*scaleY))
+  };
+}
+
+function updateCropInfo(){
+  if(!cropRect||cropRect.w<2)return;
+  document.getElementById('crop-info').textContent=
+    Math.round(cropRect.w)+' × '+Math.round(cropRect.h)+' px';
+}
+
+function drawCropOverlay(){
+  const s=document.getElementById('sel-canvas');
+  const ctx=s.getContext('2d');
+  const W=s.width,H=s.height;
+  ctx.clearRect(0,0,W,H);
+  if(!cropRect||cropRect.w<2)return;
+  const{x,y,w,h}=cropRect;
+  // Dark outside
+  ctx.fillStyle='rgba(0,0,0,0.52)';
+  ctx.fillRect(0,0,W,y);
+  ctx.fillRect(0,y+h,W,H-y-h);
+  ctx.fillRect(0,y,x,h);
+  ctx.fillRect(x+w,y,W-x-w,h);
+  // Border
+  ctx.strokeStyle='#60a5fa';
+  ctx.lineWidth=1.5;
+  ctx.setLineDash([6,3]);
+  ctx.strokeRect(x,y,w,h);
+  ctx.setLineDash([]);
+  // Rule-of-thirds grid
+  ctx.strokeStyle='rgba(255,255,255,0.25)';
+  ctx.lineWidth=0.8;
+  ctx.beginPath();
+  ctx.moveTo(x+w/3,y);ctx.lineTo(x+w/3,y+h);
+  ctx.moveTo(x+2*w/3,y);ctx.lineTo(x+2*w/3,y+h);
+  ctx.moveTo(x,y+h/3);ctx.lineTo(x+w,y+h/3);
+  ctx.moveTo(x,y+2*h/3);ctx.lineTo(x+w,y+2*h/3);
+  ctx.stroke();
+  // Handles
+  const hs=8;
+  const handles=[[x,y],[x+w/2,y],[x+w,y],[x,y+h/2],[x+w,y+h/2],[x,y+h],[x+w/2,y+h],[x+w,y+h]];
+  handles.forEach(([hx,hy])=>{
+    ctx.fillStyle='#fff';
+    ctx.fillRect(hx-hs/2,hy-hs/2,hs,hs);
+    ctx.strokeStyle='#2563eb';ctx.lineWidth=1.5;
+    ctx.strokeRect(hx-hs/2,hy-hs/2,hs,hs);
+  });
+}
+
+function applyCrop(){
+  if(!cropRect||cropRect.w<10||cropRect.h<10){
+    showNotice('Area crop terlalu kecil, drag lebih besar','err');return;
+  }
+  const c=document.getElementById('ed-canvas');
+  const x=Math.round(cropRect.x),y=Math.round(cropRect.y);
+  const w=Math.round(cropRect.w),h=Math.round(cropRect.h);
+  const imgData=c.getContext('2d').getImageData(x,y,w,h);
+  const nc=document.createElement('canvas');
+  nc.width=w;nc.height=h;
+  nc.getContext('2d').putImageData(imgData,0,0);
+  const newImg=new Image();
+  newImg.onload=()=>{
+    editorImg=newImg;
+    edState.rotation=0;edState.flipH=false;edState.flipV=false;
+    cancelCropMode();
+    renderEditorCanvas();
+  };
+  newImg.src=nc.toDataURL();
+}
+
+/* ── APPLY EDITOR → ADD TO GALLERY ──────────────── */
+function applyEditor(){
+  const c=document.getElementById('ed-canvas');
+  const q=parseInt(document.getElementById('sl-q').value)/100;
+
+  // Compress: max 1400px
+  let outCanvas=c;
+  const maxDim=1400;
+  if(c.width>maxDim||c.height>maxDim){
+    const scale=Math.min(maxDim/c.width,maxDim/c.height);
+    const nc=document.createElement('canvas');
+    nc.width=Math.round(c.width*scale);
+    nc.height=Math.round(c.height*scale);
+    nc.getContext('2d').drawImage(c,0,0,nc.width,nc.height);
+    outCanvas=nc;
+  }
+
+  const dataUrl=outCanvas.toDataURL('image/jpeg',q);
+  if(editorTargetIdx!==null){
+    PHOTOS[editorTargetIdx].src=dataUrl;
+  }else{
+    PHOTOS.push({src:dataUrl,caption:''});
+  }
+  renderPhotos();
+  closeEditor(true);
+}
+
+function closeEditor(applied){
+  document.getElementById('editor-modal').classList.remove('show');
+  const s=document.getElementById('sel-canvas');
+  const ctx=s.getContext('2d');
+  if(ctx)ctx.clearRect(0,0,s.width,s.height);
+  s.onmousedown=null;s.onmousemove=null;s.onmouseup=null;
+  s.ontouchstart=null;s.ontouchmove=null;s.ontouchend=null;
+  s.style.pointerEvents='none';s.style.cursor='default';
+  editorImg=null;
+  if(!applied){
+    // Cancelled — if it was a new photo, nothing to undo
+    // If editing existing, photo is unchanged (we didn't mutate it yet)
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   DRAFT SAVE / RESTORE
+══════════════════════════════════════════════════ */
+const DRAFT_KEY='hoist_pm_draft';
+const PHOTO_KEY='hoist_pm_photos';
+
+function collectFormData(){
+  const d={};
+  document.querySelectorAll('input[id],select[id],textarea[id]').forEach(el=>{
+    if(el.id&&el.id!=='photo-file-input')d[el.id]=el.value;
+  });
+  return d;
+}
+
+function saveDraft(){
+  try{
+    localStorage.setItem(DRAFT_KEY,JSON.stringify(collectFormData()));
+    localStorage.setItem(PHOTO_KEY,JSON.stringify(PHOTOS));
+    showNotice('Draft tersimpan di browser','ok');
+  }catch(e){
+    showNotice('Gagal menyimpan draft: '+e.message,'err');
+  }
+}
+
+function loadDraft(){
+  try{
+    const raw=localStorage.getItem(DRAFT_KEY);
+    if(raw){
+      const d=JSON.parse(raw);
+      Object.keys(d).forEach(k=>{
+        const el=document.getElementById(k);
+        if(el)el.value=d[k];
+      });
+      // Restore result sel colors
+      document.querySelectorAll('.r-sel').forEach(s=>onResult(s,s.id));
+    }
+    const rawP=localStorage.getItem(PHOTO_KEY);
+    if(rawP){PHOTOS=JSON.parse(rawP);renderPhotos();}
+  }catch(e){}
+}
+
+/* ══════════════════════════════════════════════════
+   SUBMIT TO FIRESTORE
+══════════════════════════════════════════════════ */
+function submitToDb(){
+  const woNo=document.getElementById('wo-no').value.trim();
+  const tagNo=document.getElementById('tag-no').value.trim();
+  if(!woNo||!tagNo){showNotice('WO Number dan Tag Number wajib diisi','err');return;}
+
+  const data={
+    ...collectFormData(),
+    photoCount:PHOTOS.length,
+    photoCaptions:PHOTOS.map(p=>p.caption),
+    submittedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    // Stats
+    statTotal:parseInt(document.getElementById('h-total').textContent)||0,
+    statOK:parseInt(document.getElementById('h-ok').textContent)||0,
+    statNG:parseInt(document.getElementById('h-ng').textContent)||0,
+    statNA:parseInt(document.getElementById('h-na').textContent)||0,
+  };
+
+  // Remove file input ref
+  delete data['photo-file-input'];
+
+  db.collection('hoist_pm').add(data)
+    .then(()=>showNotice('Data berhasil disimpan ke database!','ok'))
+    .catch(e=>showNotice('Gagal submit: '+e.message,'err'));
+}
+
+/* ── NOTICE ─────────────────────────────────────── */
+function showNotice(msg,type){
+  const a=document.getElementById('notice-area');
+  a.innerHTML=`<div class="notice ${type}" style="display:block">${msg}</div>`;
+  setTimeout(()=>{a.innerHTML='';},4000);
+}
+
+/* ── INIT ───────────────────────────────────────── */
+document.addEventListener('DOMContentLoaded',()=>{
+  // Set today's date
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('wo-date').value=today;
+  loadDraft();
+  updateStats();
+  renderPhotos();
+});
+</script>
+</body>
+</html>
