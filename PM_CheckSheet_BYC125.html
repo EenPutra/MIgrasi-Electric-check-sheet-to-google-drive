@@ -98,7 +98,7 @@ canvas.sig-canvas{border:1.5px solid var(--panel-border);border-radius:8px;backg
   *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .topbar,.btn-row,.btn-row,.action-row,.footer,
   .photo-drop-icon,.photo-drop-hint,.photo-del-btn,
-  .topbar-right,.live-dot{display:none!important}
+  .topbar-right,.live-dot,.notice{display:none!important}
   .print-header{display:flex!important}
   body{background:#fff!important;font-size:11px}
   .wrapper{padding:10px 0 0;max-width:100%}
@@ -562,7 +562,8 @@ async function generatePDF(){
   showNotice('Generating PDF, please wait...','info');
   await new Promise(function(r){setTimeout(r,300);});
   try{
-    var jsPDF=window.jspdf.jsPDF;
+    var jsPDF=(window.jspdf||{}).jsPDF;
+    if(!jsPDF){showNotice('❌ jsPDF gagal dimuat. Pastikan koneksi internet aktif.','err');return;}
     var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
     var PW=210,PH=297,M=12,CW=PW-M*2;
     var STEEL=[74,94,82],ACC=[192,57,43],OK=[39,174,96],NG=[192,57,43],NA=[142,68,173],LT=[244,248,245],DARK=[44,62,48],GR=[120,150,130];

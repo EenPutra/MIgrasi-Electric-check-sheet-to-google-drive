@@ -149,7 +149,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
   @page{size:A4 portrait;margin:12mm 15mm}
   *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .topbar,.action-row,.footer,.del-btn,.tb-right,
-  .sec-hdr-arrow,.live-dot,.hero-stats{display:none!important}
+  .sec-hdr-arrow,.live-dot,.hero-stats,.notice{display:none!important}
   .print-header{display:flex!important}
   body{background:#fff!important;font-size:11px}
   .hero{padding:14px 20px 12px}
@@ -936,7 +936,7 @@ async function submitToDb(){
   @page{size:A4 portrait;margin:12mm 15mm}
   *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .topbar,.action-row,.footer,.del-btn,.tb-right,
-  .sec-hdr-arrow,.live-dot,.hero-stats{display:none!important}
+  .sec-hdr-arrow,.live-dot,.hero-stats,.notice{display:none!important}
   .print-header{display:flex!important}
   body{background:#fff!important;font-size:11px}
   .hero{padding:14px 20px 12px}
@@ -1425,7 +1425,8 @@ async function generatePDF(){
   showNote('Membuat PDF...','info');
   await new Promise(function(r){setTimeout(r,300);});
   try{
-  var jsPDF=window.jspdf.jsPDF;
+  var jsPDF=(window.jspdf||{}).jsPDF;
+  if(!jsPDF){showNote('❌ jsPDF gagal dimuat. Pastikan koneksi internet aktif.','err');return;}
   var doc=new jsPDF({orientation:'landscape',unit:'mm',format:'a4'});
   var W=297,H=210,M=10,CW=W-M*2;
   var NAVY=[30,58,95],BLUE=[37,99,235],SKY=[125,211,252],LT=[240,247,255],OK=[22,163,74],NG=[220,38,38],GR=[100,116,139];

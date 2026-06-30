@@ -147,7 +147,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
   @page{size:A4 portrait;margin:12mm 15mm}
   *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
   .topbar,.action-row,.footer,.btn-add-photo,.del-btn,.tb-right,
-  .sec-hdr-arrow,.live-dot,.hero-stats,.ss-drop{display:none!important}
+  .sec-hdr-arrow,.live-dot,.hero-stats,.ss-drop,.notice{display:none!important}
   .print-header{display:flex!important}
   body{background:#fff!important;font-size:11px}
   .hero{padding:14px 20px 12px}
@@ -581,7 +581,8 @@ async function generatePDF(){
   await new Promise(function(r){setTimeout(r,300);});
 
   try{
-    var jsPDF=window.jspdf.jsPDF;
+    var jsPDF=(window.jspdf||{}).jsPDF;
+    if(!jsPDF){showNote('❌ jsPDF gagal dimuat. Pastikan koneksi internet aktif.','err');return;}
     var doc=new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
 
     var PW=210,PH=297,LM=14,RM=14,TM=14,BM=16;
