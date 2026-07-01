@@ -202,6 +202,8 @@ canvas.sigc{border:1.5px solid var(--pb);border-radius:8px;background:#f4f8f5;wi
   padding:4px 0 8px;border-bottom:2px solid #4a5e52;margin-bottom:8px;
   justify-content:space-between;align-items:center}
 .print-header strong{font-size:13px;color:#4a5e52;letter-spacing:1px}
+.btn-back{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:5px;font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.18);transition:background .15s;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.btn-back:hover{background:rgba(255,255,255,0.2);color:#fff}
 </style>
 </head>
 <body>
@@ -216,6 +218,8 @@ canvas.sigc{border:1.5px solid var(--pb);border-radius:8px;background:#f4f8f5;wi
   <span class="tsub">TRANSFORMER WEEKLY INSPECTION</span><div class="tsep"></div>
   <span class="tsub">UNIT 7/8 · AT+DGA · USST · COMMON SST · GIS</span>
   <div class="tr">
+    <a class="btn-back" href="index.html" title="Back to Portal">&#8592; Portal</a>
+    
     <div class="ldot"></div><span class="tclock" id="clock">--:--:--</span><div class="tsep"></div>
     <button class="btn bo bsm" onclick="saveDraft()">💾 Draft</button>
     <button class="btn br bsm" onclick="openPdfModal()">📥 Download PDF</button>
@@ -704,6 +708,14 @@ async function generatePDF(selSet){
 
   function drawTbl(title,tbId,hdrs,cws){
     ck(18);pdf.setFillColor(...STL);pdf.rect(M,y,W-M*2,7,'F');pdf.setTextColor(...LT);pdf.setFont(BASE_FONT,'bold');pdf.setFontSize(8.5);pdf.text('>  '+sanitizeText(title),M+3,y+5);y+=10;
+    const tableBody = document.getElementById(tbId);
+    const sourceTable = tableBody ? tableBody.closest('table') : null;
+    const columnStyles = {0:{cellWidth:8,halign:'center'},1:{cellWidth:cws[0]||70},...hdrs.reduce((o,_,i)=>({...o,[i+2]:{cellWidth:cws[i+1]||22,halign:'center'}}),{})};
+    if(sourceTable && sourceTable.querySelector('thead')){
+      pdf.autoTable({html:sourceTable,startY:y,theme:'grid',styles:{font:BASE_FONT,fontSize:6.8,cellPadding:2,textColor:[26,38,32],lineColor:[200,215,205],lineWidth:0.16},headStyles:{fillColor:[240,245,241],textColor:[80,110,90],fontStyle:'bold',fontSize:6.5,halign:'center'},columnStyles,tableWidth:'auto',margin:{left:M,right:M},didParseCell:d=>{const v=d.cell.text[0];if(['OK','No Leak','Clean','Normal'].includes(v)){d.cell.styles.textColor=[...OK];d.cell.styles.fontStyle='bold';}if(['NG','Leak','Dirty','Noise'].includes(v)){d.cell.styles.textColor=[...RED];d.cell.styles.fontStyle='bold';}if(v==='N/A')d.cell.styles.textColor=[...NA];}});
+      y=pdf.lastAutoTable.finalY+5;
+      return;
+    }
     const body=[];
     document.getElementById(tbId).querySelectorAll('tr').forEach(tr=>{
       if(tr.classList.contains('shdr')){body.push([{content:tr.querySelector('td').textContent,colSpan:99,styles:{fillColor:[240,245,241],fontStyle:'bold',fontSize:7,textColor:[74,94,82]}}]);return;}
@@ -725,8 +737,7 @@ async function generatePDF(selSet){
     pdf.autoTable({startY:y,head:[['No.','Inspection Item',...hdrs]],body,theme:'grid',
       styles:{font:BASE_FONT,fontSize:6.8,cellPadding:2,textColor:[26,38,32],lineColor:[200,215,205],lineWidth:0.16},
       headStyles:{fillColor:[240,245,241],textColor:[80,110,90],fontStyle:'bold',fontSize:6.5,halign:'center'},
-      columnStyles:{0:{cellWidth:8,halign:'center'},1:{cellWidth:cws[0]||70},...hdrs.reduce((o,_,i)=>({...o,[i+2]:{cellWidth:cws[i+1]||22,halign:'center'}}),{})},
-      didParseCell:d=>{const v=d.cell.text[0];if(['OK','No Leak','Clean','Normal'].includes(v)){d.cell.styles.textColor=[...OK];d.cell.styles.fontStyle='bold';}if(['NG','Leak','Dirty','Noise'].includes(v)){d.cell.styles.textColor=[...RED];d.cell.styles.fontStyle='bold';}if(v==='N/A')d.cell.styles.textColor=[...NA];},
+      columnStyles, didParseCell:d=>{const v=d.cell.text[0];if(['OK','No Leak','Clean','Normal'].includes(v)){d.cell.styles.textColor=[...OK];d.cell.styles.fontStyle='bold';}if(['NG','Leak','Dirty','Noise'].includes(v)){d.cell.styles.textColor=[...RED];d.cell.styles.fontStyle='bold';}if(v==='N/A')d.cell.styles.textColor=[...NA];},
       margin:{left:M,right:M}});y=pdf.lastAutoTable.finalY+5;
   }
 

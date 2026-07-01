@@ -237,6 +237,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
   padding:4px 0 8px;border-bottom:2px solid var(--navy);margin-bottom:8px;
   justify-content:space-between;align-items:center}
 .print-header strong{font-size:13px;color:var(--navy);font-family:var(--raj);letter-spacing:1px}
+.btn-back{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:5px;font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.18);transition:background .15s;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.btn-back:hover{background:rgba(255,255,255,0.2);color:#fff}
 </style>
 </head>
 <body>
@@ -255,10 +257,32 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
   <div class="tb-sep"></div>
   <span class="tb-sub">PM CHECK SHEET · POMI UNIT 7</span>
   <div class="tb-right">
+    <a class="btn-back" href="index.html" title="Back to Portal">&#8592; Portal</a>
+    
     <span class="tb-time" id="clock">--:--:--</span>
     <button class="btn btn-draft btn-sm" onclick="saveDraft()">💾 Draft</button>
-    <button class="btn btn-pdf btn-sm" onclick="printPage()">🖨️ Print / PDF</button>
+    <button class="btn btn-pdf btn-sm" onclick="togglePrintOptions()">🖨️ Print / PDF</button>
     <button class="btn btn-submit btn-sm" onclick="submitToDb()">🗄️ Submit</button>
+  </div>
+</div>
+
+<!-- Print options popup -->
+<div id="print-options" style="position:fixed;right:16px;top:72px;background:#fff;border:1px solid #ddd;padding:12px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.08);display:none;z-index:120">
+  <div style="font-weight:700;margin-bottom:6px">Print / Export Options</div>
+  <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+    <label><input type="checkbox" class="prt-opt" value="workInfo" checked> Work Info</label>
+    <label><input type="checkbox" class="prt-opt" value="basic" checked> Basic Motor Data</label>
+    <label><input type="checkbox" class="prt-opt" value="ol" checked> OL Heater Data (Point 6)</label>
+    <label><input type="checkbox" class="prt-opt" value="checkItems" checked> Check Items</label>
+    <label><input type="checkbox" class="prt-opt" value="measurement" checked> Measurement Data (Megger/Resistance)</label>
+    <label><input type="checkbox" class="prt-opt" value="trend" checked> Megger Trend Pictures</label>
+    <label><input type="checkbox" class="prt-opt" value="photos" checked> Photo Documentation</label>
+    <label><input type="checkbox" class="prt-opt" value="conclusion" checked> Conclusion & Notes</label>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn" onclick="printSelected()">Print Selected</button>
+    <button class="btn btn-pdf" onclick="exportSelectedPDF()">Export Selected PDF</button>
+    <button class="btn" onclick="togglePrintOptions(true)">Close</button>
   </div>
 </div>
 
@@ -1056,7 +1080,7 @@ async function submitToDb(){
 // ═══════════════════════════════════════════════════
 //  PDF GENERATION
 // ═══════════════════════════════════════════════════
-async function generatePDF(){
+async function generatePDF(selectedSections){
   showNote('⏳ Membuat PDF, harap tunggu...', 'info');
   await new Promise(r => setTimeout(r, 200));
   const {jsPDF} = window.jspdf;
@@ -1067,6 +1091,8 @@ async function generatePDF(){
 
   const gv = id => { const e=document.getElementById(id); return e?e.value.trim():''; };
   const tag = document.getElementById('tag-search').value.trim();
+  const selSections = (Array.isArray(selectedSections) && selectedSections.length) ? selectedSections : null;
+  const include = s => !selSections || selSections.includes(s);
 
   function nPage(){ pdf.addPage(); y=M; miniHdr(); }
   function ckY(n){ if(y+n > H-M-12) nPage(); }
@@ -1093,45 +1119,50 @@ async function generatePDF(){
   y = 50;
 
   // ── Work info box ──
-  pdf.setFillColor(...LT); pdf.setDrawColor(...SKY); pdf.setLineWidth(0.3);
-  pdf.roundedRect(M, y, CW, 40, 2, 2, 'FD');
-  pdf.setFont('helvetica','bold'); pdf.setFontSize(13); pdf.setTextColor(...NAVY);
-  pdf.text(tag||'—', M+4, y+9);
-  pdf.setFont('helvetica','normal'); pdf.setFontSize(9); pdf.setTextColor(...GR);
-  const desc = gv('tag-desc'); pdf.text(desc.slice(0,60), M+4, y+16);
-  function ib(lbl,val,x,yy){
-    pdf.setFont('helvetica','bold'); pdf.setFontSize(6); pdf.setTextColor(...GR); pdf.text(lbl.toUpperCase(),x,yy);
-    pdf.setFont('helvetica','normal'); pdf.setFontSize(9); pdf.setTextColor(...NAVY); pdf.text(String(val||'—').slice(0,28),x,yy+5);
+  if(include('workInfo')){
+    pdf.setFillColor(...LT); pdf.setDrawColor(...SKY); pdf.setLineWidth(0.3);
+    pdf.roundedRect(M, y, CW, 40, 2, 2, 'FD');
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(13); pdf.setTextColor(...NAVY);
+    pdf.text(tag||'—', M+4, y+9);
+    pdf.setFont('helvetica','normal'); pdf.setFontSize(9); pdf.setTextColor(...GR);
+    const desc = gv('tag-desc'); pdf.text(desc.slice(0,60), M+4, y+16);
+    function ib(lbl,val,x,yy){
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(6); pdf.setTextColor(...GR); pdf.text(lbl.toUpperCase(),x,yy);
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(9); pdf.setTextColor(...NAVY); pdf.text(String(val||'—').slice(0,28),x,yy+5);
+    }
+    ib('Date',gv('wo-date'),M+4,y+24); ib('Done By',gv('done-by'),M+44,y+24);
+    ib('WO No.',gv('wo-no'),M+100,y+24);
+    ib('Location',gv('location'),M+CW/2+4,y+18); ib('Compartment',gv('compartment'),M+CW/2+4,y+28);
+    ib('Signature',gv('ack-sign'),M+4,y+28);
+    y += 42;
   }
-  ib('Date',gv('wo-date'),M+4,y+24); ib('Done By',gv('done-by'),M+44,y+24);
-  ib('WO No.',gv('wo-no'),M+100,y+24);
-  ib('Location',gv('location'),M+CW/2+4,y+18); ib('Compartment',gv('compartment'),M+CW/2+4,y+28);
-  ib('Signature',gv('ack-sign'),M+4,y+28);
-  y += 42;
 
   // ── Basic Motor Data ──
-  ckY(28);
-  pdf.setFillColor(...NAVY); pdf.rect(M,y,CW,8,'F');
-  pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...WH);
-  pdf.text('BASIC MOTOR DATA', M+3, y+5.5);
-  y += 10;
-  const mdF = [
-    ['Serial No.', gv('m-sn')], ['Rated Voltage', gv('m-v')], ['Rated Power', gv('m-pwr')],
-    ['Service Factor', gv('m-sf')], ['Mounting', gv('m-mount')], ['Manufacture', gv('m-mfr')]
-  ];
-  const cw3 = CW/3; const rh = 9;
-  mdF.forEach((f,i) => {
-    const col=i%3, row=Math.floor(i/3), x=M+col*cw3, yy=y+row*rh;
-    pdf.setFillColor(col%2===0?248:244, 250, 255); pdf.rect(x,yy,cw3,rh,'F');
-    pdf.setDrawColor(...SKY); pdf.setLineWidth(0.1); pdf.rect(x,yy,cw3,rh,'D');
-    pdf.setFont('helvetica','bold'); pdf.setFontSize(6); pdf.setTextColor(...GR); pdf.text(f[0].toUpperCase(),x+2,yy+3.5);
-    pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5); pdf.setTextColor(...NAVY); pdf.text(String(f[1]||'—'),x+2,yy+7.5);
-  });
-  y += Math.ceil(mdF.length/3)*rh + 6;
+  if(include('basic')){
+    ckY(28);
+    pdf.setFillColor(...NAVY); pdf.rect(M,y,CW,8,'F');
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...WH);
+    pdf.text('BASIC MOTOR DATA', M+3, y+5.5);
+    y += 10;
+    const mdF = [
+      ['Serial No.', gv('m-sn')], ['Rated Voltage', gv('m-v')], ['Rated Power', gv('m-pwr')],
+      ['Service Factor', gv('m-sf')], ['Mounting', gv('m-mount')], ['Manufacture', gv('m-mfr')]
+    ];
+    const cw3 = CW/3; const rh = 9;
+    mdF.forEach((f,i) => {
+      const col=i%3, row=Math.floor(i/3), x=M+col*cw3, yy=y+row*rh;
+      pdf.setFillColor(col%2===0?248:244, 250, 255); pdf.rect(x,yy,cw3,rh,'F');
+      pdf.setDrawColor(...SKY); pdf.setLineWidth(0.1); pdf.rect(x,yy,cw3,rh,'D');
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(6); pdf.setTextColor(...GR); pdf.text(f[0].toUpperCase(),x+2,yy+3.5);
+      pdf.setFont('helvetica','normal'); pdf.setFontSize(8.5); pdf.setTextColor(...NAVY); pdf.text(String(f[1]||'—'),x+2,yy+7.5);
+    });
+    y += Math.ceil(mdF.length/3)*rh + 6;
+  }
 
   // ── OL Data ──
-  ckY(28);
-  const olCode    = document.getElementById('ol-code').textContent;
+  if(include('ol')){
+    ckY(28);
+    const olCode    = document.getElementById('ol-code').textContent;
   const olPlug    = document.getElementById('ol-plug').textContent;
   const olSetTxt  = document.getElementById('ol-setting').textContent;
   const szLabel   = olSize !== null ? 'Size '+olSize : '—';
@@ -1155,15 +1186,17 @@ async function generatePDF(){
     margin:{left:M,right:M}
   });
   y = pdf.lastAutoTable.finalY + 6;
+  }
 
   // ── Check Items ──
-  ckY(16);
-  pdf.setFillColor(...NAVY); pdf.rect(M,y,CW,8,'F');
-  pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...WH);
-  pdf.text('CHECK ITEMS', M+3, y+5.5);
-  y += 10;
+  if(include('checkItems')){
+    ckY(16);
+    pdf.setFillColor(...NAVY); pdf.rect(M,y,CW,8,'F');
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...WH);
+    pdf.text('CHECK ITEMS', M+3, y+5.5);
+    y += 10;
 
-  const CI = [
+    const CI = [
     ['1','No sign of damage','c1'],
     ['2','No dust or dirty','c2'],
     ['3a','No deterioration in insulation','c3a'],
@@ -1186,68 +1219,101 @@ async function generatePDF(){
     ['14','Grounding cable OK','c14'],
     ['15','Work history recorded','c15'],
   ];
+    const tableBody = CI.map(([no,crit,id]) => {
+      const sel = document.getElementById('res-'+id);
+      const res = sel ? sel.value : '';
+      const rmk = document.getElementById('rmk-'+id);
+      return [no, crit, res||'—', rmk?rmk.value.trim():'—'];
+    });
 
-  const tableBody = CI.map(([no,crit,id]) => {
-    const sel = document.getElementById('res-'+id);
-    const res = sel ? sel.value : '';
-    const rmk = document.getElementById('rmk-'+id);
-    return [no, crit, res||'—', rmk?rmk.value.trim():'—'];
-  });
-
-  pdf.autoTable({
-    startY:y,
-    head:[['No.','Criteria','Result','Remark']],
-    body:tableBody,
-    styles:{fontSize:8,cellPadding:3,overflow:'linebreak'},
-    headStyles:{fillColor:NAVY,textColor:WH,fontStyle:'bold'},
-    columnStyles:{0:{cellWidth:12,halign:'center'},1:{cellWidth:80},2:{cellWidth:16,halign:'center'},3:{cellWidth:CW-108}},
-    didParseCell: d => {
-      if(d.section==='body'&&d.column.index===2){
-        const v=d.cell.raw;
-        if(v==='OK') d.cell.styles.textColor=OKC;
-        else if(v==='NG') d.cell.styles.textColor=NGC;
-        else if(v==='N/A') d.cell.styles.textColor=NAC;
-        else d.cell.styles.textColor=GR;
-        d.cell.styles.fontStyle='bold';
-      }
-    },
-    alternateRowStyles:{fillColor:[248,250,255]},
-    margin:{left:M,right:M}
-  });
-  y = pdf.lastAutoTable.finalY + 6;
+    pdf.autoTable({
+      startY:y,
+      head:[['No.','Criteria','Result','Remark']],
+      body:tableBody,
+      styles:{fontSize:8,cellPadding:3,overflow:'linebreak'},
+      headStyles:{fillColor:NAVY,textColor:WH,fontStyle:'bold'},
+      columnStyles:{0:{cellWidth:12,halign:'center'},1:{cellWidth:80},2:{cellWidth:16,halign:'center'},3:{cellWidth:CW-108}},
+      didParseCell: d => {
+        if(d.section==='body'&&d.column.index===2){
+          const v=d.cell.raw;
+          if(v==='OK') d.cell.styles.textColor=OKC;
+          else if(v==='NG') d.cell.styles.textColor=NGC;
+          else if(v==='N/A') d.cell.styles.textColor=NAC;
+          else d.cell.styles.textColor=GR;
+          d.cell.styles.fontStyle='bold';
+        }
+      },
+      alternateRowStyles:{fillColor:[248,250,255]},
+      margin:{left:M,right:M}
+    });
+    y = pdf.lastAutoTable.finalY + 6;
+  }
 
   // ── Measurement data ──
-  ckY(30);
-  pdf.setFillColor(...NAVY); pdf.rect(M,y,CW,8,'F');
-  pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...WH);
-  pdf.text('MEASUREMENT DATA', M+3, y+5.5);
-  y += 10;
+  if(include('measurement')){
+    ckY(30);
+    pdf.setFillColor(...NAVY); pdf.rect(M,y,CW,8,'F');
+    pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...WH);
+    pdf.text('MEASUREMENT DATA', M+3, y+5.5);
+    y += 10;
 
-  const meg1  = document.getElementById('meg-1min')?.value  || '—';
-  const meg10 = document.getElementById('meg-10min')?.value || '—';
-  const rt12  = document.getElementById('res-t12')?.value   || '—';
-  const rt13  = document.getElementById('res-t13')?.value   || '—';
-  const rt23  = document.getElementById('res-t23')?.value   || '—';
+    const megTimes = ['15s','30s','45s','1m','2m','3m','4m','5m','6m','7m','8m','9m','10m'];
+    const megVals = megTimes.map(t => ({t, v: document.getElementById('meg-'+t.replace(/\s+/g,'').replace(/m/g,'m'))?.value || '—' }));
+    const rt12  = document.getElementById('res-t12')?.value   || '—';
+    const rt13  = document.getElementById('res-t13')?.value   || '—';
+    const rt23  = document.getElementById('res-t23')?.value   || '—';
+    const piVal = gv('pi-val') || '—';
+    const darVal = gv('dar-val') || '—';
 
-  pdf.autoTable({
-    startY:y,
-    head:[['Test','Points','Value','Unit']],
-    body:[
-      ['Megger 1000 Vdc','T1/T2/T3 — Ground (1 min)',meg1,'MΩ'],
-      ['Megger 1000 Vdc','T1/T2/T3 — Ground (10 min)',meg10,'MΩ'],
-      ['3-Phase Resistance','T1 – T2',rt12,'Ω'],
-      ['3-Phase Resistance','T1 – T3',rt13,'Ω'],
-      ['3-Phase Resistance','T2 – T3',rt23,'Ω'],
-    ],
-    styles:{fontSize:9,cellPadding:3},
-    headStyles:{fillColor:BLUE,textColor:WH},
-    alternateRowStyles:{fillColor:LT},
-    margin:{left:M,right:M}
-  });
-  y = pdf.lastAutoTable.finalY + 6;
+    pdf.autoTable({
+      startY:y,
+      head:[['Time','Insulation Resistance (MΩ)']],
+      body: megVals.map(m => [m.t, m.v]),
+      styles:{fontSize:9,cellPadding:3}, headStyles:{fillColor:BLUE,textColor:WH}, alternateRowStyles:{fillColor:LT}, margin:{left:M,right:M}
+    });
+    y = pdf.lastAutoTable.finalY + 6;
+
+    pdf.autoTable({ startY:y, body:[[ 'PI (10m / 1m)', piVal ], [ 'DAR (1m / 30s)', darVal ]], styles:{fontSize:9,cellPadding:3}, margin:{left:M,right:M} });
+    y = pdf.lastAutoTable.finalY + 6;
+
+    const rtdVals = Array.from(document.querySelectorAll('.rtd-input')).map(el => el.value.trim()).filter(v=>v!=='');
+    const mpr = [gv('mpr-1'), gv('mpr-2'), gv('mpr-3'), gv('mpr-4'), gv('mpr-5'), gv('mpr-6')];
+    const dcs = [gv('dcs-stator-1'), gv('dcs-stator-2'), gv('dcs-stator-3'), gv('dcs-bearing-1'), gv('dcs-bearing-2')];
+
+    pdf.autoTable({
+      startY:y,
+      head:[['Test','Points','Value','Unit']],
+      body:[
+        ['Megger summary','T1/T2/T3 — various', megVals.map(m=>m.v).join(' / '),'MΩ'],
+        ['3-Phase Resistance','T1 – T2',rt12,'Ω'],
+        ['3-Phase Resistance','T1 – T3',rt13,'Ω'],
+        ['3-Phase Resistance','T2 – T3',rt23,'Ω'],
+        ['RTD readings','All RTDs', rtdVals.length? rtdVals.join(', '):'—',''],
+        ['Motor protection','Starts / Emg / StarterOps / Hours / LastTrip / Time', mpr.join(' / '),''],
+        ['DCS readings','Stator1 / Stator2 / Stator3 / BearingDE / BearingNDE', dcs.join(' / '),'']
+      ],
+      styles:{fontSize:9,cellPadding:3}, headStyles:{fillColor:BLUE,textColor:WH}, alternateRowStyles:{fillColor:LT}, margin:{left:M,right:M}
+    });
+    y = pdf.lastAutoTable.finalY + 6;
+
+    if(include('trend') && TREND_PHOTOS.length){
+      ckY(12);
+      pdf.setFillColor(...NAVY); pdf.rect(M,y,CW,8,'F');
+      pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...WH);
+      pdf.text('MEGGER TREND PICTURES ('+TREND_PHOTOS.length+')', M+3, y+5.5);
+      y += 10;
+      const tImgs = await Promise.all(TREND_PHOTOS.map(p=> new Promise(res=>{const im=new Image();im.onload=()=>res({src:p.src,nw:im.naturalWidth,nh:im.naturalHeight});im.onerror=()=>res(null);im.src=p.src;})));
+      const validT = tImgs.filter(Boolean);
+      for(let i=0;i<validT.length;i++){
+        ckY(50);
+        try{ const f = Math.min(CW, (validT[i].nw/validT[i].nh)*60); pdf.addImage(validT[i].src,'JPEG',M, y, f, 60); }catch(e){}
+        y += 64;
+      }
+    }
+  }
 
   // ── Photo Documentation ──
-  if(PHOTOS.length > 0){
+  if(include('photos') && PHOTOS.length > 0){
     ckY(20);
     pdf.setFillColor(...NAVY); pdf.rect(M,y,CW,8,'F');
     pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...WH);
@@ -1319,7 +1385,7 @@ async function generatePDF(){
   const actionsTaken = gv('actions-taken');
   const overallRes  = gv('overall-result');
   const nextPm      = gv('next-pm');
-  if(findings || actionsTaken || overallRes || nextPm){
+  if(include('conclusion') && (findings || actionsTaken || overallRes || nextPm)){
     ckY(20);
     pdf.setFillColor(...NAVY); pdf.rect(M,y,CW,8,'F');
     pdf.setFont('helvetica','bold'); pdf.setFontSize(9); pdf.setTextColor(...WH);
@@ -1579,6 +1645,38 @@ function printPage(){
 
     window.print();
   });
+}
+
+// Print options helpers
+function togglePrintOptions(close){
+  const el = document.getElementById('print-options');
+  if(!el) return;
+  if(close) { el.style.display = 'none'; return; }
+  el.style.display = (el.style.display==='none' || !el.style.display) ? 'block' : 'none';
+}
+function getSelectedPrintOptions(){
+  return Array.from(document.querySelectorAll('.prt-opt:checked')).map(i=>i.value);
+}
+function printSelected(){
+  const sel = getSelectedPrintOptions();
+  const panelMap = {workInfo:'Work Completion Report', basic:'Basic Motor Data', checkItems:'Check Items', photos:'Photo Documentation', conclusion:'Conclusion & Notes'};
+  const panels = Array.from(document.querySelectorAll('.panel'));
+  const hidden = [];
+  panels.forEach(p=>{
+    const title = p.querySelector('.sec-hdr-title')?.textContent?.trim();
+    const keep = Object.keys(panelMap).some(k=> sel.includes(k) && panelMap[k]===title);
+    if(!keep){ p.dataset._oldDisplay = p.style.display || ''; p.style.display = 'none'; hidden.push(p); }
+  });
+  // close options UI
+  togglePrintOptions(true);
+  const restore = () => { hidden.forEach(p=>{ p.style.display = p.dataset._oldDisplay || ''; delete p.dataset._oldDisplay; }); window.removeEventListener('afterprint', restore); };
+  window.addEventListener('afterprint', restore);
+  printPage();
+}
+async function exportSelectedPDF(){
+  const sel = getSelectedPrintOptions();
+  togglePrintOptions(true);
+  await generatePDF(sel);
 }
 
 // ═══════════════════════════════════════════════════

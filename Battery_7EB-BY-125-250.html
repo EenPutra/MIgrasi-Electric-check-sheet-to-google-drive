@@ -184,9 +184,54 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
   .topbar{padding:0 12px}
   .wrap{padding:12px 10px 60px}
 }
+@media print{
+  @page{size:A4 portrait;margin:12mm 15mm}
+  *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  .topbar,.actions,.action-row,.footer,.footer-bar,.notice,.sec-hdr-arrow,
+  .live-dot,.hero-stats,.ss-drop,.tb-right,.btn-add-photo,
+  .photo-drop input[type=file],.del-btn{display:none!important}
+  .print-header{display:flex!important}
+  body{background:#fff!important;font-size:11px}
+  .hero{padding:14px 20px 12px}
+  .wrap{padding:10px 0 0;max-width:100%}
+  .sec-body{display:block!important}
+  .panel{box-shadow:none!important;border:1px solid #bfdbfe;margin-bottom:10px;break-inside:avoid;page-break-inside:avoid}
+  .sec-hdr{cursor:default;padding:8px 14px}
+  .mf input,.mf select,.mf textarea,.md-input,.ss-input,
+  .field input,.field select,.field textarea,input[type=text]:not(.r-sel),input[type=date],input[type=number]{
+    background:transparent!important;border:none!important;
+    border-bottom:1px solid #dbeafe!important;border-radius:0!important;
+    padding:2px 0!important;color:#0f172a!important;font-size:11px!important}
+  .mf input[readonly],.md-input[readonly]{color:#1e3a5f!important}
+  .r-sel{border:none!important;border-radius:3px!important;padding:2px 4px!important;
+    font-size:10px!important;-webkit-appearance:none;appearance:none}
+  .r-sel.ok{background:var(--ok-bg)!important;color:var(--ok)!important}
+  .r-sel.ng{background:var(--ng-bg)!important;color:var(--ng)!important}
+  .r-sel.na{background:var(--na-bg)!important;color:#92400e!important}
+  .rmk-inp,.meas-inp,.meas-input{background:transparent!important;border:none!important;
+    border-bottom:1px solid #dbeafe!important;border-radius:0!important;
+    padding:2px 0!important;font-size:10px!important}
+  .tbl-wrap{overflow:visible}
+  .ct,.check-table{min-width:unset!important;width:100%}
+  .ct th,.ct td,.check-table th,.check-table td{font-size:10px!important;padding:5px 7px!important}
+  .wo-grid,.md-grid{gap:8px;padding:10px}
+}
+.print-header{display:none;font-family:var(--mono);font-size:10px;color:var(--txt4);
+  padding:4px 0 8px;border-bottom:2px solid var(--navy);margin-bottom:8px;
+  justify-content:space-between;align-items:center}
+.print-header strong{font-size:13px;color:var(--navy);font-family:var(--raj);letter-spacing:1px}
+.btn-back{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:5px;font-size:11px;font-weight:700;letter-spacing:1px;text-decoration:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.85);border:1px solid rgba(255,255,255,0.18);transition:background .15s;white-space:nowrap;cursor:pointer;flex-shrink:0}
+.btn-back:hover{background:rgba(255,255,255,0.2);color:#fff}
 </style>
 </head>
 <body>
+
+<div class="print-header" id="print-header">
+  <div><strong>POMI — Battery Inspection — 7EB-BY-125/250</strong><br>
+    <span id="ph-tag">—</span> · <span id="ph-desc">—</span></div>
+  <div style="text-align:right">Date: <span id="ph-date">—</span><br>
+    WO: <span id="ph-wo">—</span></div>
+</div>
 
 <!-- TOPBAR -->
 <div class="topbar">
@@ -195,9 +240,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
   <div class="tb-sep"></div>
   <span class="tb-sub">7EB-BY-125/250 · BATTERY INSPECTION & MAINTENANCE</span>
   <div class="tb-right">
+    <a class="btn-back" href="index.html" title="Back to Portal">&#8592; Portal</a>
+    
     <span class="tb-time" id="clock">--:--:--</span>
     <button class="btn btn-draft btn-sm" onclick="saveDraft()">💾 Draft</button>
-    <button class="btn btn-pdf btn-sm" onclick="generatePDF()">📄 PDF</button>
+    <button class="btn btn-pdf btn-sm" onclick="printPage()">🖨️ Print / PDF</button>
     <button class="btn btn-sm" style="background:#16a34a;color:#fff;border:none" onclick="submitToDb()">🗄️ Submit DB</button>
   </div>
 </div>
@@ -443,7 +490,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--txt);min-height:10
 <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;padding:4px 0 8px">
   <button class="btn" style="background:#f1f5f9;color:var(--navy);border:1px solid var(--bdr)" onclick="resetForm()">🔄 Reset</button>
   <button class="btn btn-draft" style="background:var(--navy);color:#fff" onclick="saveDraft()">💾 Save Draft</button>
-  <button class="btn btn-pdf" onclick="generatePDF()">📄 Download PDF</button>
+  <button class="btn btn-pdf" onclick="printPage()">🖨️ Print / Save PDF</button>
   <button class="btn" style="background:#16a34a;color:#fff;font-size:15px;padding:10px 24px" onclick="submitToDb()">📊 Submit to Database</button>
 </div>
 <div id="notice" class="notice"></div>
@@ -815,6 +862,12 @@ async function submitToDb(){
   }catch(e){
     DB.showSubmitResult(false,'Gagal menyimpan: '+e.message);
   }
+}
+
+function printPage(){
+  document.querySelectorAll('.sec-hdr').forEach(h => h.classList.add('open'));
+  document.querySelectorAll('.sec-body').forEach(b => b.style.display = 'block');
+  window.print();
 }
 </script>
 </body>
