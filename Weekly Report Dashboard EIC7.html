@@ -51,8 +51,8 @@
   .photo-zone{border:2px dashed var(--border);border-radius:8px;padding:10px;text-align:center;font-size:12px;color:var(--grey);}
   .photo-zone.drag{border-color:var(--teal);background:#eef7fa;}
   .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
-  .thumb{width:90px;}
-  .thumb img{width:90px;height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--border);}
+  .thumb{width:110px;}
+  .thumb img{width:110px;height:auto;border-radius:6px;border:1px solid var(--border);display:block;}
   .thumb input{margin-top:3px;font-size:10px;padding:3px;}
   .thumb .rm{font-size:10px;color:var(--red);cursor:pointer;text-align:center;margin-top:2px;}
   .hl-toggle{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:bold;}
@@ -148,6 +148,7 @@
 window.DATA = { period: "", recNotes: "", workOrders: [] };
 let activeFilter = "ALL";
 let searchTerm = "";
+let lastOpenIdx = -1;
 
 const HEADER_MAP = {
   wo: ["Work Order"], asset: ["Asset"], location: ["Location"], route: ["Route"],
@@ -369,6 +370,7 @@ function renderTable(){
 
 function toggleDetail(idx){
   DATA.workOrders[idx]._open = !DATA.workOrders[idx]._open;
+  if(DATA.workOrders[idx]._open) lastOpenIdx = idx;
   renderTable();
 }
 
@@ -392,7 +394,7 @@ function buildDetailPanel(idx){
     <div style="margin-top:12px;">
       <label>Foto Evidence</label>
       <div class="photo-zone" id="pz_${idx}">
-        Tarik &amp; lepas foto ke sini, atau
+        Tarik &amp; lepas foto ke sini, tekan <b>Ctrl+V</b> untuk paste dari clipboard, atau
         <span class="file-btn btn secondary" style="padding:5px 10px;font-size:11px;">Pilih Foto<input type="file" accept="image/*" multiple id="pf_${idx}"></span>
       </div>
       <div class="thumbs" id="th_${idx}"></div>
@@ -419,7 +421,7 @@ function handleFiles(idx, files){
   if(!w.photos) w.photos = [];
   Array.from(files).forEach(file => {
     if(!file.type.startsWith('image/')) return;
-    resizeImage(file, 1280, 0.75).then(dataUrl => {
+    resizeImage(file, 900, 0.60).then(dataUrl => {
       w.photos.push({filename:file.name, dataUrl:dataUrl, caption:""});
       saveDraft();
       renderThumbs(idx);
@@ -428,14 +430,15 @@ function handleFiles(idx, files){
   });
 }
 
-function resizeImage(file, maxWidth, quality){
+function resizeImage(file, maxSide, quality){
   return new Promise((resolve) => {
     const reader = new FileReader();
     reader.onload = function(e){
       const img = new Image();
       img.onload = function(){
         let w = img.width, h = img.height;
-        if(w > maxWidth){ h = Math.round(h * maxWidth / w); w = maxWidth; }
+        const scale = Math.min(1, maxSide / Math.max(w, h));
+        if(scale < 1){ w = Math.round(w * scale); h = Math.round(h * scale); }
         const canvas = document.createElement('canvas');
         canvas.width = w; canvas.height = h;
         canvas.getContext('2d').drawImage(img, 0, 0, w, h);
@@ -502,6 +505,34 @@ window.addEventListener('drop', e => {
     };
     reader.readAsText(file);
   }
+});
+
+// Paste image from clipboard (Ctrl+V)
+document.addEventListener('paste', function(e){
+  const items = (e.clipboardData || window.clipboardData || {}).items;
+  if(!items) return;
+  let imageFile = null;
+  for(const item of Array.from(items)){
+    if(item.type.startsWith('image/')){
+      imageFile = item.getAsFile();
+      break;
+    }
+  }
+  if(!imageFile) return;
+  if(lastOpenIdx < 0 || lastOpenIdx >= DATA.workOrders.length) return;
+  if(!DATA.workOrders[lastOpenIdx]._open) return;
+  e.preventDefault();
+  const w = DATA.workOrders[lastOpenIdx];
+  if(!w.photos) w.photos = [];
+  const pz = document.getElementById('pz_'+lastOpenIdx);
+  if(pz){ pz.classList.add('drag'); setTimeout(()=>pz.classList.remove('drag'), 600); }
+  resizeImage(imageFile, 900, 0.60).then(dataUrl => {
+    const ts = new Date().toISOString().slice(11,19).replace(/:/g,'');
+    w.photos.push({filename:'paste-'+ts+'.jpg', dataUrl:dataUrl, caption:""});
+    saveDraft();
+    renderThumbs(lastOpenIdx);
+    renderTable();
+  });
 });
 
 loadDraft();
