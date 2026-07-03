@@ -67,6 +67,16 @@
   .modal-box{background:#fff;border-radius:12px;padding:24px 28px;width:min(640px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
   .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
   .badge-manual{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:bold;background:var(--amber);color:#fff;margin-left:5px;vertical-align:middle;letter-spacing:.5px;}
+  .rs-dot{display:inline-block;width:9px;height:9px;border-radius:50%;vertical-align:middle;flex-shrink:0;}
+  .rs-done{background:var(--green);}
+  .rs-inprogress{background:var(--amber);}
+  .rs-notaccessed{background:#d0d5dd;border:1px solid #b8bec7;}
+  .rs-bar{display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+  .rs-stat{display:flex;align-items:center;gap:7px;font-size:13px;}
+  .rs-stat b{font-size:20px;font-weight:700;}
+  .rs-stat.s-done b{color:var(--green);}
+  .rs-stat.s-inprogress b{color:var(--amber);}
+  .rs-stat.s-notaccessed b{color:#8a95a0;}
 </style>
 </head>
 <body>
@@ -177,6 +187,12 @@
       <div class="kpi"><div class="num" id="kpiOut">0</div><div class="lbl">OUTSTANDING</div></div>
       <div class="kpi cancelled"><div class="num" id="kpiCan">0</div><div class="lbl">CANCELLED</div></div>
     </div>
+    <div class="rs-bar">
+      <span style="font-size:10.5px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.5px;">Status Pengisian:</span>
+      <span class="rs-stat s-done"><span class="rs-dot rs-done"></span><b id="rsDone">0</b><span style="color:var(--grey);">Sudah Diisi</span></span>
+      <span class="rs-stat s-inprogress"><span class="rs-dot rs-inprogress"></span><b id="rsInprogress">0</b><span style="color:var(--grey);">In Progress</span></span>
+      <span class="rs-stat s-notaccessed"><span class="rs-dot rs-notaccessed"></span><b id="rsNotaccessed">0</b><span style="color:var(--grey);">Belum Diakses</span></span>
+    </div>
   </div>
 
   <div class="card" id="tableCard" style="display:none;">
@@ -185,6 +201,10 @@
       <button class="btn secondary" onclick="openAddModal()" style="font-size:12px;padding:6px 14px;border-color:var(--amber);color:var(--amber);">&#43; Tambah WO / SR Manual</button>
     </div>
     <div class="filters" id="filterBar"></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <span style="font-size:11px;font-weight:700;color:var(--grey);white-space:nowrap;text-transform:uppercase;letter-spacing:.5px;">Pengisian:</span>
+      <div class="filters" id="rsFilterBar"></div>
+    </div>
     <div class="row" style="margin-bottom:10px;">
       <input type="text" id="searchBox" placeholder="Cari WO / asset / deskripsi...">
     </div>
@@ -215,6 +235,7 @@
 <script>
 window.DATA = { period: "", recNotes: "", workOrders: [] };
 let activeFilter = "ALL";
+let activeRsFilter = "ALL";
 let searchTerm = "";
 let lastOpenIdx = -1;
 
@@ -352,6 +373,35 @@ function classify(status){
   return "OUT"; // APPR, INPRG, WMATL, WPCOND, others
 }
 
+function reportingStatus(w){
+  const hasUpdate = (w.whatComplete||'').trim().length > 0;
+  const hasPhotos  = (w.photos||[]).length > 0;
+  if(hasUpdate) return 'done';
+  if(hasPhotos || w.highlight) return 'inprogress';
+  return 'notaccessed';
+}
+function setRsFilter(f){ activeRsFilter = f; renderRsFilterBar(); renderTable(); }
+function renderRsFilterBar(){
+  const c = {done:0, inprogress:0, notaccessed:0};
+  DATA.workOrders.forEach(w => c[reportingStatus(w)]++);
+  document.getElementById('rsDone').textContent        = c.done;
+  document.getElementById('rsInprogress').textContent  = c.inprogress;
+  document.getElementById('rsNotaccessed').textContent = c.notaccessed;
+  const items = [
+    ['ALL',         'Semua',          ''],
+    ['done',        'Sudah Diisi',    'var(--green)'],
+    ['inprogress',  'In Progress',    'var(--amber)'],
+    ['notaccessed', 'Belum Diakses',  'var(--grey)']
+  ];
+  const bar = document.getElementById('rsFilterBar');
+  if(!bar) return;
+  bar.innerHTML = items.map(([f,label,color])=>
+    `<div class="chip ${activeRsFilter===f?'active':''}" onclick="setRsFilter('${f}')">
+       <span class="chip-dot" style="${color?'background:'+color+';opacity:1':''}"></span>
+       ${label} <span class="chip-count">${f==='ALL'?DATA.workOrders.length:c[f]}</span>
+     </div>`
+  ).join('');
+}
 function setFilter(f){ activeFilter = f; renderFilterBar(); renderTable(); }
 
 function renderFilterBar(){
@@ -394,6 +444,7 @@ function render(){
   document.getElementById('kpiCan').textContent = can;
 
   renderFilterBar();
+  renderRsFilterBar();
   renderTable();
 }
 
@@ -402,6 +453,7 @@ function renderTable(){
   let list = DATA.workOrders;
   if(activeFilter === 'HL') list = list.filter(w => w.highlight);
   else if(activeFilter !== 'ALL') list = list.filter(w => classify(w.status) === activeFilter);
+  if(activeRsFilter !== 'ALL') list = list.filter(w => reportingStatus(w) === activeRsFilter);
   if(searchTerm){
     list = list.filter(w => (w.wo+" "+w.asset+" "+w.assetDesc+" "+w.workDesc+" "+w.failureDesc).toLowerCase().includes(searchTerm));
   }
@@ -412,7 +464,7 @@ function renderTable(){
     tr.style.cursor = 'pointer';
     tr.innerHTML = `
       <td>${w.highlight?'&#9733;':''}</td>
-      <td><b>${w.wo}</b>${w.manual?'<span class="badge-manual">MANUAL</span>':''}</td>
+      <td><b>${w.wo}</b>${w.manual?'<span class="badge-manual">MANUAL</span>':''}<br><span class="rs-dot rs-${reportingStatus(w)}" title="${{done:'Sudah Diisi',inprogress:'In Progress',notaccessed:'Belum Diakses'}[reportingStatus(w)]}"></span> <span style="font-size:10px;color:var(--grey);">${{done:'Sudah Diisi',inprogress:'In Progress',notaccessed:'Belum Diakses'}[reportingStatus(w)]}</span></td>
       <td>${escapeHtml(w.asset)}<br><span style="color:var(--grey);font-size:11px;">${escapeHtml(w.assetDesc||'')}</span></td>
       <td>${escapeHtml(w.team)}</td>
       <td><span class="status-pill st-${(w.status||'').toUpperCase()}">${escapeHtml(w.status)}</span></td>
@@ -472,7 +524,7 @@ function buildDetailPanel(idx){
   `;
   setTimeout(() => {
     document.getElementById('hl_'+idx).addEventListener('change', e => { w.highlight = e.target.checked; saveDraft(); renderFilterBar(); });
-    document.getElementById('wc_'+idx).addEventListener('input', e => { w.whatComplete = e.target.value; saveDraft(); });
+    document.getElementById('wc_'+idx).addEventListener('input', e => { w.whatComplete = e.target.value; saveDraft(); renderRsFilterBar(); });
     document.getElementById('pf_'+idx).addEventListener('change', e => handleFiles(idx, e.target.files));
     const zone = document.getElementById('pz_'+idx);
     zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
@@ -696,6 +748,7 @@ function newWeek(){
   document.getElementById('recNotes').value = '';
   document.getElementById('sourceInfo').textContent = '';
   activeFilter = 'ALL';
+  activeRsFilter = 'ALL';
   searchTerm = '';
   lastOpenIdx = -1;
   render();
@@ -715,6 +768,7 @@ function loadWeek(id, period){
     document.getElementById('sourceInfo').textContent = 'Memuat: '+rec.period+' ('+rec.savedAt.slice(0,10)+')';
     saveDraft();
     activeFilter = 'ALL';
+    activeRsFilter = 'ALL';
     searchTerm = '';
     lastOpenIdx = -1;
     render();
