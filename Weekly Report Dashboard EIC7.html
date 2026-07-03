@@ -62,11 +62,68 @@
   .steps b{color:var(--navy);}
   .footer-note{font-size:11px;color:var(--grey);margin-top:6px;}
   #dropOverlay{position:fixed;inset:0;background:rgba(28,114,147,.15);border:4px dashed var(--teal);z-index:999;display:none;align-items:center;justify-content:center;font-size:24px;color:var(--teal);font-weight:bold;}
+  select{width:100%;padding:7px 9px;border:1px solid var(--border);border-radius:6px;font-family:inherit;font-size:13px;background:#fff;color:var(--navy);}
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1000;display:flex;align-items:center;justify-content:center;}
+  .modal-box{background:#fff;border-radius:12px;padding:24px 28px;width:min(640px,96vw);max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);}
+  .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .badge-manual{display:inline-block;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:bold;background:var(--amber);color:#fff;margin-left:5px;vertical-align:middle;letter-spacing:.5px;}
 </style>
 </head>
 <body>
 
 <div id="dropOverlay">Lepaskan file Excel di sini...</div>
+
+<!-- Modal Tambah WO / SR Manual -->
+<div class="modal-overlay" id="addModal" style="display:none;" onclick="if(event.target===this)closeAddModal()">
+  <div class="modal-box">
+    <h2 style="margin:0 0 18px;color:var(--navy);font-size:17px;">&#43; Tambah WO / SR Manual</h2>
+    <div class="modal-grid">
+      <div>
+        <label>No. WO / SR <span style="color:var(--red);">*</span></label>
+        <input type="text" id="mWo" placeholder="cth: 7WO-2026-001 / SR-0042">
+      </div>
+      <div>
+        <label>Status</label>
+        <select id="mStatus">
+          <option value="INPRG">INPRG — In Progress</option>
+          <option value="APPR">APPR — Approved</option>
+          <option value="WMATL">WMATL — Waiting Material</option>
+          <option value="WPCOND">WPCOND — Waiting Plant Condition</option>
+          <option value="COMP">COMP — Completed</option>
+          <option value="CAN">CAN — Cancelled</option>
+        </select>
+      </div>
+      <div>
+        <label>Asset</label>
+        <input type="text" id="mAsset" placeholder="Tag aset (cth: 7TG-GEN-100)">
+      </div>
+      <div>
+        <label>Asset Description</label>
+        <input type="text" id="mAssetDesc" placeholder="Nama / deskripsi aset">
+      </div>
+      <div>
+        <label>Team</label>
+        <input type="text" id="mTeam" placeholder="EIC7 / Kontraktor / dll">
+      </div>
+      <div>
+        <label>Scheduled Start</label>
+        <input type="date" id="mDate">
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label>Work Description</label>
+      <textarea id="mWorkDesc" rows="3" placeholder="Deskripsi pekerjaan yang dilakukan..."></textarea>
+    </div>
+    <div style="margin-top:10px;">
+      <label>Failure Description / Catatan</label>
+      <textarea id="mFailDesc" rows="2" placeholder="Deskripsi masalah / kegagalan (opsional)..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn secondary" onclick="closeAddModal()">Batal</button>
+      <button class="btn green" onclick="submitAddWO()">&#43; Tambah ke List</button>
+    </div>
+  </div>
+</div>
 
 <header>
   <div>
@@ -97,6 +154,7 @@
     <div class="toolbar">
       <span class="file-btn btn">Import Excel WO (.xlsx)<input type="file" id="xlsxInput" accept=".xlsx,.xls"></span>
       <span class="file-btn btn secondary">Lanjutkan dari file .json sebelumnya<input type="file" id="jsonInput" accept=".json"></span>
+      <button class="btn secondary" onclick="openAddModal()" style="border-color:var(--amber);color:var(--amber);">&#43; Tambah WO / SR Manual</button>
       <button class="btn" id="saveWeekBtn" style="background:#1e4d8c;">&#128190; Simpan Laporan</button>
       <button class="btn secondary" id="newWeekBtn">&#43; Minggu Baru</button>
       <button class="btn green" id="exportBtn">Export Data (.json)</button>
@@ -122,7 +180,10 @@
   </div>
 
   <div class="card" id="tableCard" style="display:none;">
-    <h2>Daftar Work Order</h2>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+      <h2 style="margin:0;">Daftar Work Order</h2>
+      <button class="btn secondary" onclick="openAddModal()" style="font-size:12px;padding:6px 14px;border-color:var(--amber);color:var(--amber);">&#43; Tambah WO / SR Manual</button>
+    </div>
     <div class="filters" id="filterBar"></div>
     <div class="row" style="margin-bottom:10px;">
       <input type="text" id="searchBox" placeholder="Cari WO / asset / deskripsi...">
@@ -351,7 +412,7 @@ function renderTable(){
     tr.style.cursor = 'pointer';
     tr.innerHTML = `
       <td>${w.highlight?'&#9733;':''}</td>
-      <td><b>${w.wo}</b></td>
+      <td><b>${w.wo}</b>${w.manual?'<span class="badge-manual">MANUAL</span>':''}</td>
       <td>${escapeHtml(w.asset)}<br><span style="color:var(--grey);font-size:11px;">${escapeHtml(w.assetDesc||'')}</span></td>
       <td>${escapeHtml(w.team)}</td>
       <td><span class="status-pill st-${(w.status||'').toUpperCase()}">${escapeHtml(w.status)}</span></td>
@@ -392,6 +453,8 @@ function buildDetailPanel(idx){
         <label>Work Desc</label>
         <div style="font-size:12.5px;color:var(--grey);margin-bottom:10px;white-space:pre-wrap;">${escapeHtml(w.workDesc||'-')}</div>
         <label class="hl-toggle"><input type="checkbox" id="hl_${idx}" ${w.highlight?'checked':''}> Highlight untuk laporan (tampilkan di PPT)</label>
+        ${w.manual?`<div style="margin-top:10px;"><button class="btn danger" style="font-size:11px;padding:4px 12px;" onclick="removeManualWO(${idx})">&#128465; Hapus entri manual ini</button></div>`:''}
+
       </div>
       <div>
         <label>Update / What was Complete?</label>
@@ -513,6 +576,56 @@ window.addEventListener('drop', e => {
     reader.readAsText(file);
   }
 });
+
+// ── Tambah WO / SR Manual ──
+function openAddModal(){
+  ['mWo','mAsset','mAssetDesc','mTeam','mWorkDesc','mFailDesc'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('mStatus').value='INPRG';
+  document.getElementById('mDate').value='';
+  document.getElementById('addModal').style.display='flex';
+  setTimeout(()=>document.getElementById('mWo').focus(),80);
+}
+function closeAddModal(){
+  document.getElementById('addModal').style.display='none';
+}
+function submitAddWO(){
+  const wo = document.getElementById('mWo').value.trim();
+  if(!wo){ alert('No. WO / SR wajib diisi.'); document.getElementById('mWo').focus(); return; }
+  const existing = DATA.workOrders.find(w=>w.wo===wo);
+  if(existing && !confirm('WO "'+wo+'" sudah ada di list. Tambah tetap sebagai entri baru?')) return;
+  const entry = {
+    wo: wo,
+    asset:        document.getElementById('mAsset').value.trim(),
+    assetDesc:    document.getElementById('mAssetDesc').value.trim(),
+    locDesc:      '',
+    failureDesc:  document.getElementById('mFailDesc').value.trim(),
+    workDesc:     document.getElementById('mWorkDesc').value.trim(),
+    team:         document.getElementById('mTeam').value.trim(),
+    workType:     'MANUAL',
+    priority:     '',
+    scheduledStart: document.getElementById('mDate').value,
+    status:       document.getElementById('mStatus').value,
+    whatComplete: '',
+    highlight:    false,
+    photos:       [],
+    manual:       true,
+    _open:        true
+  };
+  DATA.workOrders.unshift(entry);
+  saveDraft();
+  closeAddModal();
+  activeFilter = 'ALL';
+  lastOpenIdx = 0;
+  render();
+}
+function removeManualWO(idx){
+  const w = DATA.workOrders[idx];
+  if(!w || !w.manual) return;
+  if(!confirm('Hapus entri manual "'+w.wo+'" dari list?')) return;
+  DATA.workOrders.splice(idx,1);
+  saveDraft();
+  render();
+}
 
 // ── IndexedDB — riwayat laporan mingguan ──
 let currentWeekId = null;
