@@ -708,14 +708,7 @@ async function generatePDF(selSet){
 
   function drawTbl(title,tbId,hdrs,cws){
     ck(18);pdf.setFillColor(...STL);pdf.rect(M,y,W-M*2,7,'F');pdf.setTextColor(...LT);pdf.setFont(BASE_FONT,'bold');pdf.setFontSize(8.5);pdf.text('>  '+sanitizeText(title),M+3,y+5);y+=10;
-    const tableBody = document.getElementById(tbId);
-    const sourceTable = tableBody ? tableBody.closest('table') : null;
     const columnStyles = {0:{cellWidth:8,halign:'center'},1:{cellWidth:cws[0]||70},...hdrs.reduce((o,_,i)=>({...o,[i+2]:{cellWidth:cws[i+1]||22,halign:'center'}}),{})};
-    if(sourceTable && sourceTable.querySelector('thead')){
-      pdf.autoTable({html:sourceTable,startY:y,theme:'grid',styles:{font:BASE_FONT,fontSize:6.8,cellPadding:2,textColor:[26,38,32],lineColor:[200,215,205],lineWidth:0.16},headStyles:{fillColor:[240,245,241],textColor:[80,110,90],fontStyle:'bold',fontSize:6.5,halign:'center'},columnStyles,tableWidth:'auto',margin:{left:M,right:M},didParseCell:d=>{const v=d.cell.text[0];if(['OK','No Leak','Clean','Normal'].includes(v)){d.cell.styles.textColor=[...OK];d.cell.styles.fontStyle='bold';}if(['NG','Leak','Dirty','Noise'].includes(v)){d.cell.styles.textColor=[...RED];d.cell.styles.fontStyle='bold';}if(v==='N/A')d.cell.styles.textColor=[...NA];}});
-      y=pdf.lastAutoTable.finalY+5;
-      return;
-    }
     const body=[];
     document.getElementById(tbId).querySelectorAll('tr').forEach(tr=>{
       if(tr.classList.contains('shdr')){body.push([{content:tr.querySelector('td').textContent,colSpan:99,styles:{fillColor:[240,245,241],fontStyle:'bold',fontSize:7,textColor:[74,94,82]}}]);return;}
