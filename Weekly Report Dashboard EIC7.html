@@ -454,10 +454,11 @@ const PIE_SLICES = [
 ];
 
 function classifyGroup(team){
-  const t = (team||'').toUpperCase();
-  if(t.indexOf('FIRE') !== -1) return 'FIRE';
-  if(/(^|[^A-Z0-9])C7([^A-Z0-9]|$)/.test(t)) return 'C7';
-  if(/(^|[^A-Z0-9])E7([^A-Z0-9]|$)/.test(t)) return 'E7';
+  const t = (team||'').toUpperCase().trim();
+  if(t === 'EIC7' || t === '') return null; // generic placeholder, not a specific group
+  if(t.indexOf('FIRE') !== -1 || t.indexOf('FP') !== -1) return 'FIRE';
+  if(t.indexOf('C7') !== -1) return 'C7';
+  if(t.indexOf('E7') !== -1) return 'E7';
   return null;
 }
 
