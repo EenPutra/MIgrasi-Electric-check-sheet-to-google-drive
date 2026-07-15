@@ -44,6 +44,7 @@
   .status-pill{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10.5px;font-weight:bold;color:#fff;}
   .st-APPR{background:#8a94a6;} .st-INPRG{background:var(--teal);} .st-WMATL{background:var(--amber);}
   .st-WPCOND{background:#6d4fc2;} .st-COMP{background:var(--green);} .st-CAN{background:var(--red);}
+  .st-WAPPR{background:#a06a1f;} .st-SSAPPR{background:#5c6b7a;} .st-WCOND{background:#6d4fc2;}
   .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
   .chip{padding:6px 14px;border-radius:20px;border:1.5px solid var(--teal);background:#fff;color:var(--teal);font-size:12px;font-weight:bold;cursor:pointer;}
   .chip.active{background:var(--teal);color:#fff;}
@@ -100,13 +101,28 @@
   .pie-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
   .pie-legend-item .plabel{flex:1;color:var(--grey);}
   .pie-legend-item b{color:var(--navy);}
+  .tabbar{display:flex;gap:8px;margin-bottom:18px;border-bottom:2px solid var(--border);}
+  .tab-btn{background:none;border:none;padding:11px 20px;font-size:13.5px;font-weight:bold;color:var(--grey);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;}
+  .tab-btn:hover{color:var(--teal);}
+  .tab-btn.active{color:var(--navy);border-bottom-color:var(--teal);}
+  .meta-line{font-size:12px;color:var(--grey);margin-bottom:10px;}
+  .meta-line b{color:var(--navy);}
+  .exec-filter-panel{position:absolute;top:100%;left:0;right:0;z-index:50;background:#fff;border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.15);margin-top:4px;max-height:260px;overflow-y:auto;padding:6px 0;}
+  .exec-filter-item{display:flex;align-items:center;gap:8px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--navy);}
+  .exec-filter-item:hover{background:var(--light);}
+  .exec-filter-item input{width:auto;flex:none;}
+  .exec-filter-item span:first-of-type{flex:1;}
+  .exec-filter-all{border-bottom:1px solid var(--border);margin-bottom:2px;padding-bottom:8px;}
+  .exec-filter-count{color:var(--grey);font-size:11px;}
+  #execFilterBtn, #execFilterBtnJa{background:#fff;color:var(--navy);font-weight:normal;display:flex;justify-content:space-between;align-items:center;}
+  #execFilterBtn:after, #execFilterBtnJa:after{content:"\25BE";color:var(--grey);margin-left:6px;}
 </style>
 </head>
 <body>
 
 <div id="dropOverlay">Lepaskan file Excel di sini...</div>
 
-<!-- Modal Tambah WO / SR Manual -->
+<!-- Modal Tambah WO / SR Manual — Weekly Report -->
 <div class="modal-overlay" id="addModal" style="display:none;" onclick="if(event.target===this)closeAddModal()">
   <div class="modal-box">
     <h2 style="margin:0 0 18px;color:var(--navy);font-size:17px;">&#43; Tambah WO / SR Manual</h2>
@@ -142,6 +158,10 @@
         <label>Scheduled Start</label>
         <input type="date" id="mDate">
       </div>
+      <div>
+        <label>PIC / Eksekutor</label>
+        <input type="text" id="mPic" placeholder="cth: hend0312, imad0419">
+      </div>
     </div>
     <div style="margin-top:12px;">
       <label>Work Description</label>
@@ -154,6 +174,62 @@
     <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
       <button class="btn secondary" onclick="closeAddModal()">Batal</button>
       <button class="btn green" onclick="submitAddWO()">&#43; Tambah ke List</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Tambah WO / SR Manual — Weekly Job Arrangement -->
+<div class="modal-overlay" id="addModalJa" style="display:none;" onclick="if(event.target===this)closeAddModalJa()">
+  <div class="modal-box">
+    <h2 style="margin:0 0 18px;color:var(--navy);font-size:17px;">&#43; Tambah WO / SR Manual</h2>
+    <div class="modal-grid">
+      <div>
+        <label>No. WO / SR <span style="color:var(--red);">*</span></label>
+        <input type="text" id="mWoJa" placeholder="cth: 7WO-2026-001 / SR-0042">
+      </div>
+      <div>
+        <label>Status</label>
+        <select id="mStatusJa">
+          <option value="INPRG">INPRG — In Progress</option>
+          <option value="APPR">APPR — Approved</option>
+          <option value="WMATL">WMATL — Waiting Material</option>
+          <option value="WPCOND">WPCOND — Waiting Plant Condition</option>
+          <option value="COMP">COMP — Completed</option>
+          <option value="CAN">CAN — Cancelled</option>
+        </select>
+      </div>
+      <div>
+        <label>Asset</label>
+        <input type="text" id="mAssetJa" placeholder="Tag aset (cth: 7TG-GEN-100)">
+      </div>
+      <div>
+        <label>Asset Description</label>
+        <input type="text" id="mAssetDescJa" placeholder="Nama / deskripsi aset">
+      </div>
+      <div>
+        <label>Team</label>
+        <input type="text" id="mTeamJa" placeholder="EIC7 / Kontraktor / dll">
+      </div>
+      <div>
+        <label>Scheduled Start</label>
+        <input type="date" id="mDateJa">
+      </div>
+      <div>
+        <label>PIC / Eksekutor</label>
+        <input type="text" id="mPicJa" placeholder="cth: hend0312, imad0419">
+      </div>
+    </div>
+    <div style="margin-top:12px;">
+      <label>Work Description</label>
+      <textarea id="mWorkDescJa" rows="3" placeholder="Deskripsi pekerjaan yang dilakukan..."></textarea>
+    </div>
+    <div style="margin-top:10px;">
+      <label>Failure Description / Catatan</label>
+      <textarea id="mFailDescJa" rows="2" placeholder="Deskripsi masalah / kegagalan (opsional)..."></textarea>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+      <button class="btn secondary" onclick="closeAddModalJa()">Batal</button>
+      <button class="btn green" onclick="submitAddWOJa()">&#43; Tambah ke List</button>
     </div>
   </div>
 </div>
@@ -173,14 +249,22 @@
   <div class="card" id="helpCard">
     <h2>Cara Pakai</h2>
     <div class="steps">
-      <b>1.</b> Klik <b>Import Excel WO</b>, pilih file export List of Work Order dari CMMS (format sama seperti sebelumnya).<br>
-      <b>2.</b> Data otomatis dikelompokkan: Completed / Outstanding / Cancelled, plus ringkasan KPI di bawah.<br>
-      <b>3.</b> Klik satu baris WO untuk buka detail &rarr; isi/edit kolom <b>Update (What was Complete?)</b>, centang <b>Highlight untuk laporan</b> jika WO tsb perlu ditampilkan di PPT, dan upload foto evidence bila ada.<br>
-      <b>4.</b> Isi catatan <b>Rekomendasi &amp; Rencana Tindak Lanjut</b> di bagian bawah bila ingin menambahkan poin manual.<br>
-      <b>5.</b> Klik <b>Export Data (.json)</b> &rarr; upload file hasil export ini ke chat Claude, lalu minta: <i>"buatkan laporan PPT minggu ini dari data ini"</i>. Foto ikut tersimpan di dalam file JSON, jadi cukup 1 file yang diupload.<br>
-      <span class="footer-note">Data tersimpan otomatis di browser ini (draft) selama tidak clear cache. Selalu Export ke .json setiap selesai kerja agar tidak hilang &amp; bisa dipakai lintas perangkat.</span>
+      <b>1.</b> Pilih sheet di bawah: <b>Weekly Report</b> untuk laporan mingguan biasa (import Excel WO dari CMMS), atau <b>Weekly Job Arrangement</b> untuk data planning/penugasan mingguan (mis. dari PDF Daily Plan Activity). Kedua sheet punya fitur &amp; input yang sama tapi datanya disimpan terpisah.<br>
+      <b>2.</b> Klik <b>Import Excel WO</b>, pilih file export List of Work Order dari CMMS (format sama seperti sebelumnya), atau lanjutkan dari file .json yang pernah di-export.<br>
+      <b>3.</b> Data otomatis dikelompokkan: Completed / Outstanding / Cancelled, plus ringkasan KPI di bawah.<br>
+      <b>4.</b> Klik satu baris WO untuk buka detail &rarr; isi/edit kolom <b>Update (What was Complete?)</b>, centang <b>Highlight untuk laporan</b> jika WO tsb perlu ditampilkan di PPT, dan upload foto evidence bila ada.<br>
+      <b>5.</b> Isi catatan <b>Rekomendasi &amp; Rencana Tindak Lanjut</b> di bagian bawah bila ingin menambahkan poin manual.<br>
+      <b>6.</b> Klik <b>Export Data (.json)</b> &rarr; upload file hasil export ini ke chat Claude, lalu minta: <i>"buatkan laporan PPT minggu ini dari data ini"</i>. Foto ikut tersimpan di dalam file JSON, jadi cukup 1 file yang diupload.<br>
+      <span class="footer-note">Data tersimpan otomatis di browser ini (draft) selama tidak clear cache, per sheet masing-masing. Selalu Export ke .json setiap selesai kerja agar tidak hilang &amp; bisa dipakai lintas perangkat.</span>
     </div>
   </div>
+
+  <div class="tabbar">
+    <button class="tab-btn active" data-tab="report" onclick="switchTab('report')">Weekly Report</button>
+    <button class="tab-btn" data-tab="ja" onclick="switchTab('ja')">Weekly Job Arrangement</button>
+  </div>
+
+  <div id="panel-report" class="tab-panel">
 
   <div class="card">
     <h2>Data Sumber</h2>
@@ -229,6 +313,14 @@
     <h2 style="margin-top:24px;">Perbandingan per Work Group</h2>
     <div class="row" id="pieRow" style="gap:24px;align-items:flex-start;"></div>
     <div class="footer-note" id="pieUnclassifiedNote"></div>
+
+    <div id="execRecapWrap" style="display:none;">
+      <h2 style="margin-top:24px;">Rekap per Eksekutor</h2>
+      <table style="max-width:420px;">
+        <thead><tr><th>Eksekutor</th><th style="text-align:right;">Jumlah WO</th></tr></thead>
+        <tbody id="execRecapTableBody"></tbody>
+      </table>
+    </div>
   </div>
 
   <div class="card" id="tableCard" style="display:none;">
@@ -254,6 +346,14 @@
         <label>Scheduled Sampai</label>
         <input type="date" id="dateToFilter">
       </div>
+      <div style="max-width:230px;position:relative;">
+        <label>Eksekutor</label>
+        <button type="button" class="btn secondary" id="execFilterBtn" style="width:100%;padding:7px 9px;">Semua Eksekutor</button>
+        <div class="exec-filter-panel" id="execFilterPanel" style="display:none;">
+          <label class="exec-filter-item exec-filter-all"><input type="checkbox" id="execFilterAll"> <b>Pilih Semua</b></label>
+          <div id="execFilterList"></div>
+        </div>
+      </div>
       <div>
         <button class="btn secondary" id="clearDateFilterBtn" style="padding:7px 14px;">Reset Tanggal</button>
       </div>
@@ -267,6 +367,7 @@
         <th class="sortable" data-key="wo" onclick="setSort('wo')">WO <span class="sort-arrow" id="arrow-wo"></span></th>
         <th class="sortable" data-key="asset" onclick="setSort('asset')">Asset <span class="sort-arrow" id="arrow-asset"></span></th>
         <th class="sortable" data-key="team" onclick="setSort('team')">Team <span class="sort-arrow" id="arrow-team"></span></th>
+        <th>PIC</th>
         <th class="sortable" data-key="status" onclick="setSort('status')">Status <span class="sort-arrow" id="arrow-status"></span></th>
         <th class="sortable" data-key="scheduledStart" onclick="setSort('scheduledStart')">Scheduled Date <span class="sort-arrow" id="arrow-scheduledStart"></span></th>
         <th class="sortable" data-key="progress" onclick="setSort('progress')">Progress <span class="sort-arrow" id="arrow-progress"></span></th>
@@ -291,20 +392,145 @@
     <div id="weekList"><div style="color:var(--grey);font-size:12.5px;">Belum ada laporan tersimpan.</div></div>
   </div>
 
+  </div><!-- /panel-report -->
+
+  <div id="panel-ja" class="tab-panel" style="display:none;">
+
+  <div class="card">
+    <h2>Data Sumber</h2>
+    <div class="meta-line">Data awal sheet ini diisi otomatis dari PDF <b>Plan weekly planning EIC-7</b> — silakan cek &amp; sesuaikan tiap baris. Import Excel/JSON akan menggantikan data yang tampil.</div>
+    <div class="toolbar">
+      <span class="file-btn btn">Import Excel WO (.xlsx)<input type="file" id="xlsxInputJa" accept=".xlsx,.xls"></span>
+      <span class="file-btn btn secondary">Lanjutkan dari file .json sebelumnya<input type="file" id="jsonInputJa" accept=".json"></span>
+      <button class="btn secondary" onclick="openAddModalJa()" style="border-color:var(--amber);color:var(--amber);">&#43; Tambah WO / SR Manual</button>
+      <button class="btn" id="saveWeekBtnJa" style="background:#1e4d8c;">&#128190; Simpan Laporan</button>
+      <button class="btn secondary" id="newWeekBtnJa">&#43; Minggu Baru</button>
+      <button class="btn green" id="exportBtnJa">Export Data (.json)</button>
+      <button class="btn" id="exportExcelBtnJa" style="background:#217346;">&#128202; Export Excel (.xlsx)</button>
+      <button class="btn danger" id="clearBtnJa">Clear Draft</button>
+      <span class="footer-note" id="sourceInfoJa"></span>
+    </div>
+    <div class="row" style="max-width:420px;">
+      <div style="flex:1;">
+        <label>Periode Laporan</label>
+        <input type="text" id="periodInputJa" placeholder="contoh: 13 - 19 Juli 2026">
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="kpiCardJa" style="display:none;">
+    <h2>Ringkasan KPI</h2>
+    <div class="kpis">
+      <div class="kpi total"><div class="num" id="kpiTotalJa">0</div><div class="lbl">TOTAL WORK ORDER</div></div>
+      <div class="kpi completed"><div class="num" id="kpiCompJa">0</div><div class="lbl">COMPLETED</div></div>
+      <div class="kpi"><div class="num" id="kpiOutJa">0</div><div class="lbl">OUTSTANDING</div></div>
+      <div class="kpi cancelled"><div class="num" id="kpiCanJa">0</div><div class="lbl">CANCELLED</div></div>
+    </div>
+    <div class="rs-bar">
+      <span style="font-size:10.5px;font-weight:700;color:var(--grey);text-transform:uppercase;letter-spacing:.5px;">Status Pengisian:</span>
+      <span class="rs-stat s-done"><span class="rs-dot rs-done"></span><b id="rsDoneJa">0</b><span style="color:var(--grey);">Sudah Diisi</span></span>
+      <span class="rs-stat s-inprogress"><span class="rs-dot rs-inprogress"></span><b id="rsInprogressJa">0</b><span style="color:var(--grey);">In Progress</span></span>
+      <span class="rs-stat s-notaccessed"><span class="rs-dot rs-notaccessed"></span><b id="rsNotaccessedJa">0</b><span style="color:var(--grey);">Belum Diakses</span></span>
+    </div>
+  </div>
+
+  <div class="card" id="recapCardJa" style="display:none;">
+    <h2>Rekap Progress Pengerjaan</h2>
+    <table style="max-width:520px;">
+      <thead><tr><th>Progress</th><th style="text-align:right;">Jumlah</th><th style="text-align:right;">Persentase</th></tr></thead>
+      <tbody id="recapTableBodyJa"></tbody>
+    </table>
+
+    <h2 style="margin-top:24px;">Perbandingan per Work Group</h2>
+    <div class="row" id="pieRowJa" style="gap:24px;align-items:flex-start;"></div>
+    <div class="footer-note" id="pieUnclassifiedNoteJa"></div>
+
+    <div id="execRecapWrapJa" style="display:none;">
+      <h2 style="margin-top:24px;">Rekap per Eksekutor</h2>
+      <table style="max-width:420px;">
+        <thead><tr><th>Eksekutor</th><th style="text-align:right;">Jumlah WO</th></tr></thead>
+        <tbody id="execRecapTableBodyJa"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" id="tableCardJa" style="display:none;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;flex-wrap:wrap;gap:8px;">
+      <h2 style="margin:0;">Daftar Work Order</h2>
+      <button class="btn secondary" onclick="openAddModalJa()" style="font-size:12px;padding:6px 14px;border-color:var(--amber);color:var(--amber);">&#43; Tambah WO / SR Manual</button>
+    </div>
+    <div class="filters" id="filterBarJa"></div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <span style="font-size:11px;font-weight:700;color:var(--grey);white-space:nowrap;text-transform:uppercase;letter-spacing:.5px;">Pengisian:</span>
+      <div class="filters" id="rsFilterBarJa"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <span style="font-size:11px;font-weight:700;color:var(--grey);white-space:nowrap;text-transform:uppercase;letter-spacing:.5px;">Progress:</span>
+      <div class="filters" id="progFilterBarJa"></div>
+    </div>
+    <div class="row" style="margin-bottom:10px;align-items:flex-end;">
+      <div style="max-width:170px;">
+        <label>Scheduled Dari</label>
+        <input type="date" id="dateFromFilterJa">
+      </div>
+      <div style="max-width:170px;">
+        <label>Scheduled Sampai</label>
+        <input type="date" id="dateToFilterJa">
+      </div>
+      <div style="max-width:230px;position:relative;">
+        <label>Eksekutor</label>
+        <button type="button" class="btn secondary" id="execFilterBtnJa" style="width:100%;padding:7px 9px;">Semua Eksekutor</button>
+        <div class="exec-filter-panel" id="execFilterPanelJa" style="display:none;">
+          <label class="exec-filter-item exec-filter-all"><input type="checkbox" id="execFilterAllJa"> <b>Pilih Semua</b></label>
+          <div id="execFilterListJa"></div>
+        </div>
+      </div>
+      <div>
+        <button class="btn secondary" id="clearDateFilterBtnJa" style="padding:7px 14px;">Reset Tanggal</button>
+      </div>
+    </div>
+    <div class="row" style="margin-bottom:10px;">
+      <input type="text" id="searchBoxJa" placeholder="Cari WO / asset / deskripsi...">
+    </div>
+    <table>
+      <thead><tr>
+        <th style="width:26px;"></th>
+        <th class="sortable" data-key="wo" onclick="setSortJa('wo')">WO <span class="sort-arrow" id="arrow-woJa"></span></th>
+        <th class="sortable" data-key="asset" onclick="setSortJa('asset')">Asset <span class="sort-arrow" id="arrow-assetJa"></span></th>
+        <th class="sortable" data-key="team" onclick="setSortJa('team')">Team <span class="sort-arrow" id="arrow-teamJa"></span></th>
+        <th>PIC</th>
+        <th class="sortable" data-key="status" onclick="setSortJa('status')">Status <span class="sort-arrow" id="arrow-statusJa"></span></th>
+        <th class="sortable" data-key="scheduledStart" onclick="setSortJa('scheduledStart')">Scheduled Date <span class="sort-arrow" id="arrow-scheduledStartJa"></span></th>
+        <th class="sortable" data-key="progress" onclick="setSortJa('progress')">Progress <span class="sort-arrow" id="arrow-progressJa"></span></th>
+        <th>Work Desc</th>
+        <th style="width:70px;">Foto</th>
+      </tr></thead>
+      <tbody id="tblBodyJa"></tbody>
+    </table>
+  </div>
+
+  <div class="card" id="noDataCardJa">
+    <div class="empty-state">Belum ada data. Silakan import file Excel WO untuk mulai.</div>
+  </div>
+
+  <div class="card" id="recCardJa" style="display:none;">
+    <h2>Rekomendasi &amp; Rencana Tindak Lanjut (catatan manual)</h2>
+    <textarea id="recNotesJa" rows="5" placeholder="Tulis poin rekomendasi tambahan di sini, satu poin per baris..."></textarea>
+  </div>
+
+  <div class="card" id="historyCardJa">
+    <h2 style="margin-bottom:14px;">&#128197; Riwayat Laporan Mingguan</h2>
+    <div id="weekListJa"><div style="color:var(--grey);font-size:12.5px;">Belum ada laporan tersimpan.</div></div>
+  </div>
+
+  </div><!-- /panel-ja -->
+
 </div>
 
 <script>
-window.DATA = { period: "", recNotes: "", workOrders: [] };
-let activeFilter = "ALL";
-let activeRsFilter = "ALL";
-let activeProgFilter = "ALL";
-let searchTerm = "";
-let dateFilterFrom = "";
-let dateFilterTo = "";
-let lastOpenIdx = -1;
-let sortKey = null;
-let sortDir = 1;
-
+// ══════════════════════════════════════════════════════════════════
+//  Konstanta & util murni — dipakai bersama oleh kedua sheet
+// ══════════════════════════════════════════════════════════════════
 const PROGRESS_OPTIONS = [
   {value:"scheduled",      label:"Scheduled"},
   {value:"inprogress",     label:"In Progress"},
@@ -338,93 +564,6 @@ function findCol(headers, names){
   return -1;
 }
 
-document.getElementById('xlsxInput').addEventListener('change', function(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  loadExcelFile(file);
-});
-
-function loadExcelFile(file){
-  const reader = new FileReader();
-  reader.onload = function(evt){
-    const wb = XLSX.read(evt.target.result, {type:'array', cellDates:true});
-    const sheet = wb.Sheets[wb.SheetNames[0]];
-    const rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, dateNF:'yyyy-mm-dd'});
-    const headers = rows[0];
-    const colIdx = {};
-    for(const key in HEADER_MAP) colIdx[key] = findCol(headers, HEADER_MAP[key]);
-
-    const existingByWo = {};
-    DATA.workOrders.forEach(w => existingByWo[w.wo] = w);
-
-    const newList = [];
-    for(let r = 1; r < rows.length; r++){
-      const row = rows[r];
-      if(!row || row.length === 0) continue;
-      const woNum = (colIdx.wo>=0 ? row[colIdx.wo] : "") || "";
-      if(!woNum) continue;
-      const existing = existingByWo[woNum];
-      newList.push({
-        wo: String(woNum),
-        asset: colIdx.asset>=0 ? (row[colIdx.asset]||"") : "",
-        assetDesc: colIdx.assetDesc>=0 ? (row[colIdx.assetDesc]||"") : "",
-        locDesc: colIdx.locDesc>=0 ? (row[colIdx.locDesc]||"") : "",
-        failureDesc: colIdx.failureDesc>=0 ? (row[colIdx.failureDesc]||"") : "",
-        workDesc: colIdx.workDesc>=0 ? (row[colIdx.workDesc]||"") : "",
-        team: colIdx.team>=0 ? (row[colIdx.team]||"") : "",
-        workType: colIdx.workType>=0 ? (row[colIdx.workType]||"") : "",
-        priority: colIdx.priority>=0 ? (row[colIdx.priority]||"") : "",
-        scheduledStart: colIdx.scheduledStart>=0 ? (row[colIdx.scheduledStart]||"") : "",
-        status: colIdx.status>=0 ? (row[colIdx.status]||"") : "",
-        // preserve user-entered update/highlight/photos if this WO already existed in current draft
-        whatComplete: existing ? existing.whatComplete : (colIdx.whatComplete>=0 ? (row[colIdx.whatComplete]||"") : ""),
-        highlight: existing ? existing.highlight : false,
-        photos: existing ? existing.photos : [],
-        progress: existing ? (existing.progress || "scheduled") : "scheduled"
-      });
-    }
-    DATA.workOrders = newList;
-    document.getElementById('sourceInfo').textContent = "Sumber: " + file.name + " (" + newList.length + " WO dimuat)";
-    saveDraft();
-    render();
-  };
-  reader.readAsArrayBuffer(file);
-}
-
-document.getElementById('jsonInput').addEventListener('change', function(e){
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = function(evt){
-    try{
-      const loaded = JSON.parse(evt.target.result);
-      DATA = loaded;
-      document.getElementById('periodInput').value = DATA.period || "";
-      document.getElementById('recNotes').value = DATA.recNotes || "";
-      document.getElementById('sourceInfo').textContent = "Melanjutkan dari: " + file.name;
-      saveDraft();
-      render();
-    }catch(err){ alert("File JSON tidak valid: " + err.message); }
-  };
-  reader.readAsText(file);
-});
-
-document.getElementById('periodInput').addEventListener('input', function(e){ DATA.period = e.target.value; saveDraft(); });
-document.getElementById('recNotes').addEventListener('input', function(e){ DATA.recNotes = e.target.value; saveDraft(); });
-
-document.getElementById('exportBtn').addEventListener('click', function(){
-  if(DATA.workOrders.length === 0){ alert("Belum ada data untuk di-export."); return; }
-  DATA.generatedAt = new Date().toISOString();
-  const blob = new Blob([JSON.stringify(DATA)], {type:"application/json"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const dateStr = new Date().toISOString().slice(0,10);
-  a.href = url;
-  a.download = "weekly-report-data-" + dateStr + ".json";
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
 const PROGRESS_COLOR = {
   scheduled:     {strong:"8A94A6", tint:"E9EBEF"},
   inprogress:    {strong:"1C7293", tint:"DCEBF0"},
@@ -434,12 +573,6 @@ const PROGRESS_COLOR = {
   done_note:     {strong:"0F5C33", tint:"D3E6DB"}
 };
 
-document.getElementById('exportExcelBtn').addEventListener('click', function(){
-  if(DATA.workOrders.length === 0){ alert("Belum ada data untuk di-export."); return; }
-  exportExcel();
-});
-
-// ── Rekap tabel & pie chart per Work Group (dari kolom Team) ──
 const WORK_GROUPS = [
   {key:'E7',   label:'E7'},
   {key:'C7',   label:'C7'},
@@ -455,21 +588,11 @@ const PIE_SLICES = [
 
 function classifyGroup(team){
   const t = (team||'').toUpperCase().trim();
-  if(t === 'EIC7' || t === '') return null; // generic placeholder, not a specific group
+  if(t === 'EIC7' || t === '') return null;
   if(t.indexOf('FIRE') !== -1 || t.indexOf('FP') !== -1) return 'FIRE';
   if(t.indexOf('C7') !== -1) return 'C7';
   if(t.indexOf('E7') !== -1) return 'E7';
   return null;
-}
-
-function computeGroupStats(groupKey){
-  const list = DATA.workOrders.filter(w => classifyGroup(w.team) === groupKey);
-  const c = {done:0, inprogress:0, need_material:0, need_access:0, other:0};
-  list.forEach(w => {
-    const p = w.progress || 'scheduled';
-    if(c[p] !== undefined) c[p]++; else c.other++;
-  });
-  return {total:list.length, c:c};
 }
 
 function buildConicGradient(c, total){
@@ -487,139 +610,11 @@ function buildConicGradient(c, total){
   return 'conic-gradient(' + stops.join(', ') + ')';
 }
 
-function renderRecapTable(){
-  const tbody = document.getElementById('recapTableBody');
-  if(!tbody) return;
-  const counts = {};
-  PROGRESS_OPTIONS.forEach(o => counts[o.value] = 0);
-  DATA.workOrders.forEach(w => { const p = w.progress || 'scheduled'; counts[p] = (counts[p]||0) + 1; });
-  const total = DATA.workOrders.length;
-  let rows = PROGRESS_OPTIONS.map(o => {
-    const val = counts[o.value] || 0;
-    const pct = total > 0 ? (val/total*100).toFixed(1) : '0.0';
-    return `<tr><td><span class="prog-pill prog-${o.value}" style="padding:2px 8px;">${o.label}</span></td><td style="text-align:right;"><b>${val}</b></td><td style="text-align:right;color:var(--grey);">${pct}%</td></tr>`;
-  }).join('');
-  rows += `<tr style="border-top:2px solid var(--navy);"><td><b>Total</b></td><td style="text-align:right;"><b>${total}</b></td><td style="text-align:right;"><b>100%</b></td></tr>`;
-  tbody.innerHTML = rows;
-}
-
-function renderGroupPies(){
-  const pieRow = document.getElementById('pieRow');
-  if(!pieRow) return;
-  pieRow.innerHTML = WORK_GROUPS.map(g => {
-    const stats = computeGroupStats(g.key);
-    const grad = buildConicGradient(stats.c, stats.total);
-    const donutBg = grad || '#eef2f6';
-    const legendHtml = PIE_SLICES.map(slice => {
-      const val = stats.c[slice.key] || 0;
-      const pct = stats.total > 0 ? Math.round(val/stats.total*100) : 0;
-      return `<div class="pie-legend-item"><span class="pie-legend-dot" style="background:#${slice.color};"></span><span class="plabel">${slice.label}</span><b>${val}</b><span style="color:var(--grey);width:34px;text-align:right;">${pct}%</span></div>`;
-    }).join('');
-    return `
-      <div class="pie-group">
-        <div class="pie-title">${g.label}</div>
-        <div class="donut" style="background:${donutBg};">
-          <div class="donut-hole"><div class="num">${stats.total}</div><div class="lbl">Total WO</div></div>
-        </div>
-        <div class="pie-legend">${legendHtml}</div>
-      </div>`;
-  }).join('');
-  const unclassified = DATA.workOrders.filter(w => !classifyGroup(w.team)).length;
-  const note = document.getElementById('pieUnclassifiedNote');
-  if(note) note.textContent = unclassified > 0
-    ? unclassified + ' WO belum termasuk grup E7 / C7 / Fire Protection (isi kolom Team dengan salah satu kata kunci tsb agar terhitung).'
-    : '';
-}
-
-function exportExcel(){
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet('Work Orders');
-  ws.columns = [
-    {header:'No. WO / SR',                 key:'wo',             width:18},
-    {header:'Asset',                       key:'asset',          width:16},
-    {header:'Asset Description',           key:'assetDesc',      width:24},
-    {header:'Team',                        key:'team',           width:14},
-    {header:'Status',                      key:'status',         width:10},
-    {header:'Progress',                    key:'progress',       width:16},
-    {header:'Scheduled Start',             key:'scheduledStart', width:14},
-    {header:'Work Desc',                   key:'workDesc',       width:36},
-    {header:'Failure Desc',                key:'failureDesc',    width:30},
-    {header:'Update / What was Complete?', key:'whatComplete',   width:36},
-    {header:'Highlight',                   key:'highlight',      width:10}
-  ];
-  ws.getRow(1).eachCell(c => {
-    c.font = {bold:true, color:{argb:'FFFFFFFF'}};
-    c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF002060'}};
-  });
-
-  DATA.workOrders.forEach(w => {
-    const prog = w.progress || 'scheduled';
-    const colors = PROGRESS_COLOR[prog] || PROGRESS_COLOR.scheduled;
-    const row = ws.addRow({
-      wo: w.wo,
-      asset: w.asset,
-      assetDesc: w.assetDesc,
-      team: w.team,
-      status: w.status,
-      progress: PROGRESS_OPTIONS.find(o => o.value === prog).label,
-      scheduledStart: w.scheduledStart,
-      workDesc: w.workDesc,
-      failureDesc: w.failureDesc,
-      whatComplete: w.whatComplete,
-      highlight: w.highlight ? 'Ya' : ''
-    });
-    row.eachCell(c => {
-      c.alignment = {vertical:'top', wrapText:true};
-      c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF'+colors.tint}};
-    });
-    const progCell = row.getCell('progress');
-    progCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF'+colors.strong}};
-    progCell.font = {bold:true, color:{argb:'FFFFFFFF'}};
-  });
-  ws.views = [{state:'frozen', ySplit:1}];
-
-  wb.xlsx.writeBuffer().then(buffer => {
-    const blob = new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    const dateStr = new Date().toISOString().slice(0,10);
-    a.href = url;
-    a.download = "weekly-report-eic7-" + dateStr + ".xlsx";
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-}
-
-document.getElementById('clearBtn').addEventListener('click', function(){
-  if(confirm("Hapus semua draft data di browser ini?")){
-    localStorage.removeItem('eic7_weekly_draft');
-    DATA = { period:"", recNotes:"", workOrders:[] };
-    document.getElementById('periodInput').value = "";
-    document.getElementById('recNotes').value = "";
-    document.getElementById('sourceInfo').textContent = "";
-    render();
-  }
-});
-
-function saveDraft(){
-  try{ localStorage.setItem('eic7_weekly_draft', JSON.stringify(DATA)); }catch(e){ /* storage full - ignore */ }
-}
-function loadDraft(){
-  const raw = localStorage.getItem('eic7_weekly_draft');
-  if(raw){
-    try{
-      DATA = JSON.parse(raw);
-      document.getElementById('periodInput').value = DATA.period || "";
-      document.getElementById('recNotes').value = DATA.recNotes || "";
-    }catch(e){}
-  }
-}
-
 function classify(status){
   const s = (status||"").toUpperCase();
   if(s === "COMP") return "COMP";
   if(s === "CAN") return "CAN";
-  return "OUT"; // APPR, INPRG, WMATL, WPCOND, others
+  return "OUT";
 }
 
 function reportingStatus(w){
@@ -629,290 +624,61 @@ function reportingStatus(w){
   if(hasPhotos || w.highlight) return 'inprogress';
   return 'notaccessed';
 }
-function setRsFilter(f){ activeRsFilter = f; renderRsFilterBar(); renderTable(); }
-function renderRsFilterBar(){
-  const c = {done:0, inprogress:0, notaccessed:0};
-  DATA.workOrders.forEach(w => c[reportingStatus(w)]++);
-  document.getElementById('rsDone').textContent        = c.done;
-  document.getElementById('rsInprogress').textContent  = c.inprogress;
-  document.getElementById('rsNotaccessed').textContent = c.notaccessed;
-  const items = [
-    ['ALL',         'Semua',          ''],
-    ['done',        'Sudah Diisi',    'var(--green)'],
-    ['inprogress',  'In Progress',    'var(--amber)'],
-    ['notaccessed', 'Belum Diakses',  'var(--grey)']
-  ];
-  const bar = document.getElementById('rsFilterBar');
-  if(!bar) return;
-  bar.innerHTML = items.map(([f,label,color])=>
-    `<div class="chip ${activeRsFilter===f?'active':''}" onclick="setRsFilter('${f}')">
-       <span class="chip-dot" style="${color?'background:'+color+';opacity:1':''}"></span>
-       ${label} <span class="chip-count">${f==='ALL'?DATA.workOrders.length:c[f]}</span>
-     </div>`
-  ).join('');
-}
-function setProgFilter(f){ activeProgFilter = f; renderProgFilterBar(); renderTable(); }
-function renderProgFilterBar(){
-  const bar = document.getElementById('progFilterBar');
-  if(!bar) return;
-  const counts = {ALL:0};
-  PROGRESS_OPTIONS.forEach(o => counts[o.value] = 0);
-  DATA.workOrders.forEach(w => { counts.ALL++; const p = w.progress || 'scheduled'; if(counts[p]===undefined) counts[p]=0; counts[p]++; });
-  const chips = [["ALL","Semua ("+counts.ALL+")"]].concat(
-    PROGRESS_OPTIONS.map(o => [o.value, o.label+" ("+(counts[o.value]||0)+")"])
-  );
-  bar.innerHTML = chips.map(c => `<div class="chip ${activeProgFilter===c[0]?'active':''}" onclick="setProgFilter('${c[0]}')">${c[1]}</div>`).join("");
-}
 
-function setSort(key){
-  if(sortKey === key){ sortDir = -sortDir; } else { sortKey = key; sortDir = 1; }
-  renderTable();
+function escapeHtml(s){
+  if(s === undefined || s === null) return "";
+  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
-function updateSortArrows(){
-  ['wo','asset','team','status','scheduledStart','progress'].forEach(k => {
-    const th = document.querySelector('th.sortable[data-key="'+k+'"]');
-    const arrow = document.getElementById('arrow-'+k);
-    if(!th || !arrow) return;
-    if(sortKey === k){
-      th.classList.add('active-sort');
-      arrow.textContent = sortDir === 1 ? '▲' : '▼';
+function truncate(s, n){ s = String(s||""); return s.length > n ? s.slice(0,n)+"..." : s; }
+
+function parsePicNames(picStr){
+  if(!picStr) return [];
+  const names = [];
+  String(picStr).split(',').forEach(part => {
+    part = part.trim();
+    if(!part) return;
+    const m = part.match(/^(.*?)\(([^)]+)\)$/);
+    if(m){
+      if(m[1].trim()) names.push(m[1].trim());
+      if(m[2].trim()) names.push(m[2].trim());
     } else {
-      th.classList.remove('active-sort');
-      arrow.textContent = '';
+      names.push(part);
     }
   });
+  return names.filter(Boolean);
 }
 
-function setFilter(f){ activeFilter = f; renderFilterBar(); renderTable(); }
-
-function renderFilterBar(){
-  const bar = document.getElementById('filterBar');
-  const counts = {ALL:0, COMP:0, OUT:0, CAN:0, HL:0};
-  DATA.workOrders.forEach(w => {
-    counts.ALL++;
-    counts[classify(w.status)]++;
-    if(w.highlight) counts.HL++;
-  });
-  const chips = [
-    ["ALL","Semua ("+counts.ALL+")"],
-    ["OUT","Outstanding ("+counts.OUT+")"],
-    ["COMP","Completed ("+counts.COMP+")"],
-    ["CAN","Cancelled ("+counts.CAN+")"],
-    ["HL","Highlight laporan ("+counts.HL+")"]
-  ];
-  bar.innerHTML = chips.map(c => `<div class="chip ${activeFilter===c[0]?'active':''}" onclick="setFilter('${c[0]}')">${c[1]}</div>`).join("");
-}
-
-document.getElementById('searchBox').addEventListener('input', function(e){
-  searchTerm = e.target.value.toLowerCase();
-  renderTable();
-});
-
-document.getElementById('dateFromFilter').addEventListener('change', function(e){
-  dateFilterFrom = e.target.value;
-  renderTable();
-});
-document.getElementById('dateToFilter').addEventListener('change', function(e){
-  dateFilterTo = e.target.value;
-  renderTable();
-});
-document.getElementById('clearDateFilterBtn').addEventListener('click', function(){
-  dateFilterFrom = ""; dateFilterTo = "";
-  document.getElementById('dateFromFilter').value = "";
-  document.getElementById('dateToFilter').value = "";
-  renderTable();
-});
-
-function render(){
-  const hasData = DATA.workOrders.length > 0;
-  document.getElementById('noDataCard').style.display = hasData ? 'none' : 'block';
-  document.getElementById('kpiCard').style.display = hasData ? 'block' : 'none';
-  document.getElementById('recapCard').style.display = hasData ? 'block' : 'none';
-  document.getElementById('tableCard').style.display = hasData ? 'block' : 'none';
-  document.getElementById('recCard').style.display = hasData ? 'block' : 'none';
-  if(!hasData) return;
-
-  const comp = DATA.workOrders.filter(w => classify(w.status)==='COMP').length;
-  const out = DATA.workOrders.filter(w => classify(w.status)==='OUT').length;
-  const can = DATA.workOrders.filter(w => classify(w.status)==='CAN').length;
-  document.getElementById('kpiTotal').textContent = DATA.workOrders.length;
-  document.getElementById('kpiComp').textContent = comp;
-  document.getElementById('kpiOut').textContent = out;
-  document.getElementById('kpiCan').textContent = can;
-
-  renderFilterBar();
-  renderRsFilterBar();
-  renderProgFilterBar();
-  renderRecapTable();
-  renderGroupPies();
-  renderTable();
-}
-
-function renderTable(){
-  const tbody = document.getElementById('tblBody');
-  let list = DATA.workOrders;
-  if(activeFilter === 'HL') list = list.filter(w => w.highlight);
-  else if(activeFilter !== 'ALL') list = list.filter(w => classify(w.status) === activeFilter);
-  if(activeRsFilter !== 'ALL') list = list.filter(w => reportingStatus(w) === activeRsFilter);
-  if(activeProgFilter !== 'ALL') list = list.filter(w => (w.progress||'scheduled') === activeProgFilter);
-  if(dateFilterFrom) list = list.filter(w => { const d = toDateInputValue(w.scheduledStart); return d && d >= dateFilterFrom; });
-  if(dateFilterTo) list = list.filter(w => { const d = toDateInputValue(w.scheduledStart); return d && d <= dateFilterTo; });
-  if(searchTerm){
-    list = list.filter(w => (w.wo+" "+w.asset+" "+w.assetDesc+" "+w.workDesc+" "+w.failureDesc).toLowerCase().includes(searchTerm));
+function pickSheetByDate(sheetNames, refDate){
+  const dd = String(refDate.getDate()).padStart(2,'0');
+  const d1 = String(refDate.getDate());
+  const mm = String(refDate.getMonth()+1).padStart(2,'0');
+  const yyyy = String(refDate.getFullYear());
+  const yy = yyyy.slice(2);
+  const monID = ['januari','februari','maret','april','mei','juni','juli','agustus','september','oktober','november','desember'];
+  const monEN = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+  const monIDShort = ['jan','feb','mar','apr','mei','jun','jul','agu','sep','okt','nov','des'];
+  const monENShort = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+  const mi = refDate.getMonth();
+  const norm = s => String(s).toLowerCase().trim().replace(/\s+/g,' ');
+  const candidates = new Set([
+    `${dd}/${mm}/${yyyy}`, `${dd}-${mm}-${yyyy}`, `${dd}.${mm}.${yyyy}`,
+    `${dd}/${mm}/${yy}`, `${dd}-${mm}-${yy}`, `${mm}/${dd}/${yyyy}`, `${yyyy}-${mm}-${dd}`,
+    `${dd} ${monID[mi]}`, `${dd} ${monEN[mi]}`, `${dd} ${monIDShort[mi]}`, `${dd} ${monENShort[mi]}`,
+    `${d1} ${monID[mi]}`, `${d1} ${monEN[mi]}`, `${d1} ${monIDShort[mi]}`, `${d1} ${monENShort[mi]}`,
+    dd, d1
+  ].map(norm));
+  for(const name of sheetNames){ if(candidates.has(norm(name))) return name; }
+  for(const name of sheetNames){
+    const n = norm(name);
+    if(n.includes(dd) && (n.includes(monID[mi]) || n.includes(monEN[mi]) || n.includes(monIDShort[mi]) || n.includes('/'+mm) || n.includes('-'+mm) || n.includes('.'+mm)))
+      return name;
   }
-  if(sortKey){
-    list = list.slice().sort((a,b) => {
-      let va, vb;
-      if(sortKey === 'progress'){
-        va = PROGRESS_OPTIONS.findIndex(o => o.value === (a.progress||'scheduled'));
-        vb = PROGRESS_OPTIONS.findIndex(o => o.value === (b.progress||'scheduled'));
-      } else if(sortKey === 'scheduledStart'){
-        va = toDateInputValue(a.scheduledStart);
-        vb = toDateInputValue(b.scheduledStart);
-      } else {
-        va = (a[sortKey]||'').toString().toLowerCase();
-        vb = (b[sortKey]||'').toString().toLowerCase();
-      }
-      if(va < vb) return -1*sortDir;
-      if(va > vb) return 1*sortDir;
-      return 0;
-    });
-  }
-  tbody.innerHTML = "";
-  list.forEach((w) => {
-    const realIdx = DATA.workOrders.indexOf(w);
-    const prog = w.progress || 'scheduled';
-    const tr = document.createElement('tr');
-    tr.style.cursor = 'pointer';
-    tr.innerHTML = `
-      <td>${w.highlight?'&#9733;':''}</td>
-      <td><b>${w.wo}</b>${w.manual?'<span class="badge-manual">MANUAL</span>':''}<br><span class="rs-dot rs-${reportingStatus(w)}" title="${{done:'Sudah Diisi',inprogress:'In Progress',notaccessed:'Belum Diakses'}[reportingStatus(w)]}"></span> <span style="font-size:10px;color:var(--grey);">${{done:'Sudah Diisi',inprogress:'In Progress',notaccessed:'Belum Diakses'}[reportingStatus(w)]}</span></td>
-      <td>${escapeHtml(w.asset)}<br><span style="color:var(--grey);font-size:11px;">${escapeHtml(w.assetDesc||'')}</span></td>
-      <td>${escapeHtml(w.team)}</td>
-      <td><span class="status-pill st-${(w.status||'').toUpperCase()}">${escapeHtml(w.status)}</span></td>
-      <td></td>
-      <td></td>
-      <td>${escapeHtml(truncate(w.workDesc,70))}</td>
-      <td>${w.photos && w.photos.length ? w.photos.length+' foto' : '-'}</td>
-    `;
-    const dateTd = tr.children[5];
-    dateTd.addEventListener('click', e => e.stopPropagation());
-    const dateInput = document.createElement('input');
-    dateInput.type = 'date';
-    dateInput.value = toDateInputValue(w.scheduledStart);
-    dateInput.addEventListener('click', e => e.stopPropagation());
-    dateInput.addEventListener('change', e => setScheduledDate(realIdx, e.target.value));
-    dateTd.appendChild(dateInput);
-
-    const progTd = tr.children[6];
-    progTd.addEventListener('click', e => e.stopPropagation());
-    const progSelect = document.createElement('select');
-    progSelect.className = 'prog-pill prog-'+prog;
-    PROGRESS_OPTIONS.forEach(o => {
-      const opt = document.createElement('option');
-      opt.value = o.value;
-      opt.textContent = o.label;
-      if(o.value === prog) opt.selected = true;
-      progSelect.appendChild(opt);
-    });
-    progSelect.addEventListener('click', e => e.stopPropagation());
-    progSelect.addEventListener('change', e => setProgress(realIdx, e.target.value));
-    progTd.appendChild(progSelect);
-    tr.addEventListener('click', () => toggleDetail(realIdx));
-    tbody.appendChild(tr);
-    if(w._open){
-      const dtr = document.createElement('tr');
-      dtr.className = 'detail-row';
-      const td = document.createElement('td');
-      td.colSpan = 9;
-      td.appendChild(buildDetailPanel(realIdx));
-      dtr.appendChild(td);
-      tbody.appendChild(dtr);
-    }
-  });
-  if(list.length === 0){
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--grey);padding:20px;">Tidak ada WO yang cocok.</td></tr>';
-  }
-  updateSortArrows();
+  return null;
 }
 
-function setScheduledDate(idx, value){
-  DATA.workOrders[idx].scheduledStart = value;
-  saveDraft();
-  renderTable();
-}
-
-function setProgress(idx, value){
-  DATA.workOrders[idx].progress = value;
-  saveDraft();
-  renderProgFilterBar();
-  renderRecapTable();
-  renderGroupPies();
-  renderTable();
-}
-
-function toggleDetail(idx){
-  DATA.workOrders[idx]._open = !DATA.workOrders[idx]._open;
-  if(DATA.workOrders[idx]._open) lastOpenIdx = idx;
-  renderTable();
-}
-
-function buildDetailPanel(idx){
-  const w = DATA.workOrders[idx];
-  const wrap = document.createElement('div');
-  wrap.innerHTML = `
-    <div class="detail-grid">
-      <div>
-        <label>Failure Desc</label>
-        <div style="font-size:12.5px;color:var(--grey);margin-bottom:10px;white-space:pre-wrap;">${escapeHtml(w.failureDesc||'-')}</div>
-        <label>Work Desc</label>
-        <div style="font-size:12.5px;color:var(--grey);margin-bottom:10px;white-space:pre-wrap;">${escapeHtml(w.workDesc||'-')}</div>
-        <label class="hl-toggle"><input type="checkbox" id="hl_${idx}" ${w.highlight?'checked':''}> Highlight untuk laporan (tampilkan di PPT)</label>
-        ${w.manual?`<div style="margin-top:10px;"><button class="btn danger" style="font-size:11px;padding:4px 12px;" onclick="removeManualWO(${idx})">&#128465; Hapus entri manual ini</button></div>`:''}
-
-      </div>
-      <div>
-        <label>Update / What was Complete?</label>
-        <textarea id="wc_${idx}" rows="6" placeholder="Tulis progress/update terbaru untuk WO ini...">${escapeHtml(w.whatComplete||'')}</textarea>
-      </div>
-    </div>
-    <div style="margin-top:12px;">
-      <label>Foto Evidence</label>
-      <div class="photo-zone" id="pz_${idx}">
-        Tarik &amp; lepas foto ke sini, tekan <b>Ctrl+V</b> untuk paste dari clipboard, atau
-        <span class="file-btn btn secondary" style="padding:5px 10px;font-size:11px;">Pilih Foto<input type="file" accept="image/*" multiple id="pf_${idx}"></span>
-      </div>
-      <div class="thumbs" id="th_${idx}"></div>
-    </div>
-  `;
-  setTimeout(() => {
-    document.getElementById('hl_'+idx).addEventListener('change', e => { w.highlight = e.target.checked; saveDraft(); renderFilterBar(); });
-    document.getElementById('wc_'+idx).addEventListener('input', e => { w.whatComplete = e.target.value; saveDraft(); renderRsFilterBar(); });
-    document.getElementById('pf_'+idx).addEventListener('change', e => handleFiles(idx, e.target.files));
-    const zone = document.getElementById('pz_'+idx);
-    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
-    zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
-    zone.addEventListener('drop', e => {
-      e.preventDefault(); zone.classList.remove('drag');
-      handleFiles(idx, e.dataTransfer.files);
-    });
-    renderThumbs(idx);
-  }, 0);
-  return wrap;
-}
-
-function handleFiles(idx, files){
-  const w = DATA.workOrders[idx];
-  if(!w.photos) w.photos = [];
-  Array.from(files).forEach(file => {
-    if(!file.type.startsWith('image/')) return;
-    resizeImage(file, 900, 0.60).then(dataUrl => {
-      w.photos.push({filename:file.name, dataUrl:dataUrl, caption:""});
-      saveDraft();
-      renderThumbs(idx);
-      renderTable();
-    });
-  });
+function woCellValue(wo){
+  const s = String(wo||'').trim();
+  return /^\d+$/.test(s) ? Number(s) : s;
 }
 
 function resizeImage(file, maxSide, quality){
@@ -935,32 +701,946 @@ function resizeImage(file, maxSide, quality){
   });
 }
 
-function renderThumbs(idx){
-  const w = DATA.workOrders[idx];
-  const box = document.getElementById('th_'+idx);
-  if(!box) return;
-  box.innerHTML = "";
-  (w.photos||[]).forEach((p, pi) => {
-    const div = document.createElement('div');
-    div.className = 'thumb';
-    div.innerHTML = `
-      <img src="${p.dataUrl}">
-      <input type="text" placeholder="caption..." value="${escapeHtml(p.caption||'')}">
-      <div class="rm">Hapus</div>
-    `;
-    div.querySelector('input').addEventListener('input', e => { p.caption = e.target.value; saveDraft(); });
-    div.querySelector('.rm').addEventListener('click', () => { w.photos.splice(pi,1); saveDraft(); renderThumbs(idx); renderTable(); });
-    box.appendChild(div);
+// ══════════════════════════════════════════════════════════════════
+//  Data awal (seed) sheet Weekly Job Arrangement — dari PDF
+//  "Plan weekly planning EIC-7" (15 Juli 2026). Silakan cek & koreksi
+//  tanggal/isi bila ada yang meleset saat ekstraksi dari PDF.
+// ══════════════════════════════════════════════════════════════════
+const JA_SEED_DATA = [{"wo": "2605211421", "asset": "CCH-WNCH-105", "assetDesc": "PORTABLE ELECTRICAL WINCH, Cap 350 kgf", "failureDesc": "Winch cannot operate (suspect the capacitor damage) - PLEASE CREATE MATERIAL SPF FOR ORDER FROM OUR INSPECTION AS FOUND (IF NO AVAILABLE PART ON WH STOCK) - PLEASE RESERVATION PART AS OUR TECHNICAL REQUIRED", "workDesc": "Please check and repair it. 06/07/2026 - Replace Relay 2Ea - Replace Rectifier 1Ea - Replace Capacitor Running - Function Test Up & Down without Brake OK - Magnetic Clutch Brake Broken - Need replace Motor Set Brake with New One - Roll up wire sling rope & waiting motor set for replacement", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-07", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605111068", "asset": "CPD-P-520A", "assetDesc": "JETTY SUMP PIT 2 PUMP A", "failureDesc": "Pompa cpd-p-520 ketika start langsung trip di breaker lokal serta CUCB. CREATE SOW - PR TO REM FOR REPAIR", "workDesc": "Verify and repair local control and motor (last condition ground fault the motor) - identified failure mode and system control repair/replace. Last update: After repair pump by mechanic, re-install and test, found motor unbalance resistance (1.0/3.7/3.2 ohm) and 2 main contact of contactor broken-bad connection.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-05-18", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2509031030", "asset": "P0UC", "assetDesc": "Dock & Jetty Area Share 783", "failureDesc": "Cathodic jetty barat dan timur banyak yang putus dari fender butuh pengelasan cathodic ke fender", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-05-08", "status": "INPRG", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605111086", "asset": "P0UC", "assetDesc": "Dock & Jetty Area Share 783", "failureDesc": "Cathodic protection box cover missing", "workDesc": "Repair and install cathodic protection box at jetty area", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-05-18", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605211421-2", "asset": "P0MT", "assetDesc": "Maintenance Shop (Machine Shop) Area P783", "failureDesc": "Winch cannot operate (suspect the capacitor damage)", "workDesc": "Identified the failure, create material SPF if no part available on WH, inform to planner for material required. Please check and repair it.", "team": "MNT-E7", "priority": "30", "scheduledStart": "", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605211420", "asset": "CMT-PTR-340", "assetDesc": "PIPE THREAD & CUTTING MACHINE RIGGID, NO: 340", "failureDesc": "Machine for thread cannot operate. Suspect the capacitor broken", "workDesc": "Identified the failure, create material SPF if no part available on WH, inform to planner for material required. Repair it.", "team": "MNT-E7", "priority": "30", "scheduledStart": "", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603091050", "asset": "CONVEYOR A-2", "assetDesc": "CONVEYOR A-2", "failureDesc": "Breaker AKR nomer 005 trouble dan AKR nomer 010 tidak bisa full rack in (seret)", "workDesc": "Last Spare 005, 010, 011 - AKR No 8 (existing use) microversa termination broken - AKR No 005 spare can't full rack-in (welding root last activity)", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-03-12", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604301050", "asset": "CSS-P-700B", "assetDesc": "EQUALIZATION TANK FORWARDING PUMP B MOTOR", "failureDesc": "Equal Pump B can't running. suspect no electricity to pump.", "workDesc": "2026/04/30. Finding motor burnt (see attachment), waiting for spare to replace pump motor. #Waiting ST026461", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-04-30", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511131741", "asset": "CCH-HPR-100B", "assetDesc": "DOCK MOBILE HOPPER (DMH) A1-2", "failureDesc": "Req untuk cek dan verifikasi isolator kabel A1-2 (terlihat fatigue dan butuh diremajakan), setelah terpapar panas dari spontaneous combustion di cover tray.", "workDesc": "Req untuk cek dan verifikasi isolator kabel A1-2 (terlihat fatigue dan butuh diremajakan)", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-11-19", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607061024", "asset": "CCH-CNVR-900A", "assetDesc": "CONVEYOR E-4", "failureDesc": "Batch-2 continue outstanding cable tray replacement", "workDesc": "Reserve additional material", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607061023", "asset": "CCH-CNVR-900B", "assetDesc": "CONVEYOR E-5", "failureDesc": "Batch-2 continue outstanding cable tray replacement", "workDesc": "Reserve additional material", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607061022", "asset": "CCH-CNVR-800B", "assetDesc": "CONVEYOR E-3", "failureDesc": "Batch-2 continue outstanding cable tray replacement", "workDesc": "Reserve additional material", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "brew0176", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607061021", "asset": "CCH-CNVR-800A", "assetDesc": "CONVEYOR E-2", "failureDesc": "Batch-2 continue outstanding cable tray replacement", "workDesc": "Reserve additional material", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607031046", "asset": "CCH-CNVR-300", "assetDesc": "CONVEYOR C-2", "failureDesc": "Kabel tray C2 area tail banyak yang keropos dan tidak ada covernya", "workDesc": "Mohon segera dilakukan penggantian atau perbaikan", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-13", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606261060", "asset": "CCH-CNVR-500", "assetDesc": "CONVEYOR C-4", "failureDesc": "The cover of cable tray not installed properly, some need replaced with new one, tray is fully covered with coal", "workDesc": "Please clean and move material tray", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "INPRG", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2410251021", "asset": "CCH-CNVR-700", "assetDesc": "CONVEYOR E-1", "failureDesc": "Cable tray have been removed (parent WO) and need to be replaced", "workDesc": "Replace cable tray. #material cable tray material by pak fajar via direct purchase", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603161002", "asset": "CAD-HOI-100", "assetDesc": "ASH DISPOSAL TRANSFER TOWER HOIST", "failureDesc": "1. Indikasi pendant kemasukan air dan hook kecantol sehingga putus. 2. Need cleaning pendant and repair", "workDesc": "Pendant hoist was abnormal, suspect water ingress, need cleaning and repair", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "INPRG", "pic": "brew0176, hend0312, imad0419, sidik-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605221012", "asset": "CCH-STRC-100A", "assetDesc": "STACKER / RECLAIMER 1 (SANDVIK-12 OCT 2012)", "failureDesc": "BREAKER MOTOR TRAVEL M13 SERING TRIP", "workDesc": "INSTAL 3 MOTOR TRAVEL SR-1 - Inspection motor receiving - Prepare for schedule, resource", "team": "MNT-E7", "priority": "20", "scheduledStart": "2026-07-09", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2510191006", "asset": "CCH-STRC-100A", "assetDesc": "STACKER / RECLAIMER 1 (SANDVIK-12 OCT 2012)", "failureDesc": "Motor traveling stacker reclaimer 1 no. M18 always trips after reset, please check and fix it", "workDesc": "Planning motor: REMOVE 3 MOTOR - inspection spare motor - motor ready for install. Please arrange schedule for 3 motor travel replacement", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-10-20", "status": "APPR", "pic": "brew0176, imad0419, sidik-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2506231001", "asset": "CCH-STRC-100A", "assetDesc": "STACKER / RECLAIMER 1 (SANDVIK-12 OCT 2012)", "failureDesc": "Cover motor travel broken no. 12, 18 and 19", "workDesc": "Follow motor replacement 3 EA", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "INPRG", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606111015", "asset": "CSS-P-600B", "assetDesc": "SANITARY AND SEWAGE LIFT STATION PUMP B (45M3/H AT 37 KPA)", "failureDesc": "Suspect pump not pumping. The sewage pit almost full.", "workDesc": "UPDATE ACTIVITY - pump priming 1 already replaced, line suspect passing, need coordination with M8 team for verification of the line suction", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-11", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606021029", "asset": "CDG-GEN-176", "assetDesc": "176 - EMERGENCY DIESEL GENERATOR A FOR POH-1", "failureDesc": "Melakukan pemindahan jalur kabel dan menormalkan kembali power genset POH1 GENSET A ke C untuk perbaikan radiator. Dibutuhkan support tim elektrik untuk mindah kabel power genset POH1.", "workDesc": "2026-06-26 prepare jumper circuit and install them, see attachment report. Release again the jumper circuit after repair radiator Genset A for one week.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-09", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2510231023", "asset": "CMA-CMP-600-M", "assetDesc": "MACHINE SHOP AIR COMPRESSOR SYSTEM MOTOR", "failureDesc": "Under 92553/PE/POMI/24-DI0030, recondition motor compressor", "workDesc": "Update progress 2026-05-18: running test after reconditioning, found that fan blade of cooler broken, see attachment.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-02-17", "status": "INPRG", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511271029", "asset": "CCH-STRC-120B1-M", "assetDesc": "BOOM SLEWING 15 HPX 2 CONT. 4P MOTOR", "failureDesc": "As finding PM, brake pad and coil motor slewing was broken, need replace", "workDesc": "Finding PM brake motor slewing abnormal, need replace. #Material already issued and arrived. Please arrange schedule with operator FA for install/replacement.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-18", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606231147", "asset": "CCH-HPR-100C", "assetDesc": "DOCK MOBILE HOPPER (DMH) A1-3", "failureDesc": "Relay RA untuk Hopper A1-3 rusak (see attachment)", "workDesc": "Replace timer relay. Stock already taken from WH (ST17874) 25/06/2026 - Replace Relay RA with spare - Found relay OTWR not active, waiting spare limit switch for WMTL", "team": "MNT-E7", "priority": "20", "scheduledStart": "2026-07-15", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603301177", "asset": "CCH-FDR-100C", "assetDesc": "BELT FEEDER OF DMH A1-3", "failureDesc": "3 Yearly - PM for all Electrical part at DMH system (See JP)", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-13", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2601191091", "asset": "CCH-STRC-100B-M", "assetDesc": "S/R 2 BUCKET WHEEL MOTOR", "failureDesc": "1 Monthly - General PM of electric motor (see JP & attachment)", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2601191084", "asset": "CPD-P-800A-M", "assetDesc": "RUNOFF POND SUMP PUMP PIT A MOTOR", "failureDesc": "6 Monthly - Motor Lubrication using grease", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604081058", "asset": "CCH-STRC-110B1-M", "assetDesc": "STACKER / RECLAIMER 2 LONG TRAVEL DRIVE MOTOR NO B1", "failureDesc": "1 Yearly PM Stacker Reclaimer", "workDesc": "Checklist: Cleaning dust and slug inside brake unit mechanism; Adjustment and maintenance of friction disc wear, inspect auto adjust solenoid plunger; Friction Disk Inspection; Brake inspection; Regrease Bearing; Tighten Connection; Insulation Test Motor (PI 10-20-461); Clean Motor.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-15", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604211003", "asset": "CCH-HS-910A", "assetDesc": "CONVEYOR LOWER E-4 HAND SWITCH", "failureDesc": "Safety device pullcord E4 tidak aktif, please verify it (sisi barat, pullcord no.2 dari atas / head)", "workDesc": "Pullcord E4 tidak aktif. Planning material or other resource for follow up the failure requirement.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-04-29", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604141059", "asset": "CPD-P-900A", "assetDesc": "ASH PILE RUNOFF WATER SUMP PUMP A", "failureDesc": "Selector auto dan manual pompa A/B/C tidak bisa dioperasikan", "workDesc": "Sudah dicoba dari kontaktor bisa running, need material card controller", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-05-04", "status": "APPR", "pic": "hend0312, imad0419, sidik-wasa(brew0176)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603301228", "asset": "CSS-P-700A-M", "assetDesc": "EQUALIZATION TANK FORWARDING PUMP A MOTOR", "failureDesc": "1. Pump cannot pumping, please check control or level switch. Please support to check the panel or motor.", "workDesc": "Broken motor sump pump 3 phase - waiting material ST026461 / ST042110", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-04-15", "status": "APPR", "pic": "brew0176, hend0312, imad0419, sidik-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2508201043", "asset": "CCH-STRC-110A1-M", "assetDesc": "S/R 1 LONG TRAVEL MOTOR NO. 1 LTMP", "failureDesc": "Regreasing and replace motor. 1. Replace motor travel M13. 2. Take out motor for recondition motor travel M9, M12, M18", "workDesc": "LTMP regreasing and replace motor (waiting motor ready from ABB workshop)", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-02-26", "status": "INPRG", "pic": "brew0176, hend0312, imad0419, sidik-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2601201380", "asset": "CCH-CNVR-200D", "assetDesc": "CONVEYOR RECLAIM FEEDER B-3", "failureDesc": "Indikasi flop gate B3 selalu muncul dua indikasi saat dipindah secara auto, serta indikasi arah B1 dan B2 terbalik", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-02-03", "status": "WAPPR", "pic": "brew0176, imad0419, sidik-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607031009", "asset": "7BF-FAN-620A-M", "assetDesc": "PULVERIZER SEAL AIR BOOSTER FAN 7A MOTOR", "failureDesc": "Increase vibration at DE bearing motor side, suspect lack of lubrication (vibration upper warning limit: 3.78 mm/s rms)", "workDesc": "Please apply grease SKF LGLT2 as fan bearings accordingly", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-06", "status": "APPR", "pic": "risq0659, bambang-wasa (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607101002", "asset": "7BS-SBLO-794", "assetDesc": "SMART RS Soot blower SHDP", "failureDesc": "Sootblower is failed to start, suspect problem from proximitor switch", "workDesc": "", "team": "MNT-E7", "priority": "20", "scheduledStart": "2026-07-10", "status": "APPR", "pic": "risq0659, bambang-wasa (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607101009", "asset": "7BS-SBLO-484", "assetDesc": "BOILER 7 LONG STROKE EAST SIDE SOOTBLOWER 12", "failureDesc": "Sootblower jammed with suspect motor short as attached photo, and alarm overload cannot be reset", "workDesc": "", "team": "MNT-E7", "priority": "20", "scheduledStart": "2026-07-10", "status": "APPR", "pic": "risq0659, bambang-wasa (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607101008", "asset": "7BS-SBLO-793", "assetDesc": "SMART RS Soot blower", "failureDesc": "Soot blower fail to start", "workDesc": "", "team": "MNT-E7", "priority": "20", "scheduledStart": "2026-07-10", "status": "APPR", "pic": "risq0659, bambang-wasa (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607091004", "asset": "7IA-RTV-523", "assetDesc": "500 KV TARIFF METERING CAB 7 IA SUPPLY ROOT V/V", "failureDesc": "Solenoid tidak bekerja, found solenoid corrosive", "workDesc": "Please replace with new one", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606261054", "asset": "7EM-SWGR-B", "assetDesc": "#7 13.8 KV SWITCHGEAR B", "failureDesc": "Error / bad quality indication electrical data of EMSWGR-B DMMS", "workDesc": "Please check at switchgear DMMS reading, replace if required", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607091012", "asset": "7BS-SBLO-542", "assetDesc": "BOILER 7 EAST WALL SOOTBLOWER 7", "failureDesc": "Found suspect limit switch (parking side) bad quality, the wall blower can't park properly", "workDesc": "Please check and inspect it", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-15", "status": "WAPPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604211006", "asset": "7BS-SBLO-572-M", "assetDesc": "BOILER 7 SOUTH WALL SOOTBLOWER 2 MOTOR", "failureDesc": "Disconnecting switch does not function", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-15", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605211050", "asset": "7BS-SBLO-741", "assetDesc": "SMART RS Soot blower A3", "failureDesc": "Ground fault alarm raised on DCS when it & the others SHDP soot blower inservice. #Suspect from rotary inverter. #Need SPF material inverter.", "workDesc": "Please check ground fault. Please update activity progress.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "risq0659, bambang-wasa (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607031045", "asset": "7BG-PCP-800", "assetDesc": "ELECTROSTATIC PRECIPITATOR 7", "failureDesc": "Improper placement and storage of oil container near FD Fan 7A & near ESP area", "workDesc": "Remove / re-arrangement the container and put the secondary containment", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606291037", "asset": "7FA-RPR-850C", "assetDesc": "HOPPER VIBRATOR", "failureDesc": "The vibrator junction box for Economizer Hopper 7C has fallen down due to a broken weld support", "workDesc": "Please repair support for junction box", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-13", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606291046", "asset": "7BG-RECT-835B", "assetDesc": "#7 ELECTROSTATIC PRECIPITATOR B TRANSFORMER/RECTIFIER UNIT 835", "failureDesc": "Finding after inspection: 7BG-RECT-835B LV bushing oil leak", "workDesc": "Please replace LV Bushing", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606171042", "asset": "7BG-RPR-827J-M", "assetDesc": "ESP C.E. RAPPER MOTOR", "failureDesc": "Rapper can't start, suspect motor overload, please fix it", "workDesc": "Please check motor condition. #Waiting motor rapper complete refurbish PR197518", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604131046", "asset": "7BG-RPR-827E-M", "assetDesc": "#7 ELECTROSTATIC PRECIPITATOR DE RAPPER MOTOR", "failureDesc": "Found DE rapper 827E fault. Found a breaker was open (comp 9Q), can't close. #Waiting PR197518 (Ref WO 2603111007 Refurbish 2 motor rapper)", "workDesc": "Please check motor condition, winding resistance and IR", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511211004", "asset": "7BG-RPR-817H-M", "assetDesc": "ESP GAS DISTRIBUTION DEVICE RAPPER MOTOR", "failureDesc": "Found motor discharge rapper 817H not available, please check and verify; in the local and breakers/MCC there's no tag isolation", "workDesc": "Please check and reinstall the motor. # covered by WO 2505091033", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "INPRG", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2303091022", "asset": "P1TB-0M", "assetDesc": "Turbine Building P78 - Mezzanine Floor", "failureDesc": "Corroded electrical panel @ mezzanine floor turbine building U7", "workDesc": "Check and repair the corroded", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "INPRG", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511041912", "asset": "7BF-FAN-600A-M", "assetDesc": "PRIMARY AIR FAN 7A MOTOR", "failureDesc": "6 Monthly - High Voltage AC Motor and Switch Gear Maintenance", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-09", "status": "APPR", "pic": "risq0659, bambang-wasa (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604071005", "asset": "7BG-FAN-110A", "assetDesc": "FD FAN LUBE OIL COOLER 7A1", "failureDesc": "Found abnormal noise from fan cooler, suspect bearing broken", "workDesc": "Please check source of noise, replace motor fan set if required. Please update log work.", "team": "MNT-E7", "priority": "20", "scheduledStart": "2026-06-30", "status": "APPR", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605061002", "asset": "7FA-CNVR-109-M", "assetDesc": "DRAG CHAIN CONVEYOR 7 MOTOR", "failureDesc": "Found cover fan cooler motor was detached", "workDesc": "Repair/replace the cover of motor", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-29", "status": "INPRG", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602241022", "asset": "SITE-DOOR-080", "assetDesc": "ASH HANDLING ELECTRICAL BUILDING - CR.ML.REB.RSw.DCl", "failureDesc": "Cable box nearby ash handling electrical building severely corroded", "workDesc": "Apply coating to prevent any further damage", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-03", "status": "APPR", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605261008", "asset": "7CW-P-100C-M", "assetDesc": "CIRCULATING WATER PUMP 7C MOTOR", "failureDesc": "Found at DCS multiline data hunting, but at local multiline all parameter normal/no alarm", "workDesc": "Verify and repair DCS reading", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-02", "status": "APPR", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606171038", "asset": "7EB-UPS", "assetDesc": "POWER STATION - DC SUPPLY UPS 7 SYSTEM", "failureDesc": "Found alarm on panel rectifier UPS 7A. Rectifier trouble and rectifier low DC current.", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-23", "status": "APPR", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605291006", "asset": "7EM-XFMR-A5", "assetDesc": "#7 13800/416 V UNIT SUB STATION TRANSFORMER A5", "failureDesc": "Finding PM: 1 fan cooler need to replace. #Need to isolate XFMR 7A5, change over to 8A5", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-12", "status": "APPR", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606091006", "asset": "7BG-FAN-500B-M", "assetDesc": "INDUCED DRAFT FAN 7B MOTOR", "failureDesc": "Found alarm on DCS ID FAN B apparent power high alarm, and for all HV motor on unit 7 apparent power indicates too high", "workDesc": "Please check logic apparent power input/measurement on DCS for all HV motor", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-15", "status": "APPR", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604061053", "asset": "7BF-FAN-600B-M", "assetDesc": "PRIMARY AIR FAN 7B MOTOR", "failureDesc": "Spike signal at motor IB, suspect instrumental problem. Note: perlu data pembanding dari portable tool CBM / online monitoring ABB vibrasi module.", "workDesc": "Please support CBM team to verify at local instrument (vibration probe). #temporary bypass trip instrument. Planning for verification the signal - by force the logic for execution, coordination with CBM-Planner.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-05-26", "status": "INPRG", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606021014", "asset": "7BF-PVR-500", "assetDesc": "#7 6,9 KV SWGR B1 LOAD CB TO PULVERIZER 7D MOTOR - COMPT 202 B", "failureDesc": "Breaker Pulverizer 7D cannot be charged. Finding charging link ratchet was worn out.", "workDesc": "Please update activity progress", "team": "MNT-C7", "priority": "33", "scheduledStart": "2026-05-29", "status": "INPRG", "pic": "risq0659, bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2601261038", "asset": "7CL-MOV-218-M", "assetDesc": "INTAKE STRUCTURE SODIUM HYPO HEADER MOV MOTOR", "failureDesc": "Valve discrepancy, local breaker tripped when the valve was operated to open", "workDesc": "Check and repair (create access MOV remove). #Check wiring and cable connection and make sure no loose connection, no short circuit. Please update activity progress.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-04-08", "status": "APPR", "pic": "risq0659, bambang-wasa (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605151016", "asset": "7BF-FAN-620A-M", "assetDesc": "PULVERIZER SEAL AIR BOOSTER FAN 7A MOTOR", "failureDesc": "Supporting in VSD and Reactor installing project, reduce speed to 1500 rpm", "workDesc": "Update activity, resource", "team": "MNT-E7", "priority": "20", "scheduledStart": "2026-05-18", "status": "APPR", "pic": "risq0659, bambang-wasa (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604131046-2", "asset": "7BG-CAB-827A", "assetDesc": "#7 ESP CONTROL CABINET 827A FEEDER BREAKER", "failureDesc": "Found DE rapper 827E fault. Found a breaker was open (comp 9Q), can't close.", "workDesc": "Please check motor condition, winding resistance and IR", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-04-23", "status": "APPR", "pic": "risq0659, bambang-wasa (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603021339", "asset": "7ID-MOV-783C-M", "assetDesc": "DRUM SCREEN 7C SPRAY INLET MOV MOTOR", "failureDesc": "After verify by E7 technician, need to replace 7ID-MOV-783C-M", "workDesc": "Also check for 7ID-MOV-783C which also indicates fault at DCS", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-03-11", "status": "APPR", "pic": "risq0659, bambang-wasa (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2512011035", "asset": "7FA-CMP-104-M (NEW)", "assetDesc": "FLY ASH UNIT 7 CONVEYING AIR COMPRESSOR MOTOR", "failureDesc": "3 Monthly - Motor Bearing Lubrication as Mnf recommendation", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-13", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603041126", "asset": "7FA-BLO-121B-M", "assetDesc": "FLUIDIZATION BLOWER B MOTOR", "failureDesc": "1 Yearly - Low Voltage AC Motor Lubrication & Maintenance", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603041125", "asset": "7FA-BLO-121A-M", "assetDesc": "FLUIDIZATION BLOWER A MOTOR", "failureDesc": "1 Yearly - Low Voltage AC Motor Lubrication & Maintenance", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603041124", "asset": "7AC-XF-200D-M", "assetDesc": "TURBINE MEZZANINE FLOOR EXHAUST FAN 7D MOTOR", "failureDesc": "2 Yearly - Low Voltage AC Motor Maintenance", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-15", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602181410", "asset": "7EM-XFMR-B2", "assetDesc": "#7 13800/416 V UNIT SUB STATION TRANSFORMER B2", "failureDesc": "3 Monthly - Unit Sub Station Service Dry Type Transformer Inspection (U78 Area)", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043564", "asset": "7TG-GEN-100", "assetDesc": "MAIN GENERATOR 7 GENERATOR BRUSHGEAR", "failureDesc": "On-line weekly inspection & maintenance", "workDesc": "Checklist: check for running smoothness and unusual sparking between brushes and rings; record all data on checksheet and make a report; check appearance of ring surfaces and brush films for abnormality; examine constant-pressure springs for cracks/loose rivets, check proper & uniform brush tension; check brush lead, overheating (discolored) frayed wires, replace if any damaged worn brushes.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-15", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043303", "asset": "7BG-PCP-800B", "assetDesc": "ELECTROSTATIC PRECIPITATOR 7B", "failureDesc": "1 Weekly - Electrostatic Precipitator Inspection and Maintenance", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043261", "asset": "7BG-PCP-800A", "assetDesc": "ELECTROSTATIC PRECIPITATOR 7A", "failureDesc": "1 Weekly - Electrostatic Precipitator Inspection and Maintenance", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043344", "asset": "7EM-XFMR-A/B/C1", "assetDesc": "1 Weekly SST - Station Services Transformer Weekly Maintenance - Hitachi", "failureDesc": "1 Weekly SST - Station Services Transformer Weekly Maintenance - Hitachi Manual", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043220", "asset": "7EX-XFMR-EXC", "assetDesc": "GENERATOR EXCITATION TRANSFORMER 23 KV / 900 VAC", "failureDesc": "1 Weekly EXC - Generator Excitation Transformer Maintenance - Hitachi Manual", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043138", "asset": "7EX-XFMR-AT", "assetDesc": "UNIT AUXILIARY TRANSFORMER 23 KV/13,8 KV (112MVA NLTC)", "failureDesc": "1 Weekly UAT - Unit Auxiliary Transformer Maintenance - Hitachi Manual", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043097", "asset": "7EY-XFMR-SU", "assetDesc": "#7 START UP TRANSFORMER 150 KV/13.8 KV (OLTC 112 MVA)", "failureDesc": "1 Weekly SUT - Start Up Transformer Maintenance - Hitachi Manual", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043056", "asset": "7EZ-XFMR-GSU", "assetDesc": "GENERATOR STEP UP TRANSFORMER 23/525 KV (OLTC 876 MVA)", "failureDesc": "1 Weekly GSUT - GSUT Maintenance and inspect SF-6 gas pressure top up when necessary", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511041936", "asset": "7BF-FAN-600B-M", "assetDesc": "PRIMARY AIR FAN 7B MOTOR", "failureDesc": "6 Monthly - High Voltage AC Motor and Switch Gear Maintenance", "workDesc": "Checklist: check protection relay; check breaker in operational conditions; stator temperature RTD inspections; bearing vibrations probe and abnormal noise inspections; bearing temperature RTD inspections; check operational motor parameter; check grounding cable mounting bolts tight & secure; check bearings lubricant level; cleaning of motor casing; cleaning air box of filter with vacuum cleaner; cleaning mesh of air filter with service water and drying.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2510162198", "asset": "7WALL-WEST-3", "assetDesc": "BOILER 7 - WALL SOOTBLOWER WEST-GROUP 3", "failureDesc": "1 Yearly - Low Voltage AC Motor Lubrication & Maintenance", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-15", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2510162200", "asset": "7WALL-WEST-2", "assetDesc": "BOILER 7 - WALL SOOTBLOWER WEST-GROUP 2", "failureDesc": "1 Yearly - Low Voltage AC Motor Lubrication & Maintenance", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-07-08", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511261007", "asset": "7B1-CCA-CMP-100D-M", "assetDesc": "#7 6,9KV SWGR B1 LOAD CB TO AIR COMPRESSOR D MOTOR - COMPT 203 B", "failureDesc": "There are some CB indicator lights was off, see detail failure and attachments", "workDesc": "Please replace indicator lamp", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-04-10", "status": "APPR", "pic": "ibnu0431, tomy0682 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602181429", "asset": "7FW-HST-200", "assetDesc": "Electrical Hoist Boiler Building Deareator/Steam Drum Area", "failureDesc": "1 Yearly - Hoist Electrical Part Maintenance, need scaffold", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-09", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602181425", "asset": "7BG-HST-600", "assetDesc": "AIR HEATER MAINTENANCE ELECTRICAL MAINTENANCE HOIST", "failureDesc": "1 Yearly - Hoist Electrical Part Maintenance, need scaffold", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-10", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602181434", "asset": "7BF-HST-602", "assetDesc": "PA FAN B MOTOR & FD FAN B ROTOR MAINTENANCE ELECTRICAL HOIST", "failureDesc": "1 Yearly - Hoist Electrical Part Maintenance, need scaffold", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-08", "status": "APPR", "pic": "ibnu0431, tomy0682 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511261010", "asset": "7FA-CMP-103", "assetDesc": "FLY ASH COMPRESSOR 103", "failureDesc": "Restoration the system Fly Ash compressor for back up unit operation", "workDesc": "#SPARE: Pre-Reservation motor spare at WH, ST013966. Motor move to side. # Power and Control System Maintenance. Cleaning area.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-11-26", "status": "APPR", "pic": "ibnu0431, tomy0682 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2411251095", "asset": "CCH-STRC-100A", "assetDesc": "STACKER / RECLAIMER 1 (SANDVIK-12 OCT 2012)", "failureDesc": "S&L B2 Replace", "workDesc": "ST011922", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-01-12", "status": "APPR", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2411251093", "asset": "7FA-DRY-106", "assetDesc": "CONVEYING AIR DRYER", "failureDesc": "S&L B2 Replace", "workDesc": "ST002756", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-01-12", "status": "APPR", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2412171033", "asset": "P7HAFC", "assetDesc": "BOILER'S - FLUE GAS CLEANING SYSTEM", "failureDesc": "Repair broken cable tray", "workDesc": "#need prepare material", "team": "MNT-C7", "priority": "30", "scheduledStart": "2025-09-20", "status": "APPR", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2211051019", "asset": "P0PEA", "assetDesc": "CIRCULATING WATER - CATHODIC PROTECTION SYSTEM - SHARE 783", "failureDesc": "MCS-WH-CATHODIC", "workDesc": "Repair loose connection cathodic protection machine shop area", "team": "MNT-E7", "priority": "", "scheduledStart": "", "status": "INPRG", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2508261035", "asset": "7EC-DCC", "assetDesc": "DCS CONTROL SYSTEM 8", "failureDesc": "Found bad quality problem ELC communication from U7 KWH metering to DCS, menyebabkan pembacaan KWH nett tidak akurat", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-08-26", "status": "APPR", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2210181333", "asset": "7AC-XF-100F", "assetDesc": "TURBINE BLDG ROOF VENTILATOR 7F", "failureDesc": "Exhaust fan not in service while DS and Breaker on close position", "workDesc": "#waiting PO: 87779/PE/POMI/23 - L1. #Status: Receipts Complete. #Received by FAJA0316 - 08/Dec/2023", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-08-13", "status": "INPRG", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2505191008", "asset": "7LT-P-200A-M", "assetDesc": "BFPT A LUBE OIL PUMP 7A1 L/O MOTOR", "failureDesc": "Need WO Refurbish ST014859 issued WO 2505021011 qty 1 EACH", "workDesc": "PR187750", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-08-31", "status": "WMATL", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2504281027", "asset": "7FC-FAN-201-M", "assetDesc": "ABSORBER INLET DAMPER SEAL AIR FAN 7B MOTOR", "failureDesc": "Need WO Refurbish ST015612 issued WO 2501171024 qty 1 EACH", "workDesc": "#waiting PR187750 - L10", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-08-31", "status": "WMATL", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2507241019", "asset": "7ID-P-200C", "assetDesc": "SCREEN WASH PUMP 7C", "failureDesc": "Found abnormal noise at the pump, after 50 second running the pump trips", "workDesc": "Please check and fix the motor due to OL relay active & contactor noise (see attachment). # Reset and check setting overload relay.", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-07-29", "status": "APPR", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2504081008", "asset": "7ID-P-200B-M", "assetDesc": "SCREEN WASH PUMP 7B MOTOR", "failureDesc": "Need WO Refurbish ST027128 issued WO 2504021006 qty 1 EACH", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-01-08", "status": "INPRG", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2502261054", "asset": "7ID-P-200C-M", "assetDesc": "SCREEN WASH PUMP 7C MOTOR", "failureDesc": "# waiting PR189845, # PO: 95951/PE/POMI/25", "workDesc": "Need Refurbish ST027128 - WO 2411261004", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-08-31", "status": "WMATL", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2504021006", "asset": "7ID-P-200B-M", "assetDesc": "SCREEN WASH PUMP 7B MOTOR", "failureDesc": "Found screen wash 7B fault. Found breaker trip. Try to reset and start again, running for a second and then breaker trip again.", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-03-30", "status": "INPRG", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2412021041", "asset": "CFP-P-600-M", "assetDesc": "ELECTRIC DRIVEN FIRE PUMP MOTOR", "failureDesc": "Need WO Refurbish ST021284 issued WO 2411251082 qty 1 EACH", "workDesc": "", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-07-25", "status": "INPRG", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2410141063", "asset": "7XFMR-SU", "assetDesc": "# 7 START UP SYSTEM", "failureDesc": "#Waiting PR186857 - L2", "workDesc": "Please refurbish the fan cooler motor", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-08-31", "status": "WMATL", "pic": "eenh0552", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607131017", "asset": "CCH-CNVR-900B", "assetDesc": "CONVEYOR E-5", "failureDesc": "E5 trouble caused by fire protection alarm and found at local line pipe of sprinkler leakage caused by rusted pipe", "workDesc": "", "team": "CONTR-FP78", "priority": "10", "scheduledStart": "2026-07-14", "status": "SSAPPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602251018", "asset": "SITE-DOOR-079", "assetDesc": "HYDROGEN BUILDING CONTROL ROOM - CR.ML.REB.RSw.DCl", "failureDesc": "CFP-CAB-531 panel fire alarm NAC trouble", "workDesc": "Please replace module. #Need SPF MRI600R (picture attached)", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607031012", "asset": "P0AB", "assetDesc": "Admin Building Area P783", "failureDesc": "Hydrant box door was difficult to open, need a time when emergency", "workDesc": "Repair", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607014160", "asset": "7FP-HV-250I", "assetDesc": "BOILER (NORTHWEST) EL 37.2 M FIRE WATER HOSE V/V", "failureDesc": "Clamp Hose 2.5\" was broken", "workDesc": "Note: fire hose 2.5'' ready di coreteam", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-07-15", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606241058", "asset": "CCH-GATE-500B", "assetDesc": "TH-4 FLOP GATE B (E-5 to G-1 or G-2)", "failureDesc": "Wire fire protection TH-4 lepas, perlu dirapikan", "workDesc": "", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605111073", "asset": "P0UC", "assetDesc": "Dock & Jetty Area Share 783", "failureDesc": "Hose box's legs were heavily corroded and broke", "workDesc": "Repair hose box @ Jetty. Material ready di coreteam. #Waiting schedule PBM team to build concrete support (Child WO 2605291016)", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-07-13", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605041067", "asset": "CFP-HYD-1000", "assetDesc": "JL. BALI INFRONT OF HOUSE 6", "failureDesc": "Seal of hose, nozzle and adapter was leak", "workDesc": "Verify and repair it (multiple asset)", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-06-29", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602191102", "asset": "7FP-DV-285", "assetDesc": "SA HEATER 7B FIRE WATER HEADER DELUGE V/V 2", "failureDesc": "Routine inspection and test of water deluge systems", "workDesc": "", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602191099", "asset": "7FP-DV-275", "assetDesc": "SA HEATER 7B FIRE WATER HEADER DELUGE V/V 1", "failureDesc": "Routine inspection and test of water deluge systems", "workDesc": "", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-07-13", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602191093", "asset": "7FP-DV-260", "assetDesc": "SA HEATER 7A FIRE WATER HEADER DELUGE V/V 2", "failureDesc": "Routine inspection and test of water deluge systems", "workDesc": "", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-06-07", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602191094", "asset": "7FP-DV-265", "assetDesc": "SA HEATER 7A FIRE WATER HEADER DELUGE V/V 1", "failureDesc": "Routine inspection and test of water deluge systems", "workDesc": "", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-07-07", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602191090", "asset": "7FP-CAB-165", "assetDesc": "FP Panel Unit 7 Boiler Building Electronics Room", "failureDesc": "Routine - Cabinet, Fire Detection and Alarm System Inspection and Test", "workDesc": "", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-01-07", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602191047", "asset": "CFP-FOAM", "assetDesc": "FOAM SYSTEM / FOAM HOUSE FOR ANNUAL TEST", "failureDesc": "Monthly Inspection foam system (form attached)", "workDesc": "", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2510171059", "asset": "7FP-CAB-700", "assetDesc": "FP Panel Unit 7 Intake Electrical Building 1", "failureDesc": "Routine - Cabinet, Fire Detection and Alarm System Inspection and Test", "workDesc": "", "team": "CONTR-FP78", "priority": "30", "scheduledStart": "2026-02-07", "status": "APPR", "pic": "bambang-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607101001", "asset": "7TG-CV-1", "assetDesc": "U7 Main Turbine Control Valve HP Steam Line 1", "failureDesc": "During CV-1 closure test, others CV 2/3/4 hunting and boiler firing rate alarm (reach 15%) -WCOND", "workDesc": "", "team": "MNT-C7", "priority": "20", "scheduledStart": "2026-05-23", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606231145", "asset": "7CM-LT-481B", "assetDesc": "MAIN LP CONDENSER 7A HOTWELL LEVEL TRANSMITTER B", "failureDesc": "Level condenser often alarm deviation. 7CM-LT-481B reading 77%, locally level glass around 60%", "workDesc": "Before isolate heater deviation AVS B = 2%. After restore system deviation 14% (481A: 64%, 481B: 78%)", "team": "MNT-C7", "priority": "20", "scheduledStart": "2026-05-23", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607014228", "asset": "7CP-SV-520B", "assetDesc": "PRIMING PUMP SEAL RECIRCULATING TANK 7A MAKEUP WATER SOLENOID V/V", "failureDesc": "The solenoid valve for the seal recirculation tank is not working, because the tank level is always low", "workDesc": "Please check solenoid valve. Repair / replace if required. ST009046 (Valve Set), ST008722 (Coil)", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-07", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606171037", "asset": "7CM-CE-658", "assetDesc": "POLISHER 7 OUTLET SAMPLE COOLER SPECIFIC CONDUCTIVITY ELEMENT", "failureDesc": "Terdapat perbedaan pembacaan antara online analyzer dan grab: online terbaca 0.001 us/cm, grab dengan purecal terbaca 0.063 us/cm. Sebelumnya sudah dilakukan penggantian sensor (WO 2605061022) tapi analyzer kembali terbaca 0.00 us/cm.", "workDesc": "Terdapat perbedaan pembacaan antara online dan grab - DONE", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-24", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606291036", "asset": "7CM-TE-200", "assetDesc": "LP FLASHBOX #7 TEMPERATURE ELEMENT", "failureDesc": "Found 7CM-TV-705 tracking to manual due to 7CM-TE-200 sometimes reading bad quality (531.25 deg C)", "workDesc": "Found 7CM-TV-705 tracking to manual - WCOND. Re-scaling the temp range on the DCS.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-07", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606291035", "asset": "7FW-VT-230", "assetDesc": "MD BFP 7 PUMP INBOARD BEARING VIB X TRANSMITTER", "failureDesc": "Ditemukan indikasi motor vibrasi >3.0 um saat motor stop beroperasi; vibrasi pump dan coupling juga >1.0 um saat motor stop. Compare dgn unit 8 <1.0 um saat stop.", "workDesc": "Additional info dari CBM Team: probe yg terpasang di lokal merupakan probe dengan tipe displacement sensor yang membaca saat rotor berputar saja. Perlu cek indikasi pembacaan di logic DCS zero-nya, bandingkan dengan unit 8.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-07", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605201001", "asset": "CCA-TI-100A", "assetDesc": "STATION AIR COMPRESSOR A 2ND STAGE SUCTION TEMPERATURE INDICATOR", "failureDesc": "TI untuk inlet stage 2 hanya terbaca 2°, comp C 42° dan comp E 37°. TI comp A hasilnya juga terlalu jauh dengan pengecekan.", "workDesc": "Please update activity progress", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-05-25", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602242070", "asset": "7TG-GEN-100", "assetDesc": "MAIN GENERATOR 7", "failureDesc": "New PM for SLMS Analyzer, please get the check sheet as WO ref. As last issue the system have abnormal, please coordination with mas Muhamad for change swap with Unit 8", "workDesc": "Annual Generator Stator Leak Monitoring System Maintenance. Please do check sheet inspection and record as maintenance list on WO task.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-17", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606121008", "asset": "7CM-ISV-955A", "assetDesc": "LP MAIN CONDENSER HOOD SPRAY INLET ISOL V/V A2", "failureDesc": "Found valve 955A always close/cannot control, cause solenoid control detached", "workDesc": "Found valve 955A always close/cannot control, cause solenoid control detached - DONE", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-02-07", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606241059", "asset": "7CW-MOV-703A", "assetDesc": "CIRCULATING WATER PUMP 7A DISCHARGE MOV", "failureDesc": "Found discharge MOV is different from the local reading and the DCS reading", "workDesc": "Found discharge MOV is different from the local reading and the DCS reading - WCOND", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-01-07", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606111010", "asset": "7SC-TV-330", "assetDesc": "STATOR COOLING WATER 7 TEMPERATURE CONTROL V/V", "failureDesc": "Different opening for 7SC-TV-330: 0% opening at DCS, local condition approximately 25% opening", "workDesc": "Cek modulating voltage during testing, compare between unit 7 and unit 8, to eliminate the failure, if it's from DCS card or positioner. Please prepare material for replacement for DCS/positioner - WCOND.", "team": "MNT-C7", "priority": "20", "scheduledStart": "2026-11-05", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606101002", "asset": "7HB-FY-294A", "assetDesc": "FEEDWATER HEATER 2 EXTRACTION DRAIN INLET SOLENOID CONTROL V/V", "failureDesc": "7HB-FY-294A failed to shut", "workDesc": "Prepare for insitu replacement the kit, if possible to access / if fail from kit - DONE", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-15", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604081693", "asset": "7TG-TE-206", "assetDesc": "MAIN TURBINE BEARING #6 TEMPERATURE ELEMENT", "failureDesc": "There is an alarm at DCS (7TG-TE-206) which displays spike/temperature hunting, but temperature at the local (TI) is steady", "workDesc": "Please update activity progress - need evidence, more info for temperature", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-04-15", "status": "APPR", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605041058", "asset": "7CW-TT-718A", "assetDesc": "MAIN CONDENSER 7A OUTLET WATER BOX A TEMPERATURE TRANSMITTER 3", "failureDesc": "Alarm bad quality, persistent alarms on DCS screen", "workDesc": "Verify and fix the alarm. Please update activity progress.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-05", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605041057", "asset": "7CW-TT-713A", "assetDesc": "MAIN CONDENSER 7A INLET WATER BOX A TEMPERATURE TRANSMITTER 2", "failureDesc": "Alarm bad quality, persistent alarms on DCS screen", "workDesc": "Verify and fix the alarm. Please update activity progress.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-05", "status": "WAPPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605041056", "asset": "7TL-TT-450", "assetDesc": "LP TURBINE 7A STEAM SEAL SUPPLY TO N5 PACKING TEMP. TRANSMITTER", "failureDesc": "Alarm bad quality, persistent alarm on DCS screen", "workDesc": "Verify and repair local temp transmitter. Please update activity progress.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-05", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605041055", "asset": "7SC-TE-533", "assetDesc": "GENERATOR 7 STATOR C-BAR TEMPERATURE INDICATION #33", "failureDesc": "Alarm bad quality, also happens at 7TG-TE-539 and 7TG-TE-501", "workDesc": "Verify and repair local TE. Please update activity progress, please share evidence for local verification.", "team": "MNT-C8", "priority": "31", "scheduledStart": "2026-07-05", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605041060", "asset": "7GH-DRY-100", "assetDesc": "Generator Hydrogen Dryer Unit", "failureDesc": "Persistent alarm bad quality on DCS: 7GH-DRY-DP2, 7GH-DRY-DP1. Suspect from generator dryer switched off due to screen.", "workDesc": "Verify and fix the alarm", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-05", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602271015", "asset": "7CL-FT-217", "assetDesc": "INTAKE STRUCTURE SODIUM HYPO HEADER FLOW TRANSMITTER", "failureDesc": "Found flow transmitter fluktuatif", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-06", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603021014", "asset": "7TL-FV-270", "assetDesc": "MAIN TURBINE HEATING STEAM SEAL FEED FLOW CONTROL VALVE", "failureDesc": "It is suspected to be passing due to the temperature alarm (400-437 deg C) although it was shut at low load", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-02-19", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603161142", "asset": "7HB-CKV-245", "assetDesc": "REHEAT TURBINE 7 EXTRACTION CHECK VALVE FROM E3B LINE TO DEAERATOR", "failureDesc": "During RPT, CKV cannot moved to closed because solenoid leak", "workDesc": "Repair IA leak from solenoid valve, replace solenoid if required - WMATL", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-23", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603161141", "asset": "7HB-CKV-232A", "assetDesc": "FEEDWATER HEATER 6A EXTRACTION STEAM INLET CHECK V/V", "failureDesc": "CKV cannot closed during RPT", "workDesc": "Please check and verify check valve condition - WMATL", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-23", "status": "APPR", "pic": "febr0663, fauzi-wasa (isya0318)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604061015", "asset": "7EC-DROP-212", "assetDesc": "U#7 MCR OPERATOR WORK STATION 212", "failureDesc": "Load control mode button (LOCAL/REMOTE) for Unit 7 & 8 can't be operated (no response if clicked), to change this mode (mainly during RPT closure test) must go to unit master. Existing DCS perlu perbaikan.", "workDesc": "Load control mode button can't be operated - WPCOND", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-04-20", "status": "APPR", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602051042", "asset": "7EC-DROP-210", "assetDesc": "U#7 MCR OPERATOR WORK STATION 210", "failureDesc": "Hard disk error and windows cannot start normally", "workDesc": "Replace hard disk. Waiting PR198213.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-04-24", "status": "WMATL", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602181011", "asset": "7GH-AE-117", "assetDesc": "GENERATOR PYROLYSATE COLLECTOR ANALYSER ELEMENT", "failureDesc": "Found dew point analyzer reading isn't clear, please check and inspect it", "workDesc": "Waiting SPF from RE", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-04-14", "status": "APPR", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602271019", "asset": "7CW-LT-719B", "assetDesc": "MAIN CONDENSER 7A OUTLET WATER BOX B LEVEL TRANSMITTER", "failureDesc": "Indikasi di DCS bad quality", "workDesc": "WMATL", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-06", "status": "APPR", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603121043", "asset": "P7MKSC", "assetDesc": "GENERATOR - STATOR COOLER SYSTEM", "failureDesc": "Please cek pembacaan H2 leak rate SLMS yang masih 0, harusnya terbaca 2% & 20 CFD dari panelnya", "workDesc": "WMATL", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-12", "status": "APPR", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602021034", "asset": "7LT-XIT-550A", "assetDesc": "BFPT 7A L/O RETURN TO RESERVOIR WATER CONTENT INDICATING TRANSMITTER", "failureDesc": "Oil moisture of BFPT 7A is showing bad quality at DCS", "workDesc": "WMATL", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-02-04", "status": "APPR", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602231101", "asset": "7BM-CAB-100", "assetDesc": "#7 BOILER SUPERVISORY CONTROL (BMS/FSSS) CABINET", "failureDesc": "Found display Bentley for monitoring vibration PA FD Fan Unit 7 was blank off (BMS Room)", "workDesc": "Please help to verify and repair it - WMATL", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-02-26", "status": "APPR", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2411201027", "asset": "CCH-STRC-100A", "assetDesc": "STACKER / RECLAIMER 1 (SANDVIK-12 OCT 2012)", "failureDesc": "Wind speed not reading", "workDesc": "Need material order - WMATL", "team": "MNT-C7", "priority": "30", "scheduledStart": "2025-10-11", "status": "APPR", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2509171018", "asset": "7CP-CAB-300", "assetDesc": "CONDENSER PRIMING CONTROL PANEL", "failureDesc": "Please add alarm common trouble (pump trip, pressure low, level low) when CP system have any problem, currently there isn't alarm", "workDesc": "Add/activate alarm on priming pump - RE Review", "team": "MNT-C7", "priority": "30", "scheduledStart": "2025-09-24", "status": "APPR", "pic": "isya0318", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606111015-2", "asset": "CSS-P-600B", "assetDesc": "SANITARY AND SEWAGE LIFT STATION PUMP B (45M3/H AT 37 KPA)", "failureDesc": "Suspect pump not pumping. The sewage pit almost full.", "workDesc": "UPDATE ACTIVITY - pump priming 1 already replaced, line suspect passing, need coordination with M8 team for verification of the line suction", "team": "MNT-E7", "priority": "30", "scheduledStart": "2026-06-11", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511044958", "asset": "CAC-FSL-330", "assetDesc": "CHEMICAL SUMP EXHAUST FAN FLOW SWITCH LOW", "failureDesc": "1 Yearly Inst-Calibration of type Yamatake-Honeywell AF.1JPP0260 instrumentation device", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-29", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607061106", "asset": "CCH-BIN-200", "assetDesc": "CRUSHER SURGE BIN", "failureDesc": "Surge bin level read, was error read (surge bin number 2)", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-07", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2601281100", "asset": "CCH-SCAL-300A", "assetDesc": "BELT SCALE E-4 CONVEYOR", "failureDesc": "1 Weekly - Thermo Fisher Belt Scale Zero Calibration", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2601281053", "asset": "CCH-SCAL-300B", "assetDesc": "BELT SCALE E-5 CONVEYOR", "failureDesc": "1 Weekly - Thermo Fisher Belt Scale Zero Calibration", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2601191078", "asset": "CCH-STRC-100B", "assetDesc": "STACKER / RECLAIMER 2", "failureDesc": "1 Monthly - General PM & cleaning for switch room, panel, cabin (see JP)", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607101013", "asset": "CCH-FDR-100B", "assetDesc": "BELT FEEDER OF DMH A1-2", "failureDesc": "Alarm Chute Plug sering active, actual tidak ada built up, ditemukan hanger tilt switchnya tidak ada", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-13", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "SR135577", "asset": "CCH-STRC-100A", "assetDesc": "STACKER / RECLAIMER 1 (SANDVIK-12 OCT 2012)", "failureDesc": "Signal di PLC Stacker 1 conveyor permisive sering intermitten (Rung 2:120)", "workDesc": "Temporary repair, add logic (test bit 9)", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-09-07", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605201003", "asset": "CCH-STRC-100A", "assetDesc": "STACKER / RECLAIMER 1 (SANDVIK-12 OCT 2012)", "failureDesc": "Sinyal stacking masuk terus (stacking complete), actual stacking baru mulai parameter masuk semua", "workDesc": "Toggle bit di rung PLC", "team": "MNT-C7", "priority": "20", "scheduledStart": "2026-05-19", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2410301183", "asset": "CCH-CNVR-200D", "assetDesc": "CONVEYOR RECLAIM FEEDER B-3", "failureDesc": "RTD for bearing pulley feeder B3 dan C5 perlu di cek dan diperbaiki. Please issue material and replacement.", "workDesc": "@W1-1124. Please update activity progress.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-16", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2601201381", "asset": "CAD-CNVR-300", "assetDesc": "RADIAL STACKER BOOM CONVEYOR", "failureDesc": "MA sisi tail sebelah utara macet, MA sisi head sebelah selatan macet. Pullcord macet (ST048452 - ready 1).", "workDesc": "Need check or replace", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-05-21", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605061023", "asset": "P0WT", "assetDesc": "Waste Water Treatment Building Area P783", "failureDesc": "Quality of electrical panel box poor (see picture)", "workDesc": "Repaint the box and provide proper identification on the control box. Add resource.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-12-06", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604281036", "asset": "CWT-AIT-936", "assetDesc": "WWT SYSTEM SUPPLY PUMP C ANALYTICAL INDICATING TRANSMITTER", "failureDesc": "pH Analyzer is not reading correctly", "workDesc": "Please check and verify pH Analyzer", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-05-20", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2605191025", "asset": "CAD-CNVR-200", "assetDesc": "PIPE CONVEYOR P-1", "failureDesc": "Pullcord 227 Conveyor P1 aktif pada monitor fly ash, padahal tidak ada penarikan di lokal, ketika reset alarm pada monitor", "workDesc": "Langsung release", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-05-19", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602271032", "asset": "CCH-STRC-100A", "assetDesc": "STACKER / RECLAIMER 1 (SANDVIK-12 OCT 2012)", "failureDesc": "Socket solenoid line greasing out (socket rusak)", "workDesc": "Solenoid jalur greasing", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-02-03", "status": "APPR", "pic": "adna0499, fauz0565, jajuli-wasa", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607101029", "asset": "7BF-PDT-590F", "assetDesc": "PULVERIZER 7F BOWLPRESS DIFF TRANSMITTER", "failureDesc": "Tend DP bowl high high alarm 3.8 kPa while demand 70%. Check pyrites reject normal.", "workDesc": "Please perform manual flushing for TX", "team": "MNT-C7", "priority": "10", "scheduledStart": "2026-07-10", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)(zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607021789", "asset": "7BG-CAB-100", "assetDesc": "STACK CEMS ANALYZER CABINET UNIT 7", "failureDesc": "Verification low reading of SO2 gas CEMS", "workDesc": "Verification existing line. Replace sample line after temporary action by callout team.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-06", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)(zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606181002", "asset": "7BA-FAN-130", "assetDesc": "BOTTOM ASH HYDRAULIC OIL COOLER FAN", "failureDesc": "Suspect auto cut in trouble (FLM)", "workDesc": "Please check and verify auto cut in SSCC system", "team": "MNT-C7", "priority": "20", "scheduledStart": "2026-06-22", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607031007", "asset": "7BA-FQI-102", "assetDesc": "SUBMERGED CHAIN CONVEYOR 7 SERVICE WATER INLET FLOW INDICATOR", "failureDesc": "Flow meter make up SSCC dari service water pembacaan kemungkinan tidak aktual. Flow meter dibuat 8 m3, overflow SSCC kecil.", "workDesc": "#Waiting portable flow meter under repair", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-07", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606241063", "asset": "7FA-SHV-251A", "assetDesc": "VENT AIR FAN A SUCTION SHUT OFF V/V", "failureDesc": "7FA-SHV-251A dan 7FA-SHV-251B untuk fan 114 A/B sering discrepancy, muncul indikasi kuning saat akan dioperasikan", "workDesc": "Permintaan dari team maintenance untuk proses pengecekan lanjutan", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606151016", "asset": "7BF-ZT-730A", "assetDesc": "SOFA Tilt Drive Corner 1 Position Transmitter", "failureDesc": "Found Positioner SOFA A tilt Corner 1 bad quality and different between local and DCS (local 0.3%) and (DCS 70%)", "workDesc": "Verify and repair local positioner", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-07", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607091005", "asset": "7FA-AL-101H", "assetDesc": "HOPPER PRESSURE VESSEL 101H AB SECT. ROW 1", "failureDesc": "This high-level transmitter is acting up because sometimes it's on and sometimes it disappears. Already checked it at the flange hole with the vessel under vacuum.", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607061108", "asset": "7FC-TE-102A", "assetDesc": "FGD-A INLET DUCT QUENCER AREA GAS TEMPERATURE #1", "failureDesc": "Found 7FC-TI-102A not reading temperature correctly same as other transmitter", "workDesc": "Please replace TE. ST015427 ready to issue.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-14", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607061107", "asset": "7BS-SMV-201B", "assetDesc": "STEAM DRUM 7 OUTLET WEST HEADER - SAMPLE V/V B2", "failureDesc": "Steam leak di pipa sampling, posisi diluar grating tidak ada akses, utara deaerator", "workDesc": "Please repair leak. #Prepare JSA for scaffolding, passing isolation valve.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607061105", "asset": "7FA-DRV-627B", "assetDesc": "CONVEYING AIR TANK DRAIN V/V B", "failureDesc": "Automatic drain (after 7FA-DRV-627B) abnormal working, suspect pneumatic valve tidak bisa kembali ke posisi shut", "workDesc": "Please check and repair auto drain valve", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-13", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2607061104", "asset": "7FA-VTV-232P", "assetDesc": "HOPPER PRESSURE VESSEL 100P VENT V/V", "failureDesc": "Found venting valve 232P at panel PLC fail to close", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-13", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2510201061", "asset": "7FC-CAB-100", "assetDesc": "SCRUBBER CEMS ANALYSER CABINET", "failureDesc": "Weekly - Unit 78 FGD Inlet SO2 Analyzer Preventive Maintenance", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-16", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511044779", "asset": "7BG-AE-562", "assetDesc": "SECONDARY AIR HEATER 7A GAS INLET - OXYGEN ANALYZER ELEMENT 1", "failureDesc": "1 Weekly - 8 Channel Oxygen Analyzer Inspection (BG-AE-562 till BG-AE-569)", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043780", "asset": "7BG-AI-570~573A/B", "assetDesc": "HEATER 7 GAS OUT O2 ANALYZER", "failureDesc": "Weekly Maintenance YOKOGAWA Zirconia Oxygen analyzer (7BG-AI570~573A/B)", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511031213", "asset": "7BG-AE-568", "assetDesc": "PRIMARY AIR HEATER 7 GAS INLET - OXYGEN ANALYZER ELEMENT 7", "failureDesc": "3 Monthly - Oxygen Analyzer Maintenance and Calibration", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043897", "asset": "7BG-CAB-130A", "assetDesc": "PROCESSOR CONTROL UNIT BOILER LEAK DETECTION SYSTEM 1 (FEGT)", "failureDesc": "Weekly - FEGT System Inspection", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511043840", "asset": "7BG-CAB-130B", "assetDesc": "PROCESSOR CONTROL UNIT BOILER LEAK DETECTION SYSTEM 2 (LD)", "failureDesc": "Weekly - FEGT System Inspection", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-07-17", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511044611", "asset": "7BG-FAN-500B", "assetDesc": "INDUCED DRAFT FAN 7B (PLANT)", "failureDesc": "Sealing of Field Instruments for Water Ingress Prevention", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-10-07", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603021336", "asset": "7FW-LT-370A", "assetDesc": "STEAM DRUM (WEST) LEVEL TRANSMITTER A", "failureDesc": "Transmitter reading shows a deviation compared to the other transmitter", "workDesc": "Verify and repair local transmitter. #ST012474 ready to issue and replace.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-30", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604061053-2", "asset": "7BF-FAN-600B-M", "assetDesc": "PRIMARY AIR FAN 7B MOTOR", "failureDesc": "Spike signal at motor IB, suspect instrumental problem. Note: perlu data pembanding dari portable tool CBM.", "workDesc": "Please support CBM Team to verify at local instrument (vibration probe). #temporary bypass trip instrument.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-02-07", "status": "INPRG", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604301008", "asset": "7BS-PT-106A", "assetDesc": "FINAL SUPERHEATER 7 OUTLET PRESSURE TRANSMITTER A ( 0-19000 kPa )", "failureDesc": "Often alarm deviation (over 100 kPa) between 7BS-PT-106A and 7BS-PT-106B", "workDesc": "Verify and repair the pressure transmitter", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-02-07", "status": "APPR", "pic": "abdu0537, mahf0662 (eenh0552)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2606171039", "asset": "7FC-PDT-105", "assetDesc": "SEAWATER SCRUBBER ABSORBER 7A PRESS DIFF TRANSMITTER", "failureDesc": "7FC-PDT-105, FGD A Demister DP High alarm often appears during high load. It's in the Top 10 Alarms.", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-24", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2511044611-2", "asset": "7BG-FAN-500B", "assetDesc": "INDUCED DRAFT FAN 7B (PLANT)", "failureDesc": "Sealing of Field Instruments for Water Ingress Prevention", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-15", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603051012", "asset": "7FC-V-101A", "assetDesc": "ABSORBER INLET DAMPER 7A OPEN POSITION HYDRAULIC OIL LINE ADJUSTABLE VALVE", "failureDesc": "Terdapat kebocoran pada adjuster pressure dan line", "workDesc": "Please check leakage and replace o-ring seal if required", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-05-11", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604291073", "asset": "7FC-FV-205", "assetDesc": "SEAWATER SCRUBBER ABSORBER 7B EMERG COOLING WATER INLET FLOW CONTROL V/V", "failureDesc": "Support M7 for disconnect solenoid", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-04-30", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604281035", "asset": "7BF-FDR-500B", "assetDesc": "COAL FEEDER 7B", "failureDesc": "Found alarm chute block active, but actual not blocked", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-05-04", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603121044", "asset": "7BF-ZS-504E", "assetDesc": "COAL FEEDER 7E DISCHARGE CHUTE PLUG SENSOR SWITCH", "failureDesc": "Alarm discharge chute plug terus aktif, aktual ketika di PDM bersih", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-16", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603271009", "asset": "7BF-ISD-506E", "assetDesc": "PULVERIZER 7E OUTLET TO CORNER 1 ISOL DAMPER", "failureDesc": "Found Mill 7E permissive not ready, suspect from limit switch for Open 7E Corner 1 is not detected", "workDesc": "Please check limit switch condition, replace if required", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-05-26", "status": "APPR", "pic": "abdu0537, mahf0662, fauzi-wasa (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603241050", "asset": "7CS-FT-403", "assetDesc": "MAIN CONDENSER 7 MAKEUP FLOW TRANSMITTER", "failureDesc": "When the M/U control valve (7CM-FV-481A) opens above 15%, the flowmeter starts to show a reading, but below 15% the flowmeter indicates 0 TPH", "workDesc": "Please verify flow transmitter/M/U control valve", "team": "MNT-C7", "priority": "20", "scheduledStart": "2026-03-25", "status": "APPR", "pic": "abdu0537, mahf0662, fauzi-wasa (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603041016", "asset": "7BB-FIQ-310", "assetDesc": "INTERMITTENT BLOWDOWN TANK 7 TOTALIZER INDICATOR", "failureDesc": "The local flowmeter indicator was found stuck and not counting, repair required", "workDesc": "Please repair or replace flow meter", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-06-04", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602111014", "asset": "7BG-PI-205B", "assetDesc": "FD FAN HYDRAULIC OIL PUMP 7B DISCHARGE - PRESSURE INDICATOR", "failureDesc": "Pressure gauge discharge FD fan hydraulic oil pump 7B low pressure indication", "workDesc": "Need check calibration", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-02-19", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603021338", "asset": "7BG-RTV-109A", "assetDesc": "FD FAN 7A LUBE OIL FILTER - PRESSURE DIFF SWITCH HIGH ROOT V/V 2", "failureDesc": "Found (minor) oil leaks on discharge line of pump FD Fan 7A, near valve 7BG-RTV-109A", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-09", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2603021334", "asset": "7BA-SHV-330C", "assetDesc": "PYRITE HOPPER 7C INLET SHUT OFF V/V", "failureDesc": "Found Pyrite 7C v/v inlet proximity on the open side always on", "workDesc": "", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-09", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2501131091", "asset": "P7FAA", "assetDesc": "P7 FGD A Area", "failureDesc": "Update report", "workDesc": "Sealing of Field Instruments for Water Ingress Prevention", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-13", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2501131090", "asset": "P7FAB", "assetDesc": "P7 FGD B Area", "failureDesc": "Update report", "workDesc": "Sealing of Field Instruments for Water Ingress Prevention", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-13", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2501131082", "asset": "P7BB-04", "assetDesc": "Boiler Building 7 - 4th Floor", "failureDesc": "Update report", "workDesc": "Sealing of Field Instruments for Water Ingress Prevention", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-13", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2501131080", "asset": "P7BB-06", "assetDesc": "Boiler Building 7 - 6th Floor", "failureDesc": "Update report", "workDesc": "Sealing of Field Instruments for Water Ingress Prevention", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-13", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2501131081", "asset": "P7BB-05", "assetDesc": "Boiler Building 7 - 5th Floor", "failureDesc": "Update report", "workDesc": "Sealing of Field Instruments for Water Ingress Prevention", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-13", "status": "APPR", "pic": "abdu0537, mahf0662 (zain0479)", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2501131079", "asset": "P7BB-07", "assetDesc": "Boiler Building 7 - 7th Floor", "failureDesc": "Update report", "workDesc": "Sealing of Field Instruments for Water Ingress Prevention", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-13", "status": "APPR", "pic": "zain0479", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2604241004", "asset": "7HD-LT-603A", "assetDesc": "FEEDWATER HEATER 8A LEVEL TRANSMITTER", "failureDesc": "Indikasi level di DCS normal akan tetapi level switch high alarm aktif", "workDesc": "Please check and repair", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-04-28", "status": "", "pic": "zain0479", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2509151510", "asset": "7FW-TV-338A", "assetDesc": "BOILER INTERM SH DSH 7A FW SPRAY TEMPERATURE CONTROL V/V", "failureDesc": "Need WO Refurbish ST016964 issued WO 2508211188 qty 1 EACH", "workDesc": "Refurbish actuator", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-13", "status": "APPR", "pic": "zain0479", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2602041008", "asset": "7FO-PV-900", "assetDesc": "BOILER OIL GUN 7 SA SUPPLY PRESS CONTROL V/V", "failureDesc": "Atomizing cannot adjust (verified by maint & engineer)", "workDesc": "Atomizing air tidak bisa di adjust. #need SPF.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2026-03-13", "status": "APPR", "pic": "zain0479", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2509171025", "asset": "CCH-STRC-100B", "assetDesc": "STACKER / RECLAIMER 2", "failureDesc": "Saat reclaiming semi auto diatas slew 65 deg kemudian dilakukan pemindahan dari semi auto ke manual operasi", "workDesc": "Tolong diverifikasi dan diperbaiki", "team": "MNT-C7", "priority": "30", "scheduledStart": "2025-09-24", "status": "APPR", "pic": "zain0479", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2510211007", "asset": "7FA-CMP-104", "assetDesc": "FLY ASH CONVEYING AIR COMPRESSOR SUPPLY TO UNIT 7", "failureDesc": "LCD tidak jelas pada saat melakukan PM, mohon untuk diganti dengan yang baru", "workDesc": "Please check and fix the display due to unclear", "team": "MNT-E7", "priority": "30", "scheduledStart": "2025-10-28", "status": "APPR", "pic": "zain0479", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}, {"wo": "2509301003", "asset": "7BG-AIT-813B", "assetDesc": "ID FAN 7B INLET - ANALYSIS TRANSMITTER", "failureDesc": "Opacity high alarm always appear with maximum value about 23%, sometimes reset then reappear", "workDesc": "Check and verify opacity analyzer. Create SPF material.", "team": "MNT-C7", "priority": "30", "scheduledStart": "2025-07-10", "status": "INPRG", "pic": "", "highlight": false, "photos": [], "whatComplete": "", "progress": "scheduled"}];
+
+// ══════════════════════════════════════════════════════════════════
+//  Tab switching
+// ══════════════════════════════════════════════════════════════════
+let activeTab = 'report';
+const Sheets = {};
+
+function pushCrossSync(fromKey, wo, patch){
+  if(!wo) return;
+  const otherKey = fromKey === 'report' ? 'ja' : 'report';
+  const other = Sheets[otherKey];
+  if(other && other.applyIncomingUpdate) other.applyIncomingUpdate(wo, patch);
+}
+
+function reconcileCrossSync(){
+  const rep = Sheets.report, ja = Sheets.ja;
+  if(!rep || !ja) return;
+  const repList = rep.getData().workOrders;
+  const jaList = ja.getData().workOrders;
+  const jaByWo = {};
+  jaList.forEach(w => { if(w.wo) jaByWo[w.wo] = w; });
+  let repChanged = false, jaChanged = false;
+  const isEmpty = (f, v) => f === 'progress' ? (!v || v === 'scheduled') : !v;
+  repList.forEach(rw => {
+    const jw = jaByWo[rw.wo];
+    if(!jw) return;
+    ['whatComplete','highlight','progress'].forEach(f => {
+      const rEmpty = isEmpty(f, rw[f]), jEmpty = isEmpty(f, jw[f]);
+      if(rEmpty && !jEmpty){ rw[f] = jw[f]; repChanged = true; }
+      else if(jEmpty && !rEmpty){ jw[f] = rw[f]; jaChanged = true; }
+    });
   });
+  if(repChanged) rep.saveAndRerender();
+  if(jaChanged) ja.saveAndRerender();
 }
 
-function escapeHtml(s){
-  if(s === undefined || s === null) return "";
-  return String(s).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function switchTab(tab){
+  activeTab = tab;
+  document.getElementById('panel-report').style.display = tab === 'report' ? '' : 'none';
+  document.getElementById('panel-ja').style.display = tab === 'ja' ? '' : 'none';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
 }
-function truncate(s, n){ s = String(s||""); return s.length > n ? s.slice(0,n)+"..." : s; }
 
-// Drag-and-drop Excel anywhere on the page
+// ══════════════════════════════════════════════════════════════════
+//  Factory sheet — 1 instance untuk "report" (ids asli, backward-
+//  compatible dengan draft/riwayat lama), 1 instance untuk "ja"
+// ══════════════════════════════════════════════════════════════════
+function initSheet(key, suffix, seedData){
+  const $ = (base) => document.getElementById(suffix ? base + suffix : base);
+  const LS_KEY = key === 'report' ? 'eic7_weekly_draft' : 'eic7_jobarrangement_draft';
+  const DB_NAME = key === 'report' ? 'eic7_weekly' : 'eic7_jobarrangement';
+
+  let DATA = { period: "", recNotes: "", workOrders: [] };
+  let activeFilter = "ALL", activeRsFilter = "ALL", activeProgFilter = "ALL";
+  let execFilterValues = new Set();
+  let searchTerm = "", dateFilterFrom = "", dateFilterTo = "";
+  let lastOpenIdx = -1, sortKey = null, sortDir = 1, currentWeekId = null;
+
+  function saveDraft(){
+    try{ localStorage.setItem(LS_KEY, JSON.stringify(DATA)); }catch(e){ /* storage full - ignore */ }
+  }
+  function loadDraft(){
+    const raw = localStorage.getItem(LS_KEY);
+    if(raw){
+      try{
+        DATA = JSON.parse(raw);
+        $('periodInput').value = DATA.period || "";
+        $('recNotes').value = DATA.recNotes || "";
+        return;
+      }catch(e){}
+    }
+    if(seedData && seedData.length){
+      DATA = { period: "", recNotes: "", workOrders: JSON.parse(JSON.stringify(seedData)) };
+      $('sourceInfo').textContent = "Data awal dari PDF Plan Weekly Planning EIC-7 (" + DATA.workOrders.length + " WO) — silakan cek & sesuaikan.";
+      saveDraft();
+    }
+  }
+
+  function loadExcelFile(file){
+    const reader = new FileReader();
+    reader.onload = function(evt){
+      const wb = XLSX.read(evt.target.result, {type:'array', cellDates:true});
+      const matchedSheet = pickSheetByDate(wb.SheetNames, new Date());
+      const targetSheetName = matchedSheet || wb.SheetNames[wb.SheetNames.length-1];
+      const usedFallback = !matchedSheet;
+      const sheet = wb.Sheets[targetSheetName];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, dateNF:'yyyy-mm-dd'});
+      const headers = rows[0] || [];
+      const colIdx = {};
+      for(const key2 in HEADER_MAP) colIdx[key2] = findCol(headers, HEADER_MAP[key2]);
+
+      const existingByWo = {};
+      DATA.workOrders.forEach(w => existingByWo[w.wo] = w);
+
+      let addedCount = 0, updatedCount = 0;
+      for(let r = 1; r < rows.length; r++){
+        const row = rows[r];
+        if(!row || row.length === 0) continue;
+        const woNum = (colIdx.wo>=0 ? row[colIdx.wo] : "") || "";
+        if(!woNum) continue;
+        const woStr = String(woNum);
+        const sourceFields = {
+          asset: colIdx.asset>=0 ? (row[colIdx.asset]||"") : "",
+          assetDesc: colIdx.assetDesc>=0 ? (row[colIdx.assetDesc]||"") : "",
+          locDesc: colIdx.locDesc>=0 ? (row[colIdx.locDesc]||"") : "",
+          failureDesc: colIdx.failureDesc>=0 ? (row[colIdx.failureDesc]||"") : "",
+          workDesc: colIdx.workDesc>=0 ? (row[colIdx.workDesc]||"") : "",
+          team: colIdx.team>=0 ? (row[colIdx.team]||"") : "",
+          workType: colIdx.workType>=0 ? (row[colIdx.workType]||"") : "",
+          priority: colIdx.priority>=0 ? (row[colIdx.priority]||"") : "",
+          scheduledStart: colIdx.scheduledStart>=0 ? (row[colIdx.scheduledStart]||"") : "",
+          status: colIdx.status>=0 ? (row[colIdx.status]||"") : ""
+        };
+        if(colIdx.originator>=0) sourceFields.pic = row[colIdx.originator]||"";
+        const existing = existingByWo[woStr];
+        if(existing){
+          // WO sudah ada — perbarui field dari sumber, JANGAN timpa update/highlight/foto/progress yang sudah diisi user
+          Object.assign(existing, sourceFields);
+          updatedCount++;
+        } else {
+          const entry = Object.assign({
+            wo: woStr,
+            pic: '',
+            whatComplete: colIdx.whatComplete>=0 ? (row[colIdx.whatComplete]||"") : "",
+            highlight: false,
+            photos: [],
+            progress: "scheduled"
+          }, sourceFields);
+          DATA.workOrders.push(entry);
+          existingByWo[woStr] = entry;
+          addedCount++;
+        }
+      }
+      $('sourceInfo').textContent = 'Sumber: ' + file.name + ' — sheet "' + targetSheetName + '"' +
+        (usedFallback ? ' (tidak ada sheet cocok dgn tanggal hari ini, pakai sheet terakhir)' : '') +
+        ' · ' + addedCount + ' baru, ' + updatedCount + ' diperbarui, total ' + DATA.workOrders.length + ' WO';
+      saveDraft();
+      render();
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function loadJsonInto(obj){
+    DATA = obj;
+    $('periodInput').value = DATA.period || "";
+    $('recNotes').value = DATA.recNotes || "";
+    saveDraft();
+    render();
+  }
+
+  function loadExternalFile(file){
+    if(!file) return;
+    if(file.name.match(/\.xlsx?$/i)) loadExcelFile(file);
+    else if(file.name.match(/\.json$/i)){
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try{ loadJsonInto(JSON.parse(evt.target.result)); }
+        catch(err){ alert("File JSON tidak valid: " + err.message); }
+      };
+      reader.readAsText(file);
+    }
+  }
+
+  $('xlsxInput').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(file) loadExcelFile(file);
+  });
+  $('jsonInput').addEventListener('change', function(e){
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt){
+      try{
+        loadJsonInto(JSON.parse(evt.target.result));
+        $('sourceInfo').textContent = "Melanjutkan dari: " + file.name;
+      }catch(err){ alert("File JSON tidak valid: " + err.message); }
+    };
+    reader.readAsText(file);
+  });
+  $('periodInput').addEventListener('input', function(e){ DATA.period = e.target.value; saveDraft(); });
+  $('recNotes').addEventListener('input', function(e){ DATA.recNotes = e.target.value; saveDraft(); });
+
+  $('exportBtn').addEventListener('click', function(){
+    if(DATA.workOrders.length === 0){ alert("Belum ada data untuk di-export."); return; }
+    DATA.generatedAt = new Date().toISOString();
+    const blob = new Blob([JSON.stringify(DATA)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0,10);
+    a.href = url;
+    a.download = (key === 'report' ? "weekly-report-data-" : "weekly-job-arrangement-data-") + dateStr + ".json";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  function computeGroupStats(groupKey){
+    const list = DATA.workOrders.filter(w => classifyGroup(w.team) === groupKey);
+    const c = {done:0, inprogress:0, need_material:0, need_access:0, other:0};
+    list.forEach(w => {
+      const p = w.progress || 'scheduled';
+      if(c[p] !== undefined) c[p]++; else c.other++;
+    });
+    return {total:list.length, c:c};
+  }
+
+  function renderRecapTable(){
+    const tbody = $('recapTableBody');
+    if(!tbody) return;
+    const counts = {};
+    PROGRESS_OPTIONS.forEach(o => counts[o.value] = 0);
+    DATA.workOrders.forEach(w => { const p = w.progress || 'scheduled'; counts[p] = (counts[p]||0) + 1; });
+    const total = DATA.workOrders.length;
+    let rows = PROGRESS_OPTIONS.map(o => {
+      const val = counts[o.value] || 0;
+      const pct = total > 0 ? (val/total*100).toFixed(1) : '0.0';
+      return `<tr><td><span class="prog-pill prog-${o.value}" style="padding:2px 8px;">${o.label}</span></td><td style="text-align:right;"><b>${val}</b></td><td style="text-align:right;color:var(--grey);">${pct}%</td></tr>`;
+    }).join('');
+    rows += `<tr style="border-top:2px solid var(--navy);"><td><b>Total</b></td><td style="text-align:right;"><b>${total}</b></td><td style="text-align:right;"><b>100%</b></td></tr>`;
+    tbody.innerHTML = rows;
+  }
+
+  function renderGroupPies(){
+    const pieRow = $('pieRow');
+    if(!pieRow) return;
+    pieRow.innerHTML = WORK_GROUPS.map(g => {
+      const stats = computeGroupStats(g.key);
+      const grad = buildConicGradient(stats.c, stats.total);
+      const donutBg = grad || '#eef2f6';
+      const legendHtml = PIE_SLICES.map(slice => {
+        const val = stats.c[slice.key] || 0;
+        const pct = stats.total > 0 ? Math.round(val/stats.total*100) : 0;
+        return `<div class="pie-legend-item"><span class="pie-legend-dot" style="background:#${slice.color};"></span><span class="plabel">${slice.label}</span><b>${val}</b><span style="color:var(--grey);width:34px;text-align:right;">${pct}%</span></div>`;
+      }).join('');
+      return `
+        <div class="pie-group">
+          <div class="pie-title">${g.label}</div>
+          <div class="donut" style="background:${donutBg};">
+            <div class="donut-hole"><div class="num">${stats.total}</div><div class="lbl">Total WO</div></div>
+          </div>
+          <div class="pie-legend">${legendHtml}</div>
+        </div>`;
+    }).join('');
+    const unclassified = DATA.workOrders.filter(w => !classifyGroup(w.team)).length;
+    const note = $('pieUnclassifiedNote');
+    if(note) note.textContent = unclassified > 0
+      ? unclassified + ' WO belum termasuk grup E7 / C7 / Fire Protection (isi kolom Team dengan salah satu kata kunci tsb agar terhitung).'
+      : '';
+  }
+
+  function exportExcel(){
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet('Work Orders');
+    ws.columns = [
+      {header:'No. WO / SR',                 key:'wo',             width:18},
+      {header:'Asset',                       key:'asset',          width:16},
+      {header:'Asset Description',           key:'assetDesc',      width:24},
+      {header:'Team',                        key:'team',           width:14},
+      {header:'Status',                      key:'status',         width:10},
+      {header:'Progress',                    key:'progress',       width:16},
+      {header:'Scheduled Start',             key:'scheduledStart', width:14},
+      {header:'Work Desc',                   key:'workDesc',       width:36},
+      {header:'Failure Desc',                key:'failureDesc',    width:30},
+      {header:'Update / What was Complete?', key:'whatComplete',   width:36},
+      {header:'Highlight',                   key:'highlight',      width:10}
+    ];
+    ws.getRow(1).eachCell(c => {
+      c.font = {bold:true, color:{argb:'FFFFFFFF'}};
+      c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF002060'}};
+    });
+
+    DATA.workOrders.forEach(w => {
+      const prog = w.progress || 'scheduled';
+      const colors = PROGRESS_COLOR[prog] || PROGRESS_COLOR.scheduled;
+      const row = ws.addRow({
+        wo: woCellValue(w.wo),
+        asset: w.asset,
+        assetDesc: w.assetDesc,
+        team: w.team,
+        status: w.status,
+        progress: PROGRESS_OPTIONS.find(o => o.value === prog).label,
+        scheduledStart: w.scheduledStart,
+        workDesc: w.workDesc,
+        failureDesc: w.failureDesc,
+        whatComplete: w.whatComplete,
+        highlight: w.highlight ? 'Ya' : ''
+      });
+      row.eachCell(c => {
+        c.alignment = {vertical:'top', wrapText:true};
+        c.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF'+colors.tint}};
+      });
+      const woCell = row.getCell('wo');
+      if(typeof woCell.value === 'number') woCell.numFmt = '0';
+      const progCell = row.getCell('progress');
+      progCell.fill = {type:'pattern', pattern:'solid', fgColor:{argb:'FF'+colors.strong}};
+      progCell.font = {bold:true, color:{argb:'FFFFFFFF'}};
+    });
+    ws.views = [{state:'frozen', ySplit:1}];
+
+    wb.xlsx.writeBuffer().then(buffer => {
+      const blob = new Blob([buffer], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0,10);
+      a.href = url;
+      a.download = (key === 'report' ? "weekly-report-eic7-" : "weekly-job-arrangement-eic7-") + dateStr + ".xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  }
+  $('exportExcelBtn').addEventListener('click', function(){
+    if(DATA.workOrders.length === 0){ alert("Belum ada data untuk di-export."); return; }
+    exportExcel();
+  });
+
+  $('clearBtn').addEventListener('click', function(){
+    if(confirm("Hapus semua draft data di browser ini?")){
+      localStorage.removeItem(LS_KEY);
+      DATA = { period:"", recNotes:"", workOrders:[] };
+      $('periodInput').value = "";
+      $('recNotes').value = "";
+      $('sourceInfo').textContent = "";
+      render();
+    }
+  });
+
+  function setRsFilter(f){ activeRsFilter = f; renderRsFilterBar(); renderTable(); }
+  function renderRsFilterBar(){
+    const c = {done:0, inprogress:0, notaccessed:0};
+    DATA.workOrders.forEach(w => c[reportingStatus(w)]++);
+    $('rsDone').textContent        = c.done;
+    $('rsInprogress').textContent  = c.inprogress;
+    $('rsNotaccessed').textContent = c.notaccessed;
+    const items = [
+      ['ALL',         'Semua',          ''],
+      ['done',        'Sudah Diisi',    'var(--green)'],
+      ['inprogress',  'In Progress',    'var(--amber)'],
+      ['notaccessed', 'Belum Diakses',  'var(--grey)']
+    ];
+    const bar = $('rsFilterBar');
+    if(!bar) return;
+    bar.innerHTML = items.map(([f,label,color])=>
+      `<div class="chip ${activeRsFilter===f?'active':''}" onclick="setRsFilter${suffix}('${f}')">
+         <span class="chip-dot" style="${color?'background:'+color+';opacity:1':''}"></span>
+         ${label} <span class="chip-count">${f==='ALL'?DATA.workOrders.length:c[f]}</span>
+       </div>`
+    ).join('');
+  }
+  function setProgFilter(f){ activeProgFilter = f; renderProgFilterBar(); renderTable(); }
+  function renderProgFilterBar(){
+    const bar = $('progFilterBar');
+    if(!bar) return;
+    const counts = {ALL:0};
+    PROGRESS_OPTIONS.forEach(o => counts[o.value] = 0);
+    DATA.workOrders.forEach(w => { counts.ALL++; const p = w.progress || 'scheduled'; if(counts[p]===undefined) counts[p]=0; counts[p]++; });
+    const chips = [["ALL","Semua ("+counts.ALL+")"]].concat(
+      PROGRESS_OPTIONS.map(o => [o.value, o.label+" ("+(counts[o.value]||0)+")"])
+    );
+    bar.innerHTML = chips.map(c => `<div class="chip ${activeProgFilter===c[0]?'active':''}" onclick="setProgFilter${suffix}('${c[0]}')">${c[1]}</div>`).join("");
+  }
+
+  function updateExecFilterBtnLabel(){
+    const btn = $('execFilterBtn');
+    if(!btn) return;
+    const n = execFilterValues.size;
+    btn.textContent = n === 0 ? 'Semua Eksekutor' : (n + ' Eksekutor dipilih');
+  }
+
+  function renderExecFilterOptions(){
+    const list = $('execFilterList');
+    const allCb = $('execFilterAll');
+    if(!list || !allCb) return;
+    const counts = {};
+    DATA.workOrders.forEach(w => parsePicNames(w.pic).forEach(n => { counts[n] = (counts[n]||0)+1; }));
+    const names = Object.keys(counts).sort((a,b) => counts[b]-counts[a] || a.localeCompare(b));
+    Array.from(execFilterValues).forEach(v => { if(counts[v] === undefined) execFilterValues.delete(v); });
+    list.innerHTML = names.map(n => `
+      <label class="exec-filter-item">
+        <input type="checkbox" value="${escapeHtml(n)}" ${execFilterValues.has(n)?'checked':''}>
+        <span>${escapeHtml(n)}</span>
+        <span class="exec-filter-count">${counts[n]}</span>
+      </label>`).join('');
+    list.querySelectorAll('input[type=checkbox]').forEach(cb => {
+      cb.addEventListener('change', e => {
+        if(e.target.checked) execFilterValues.add(e.target.value); else execFilterValues.delete(e.target.value);
+        const boxes = list.querySelectorAll('input[type=checkbox]');
+        const checkedCount = list.querySelectorAll('input[type=checkbox]:checked').length;
+        allCb.checked = boxes.length > 0 && checkedCount === boxes.length;
+        allCb.indeterminate = checkedCount > 0 && checkedCount < boxes.length;
+        updateExecFilterBtnLabel();
+        renderTable();
+      });
+    });
+    const checkedCount = execFilterValues.size;
+    allCb.checked = names.length > 0 && checkedCount === names.length;
+    allCb.indeterminate = checkedCount > 0 && checkedCount < names.length;
+    updateExecFilterBtnLabel();
+  }
+
+  function renderExecRecap(){
+    const wrap = $('execRecapWrap');
+    const tbody = $('execRecapTableBody');
+    if(!wrap || !tbody) return;
+    const counts = {};
+    DATA.workOrders.forEach(w => parsePicNames(w.pic).forEach(n => { counts[n] = (counts[n]||0)+1; }));
+    const names = Object.keys(counts).sort((a,b) => counts[b]-counts[a] || a.localeCompare(b));
+    if(names.length === 0){ wrap.style.display = 'none'; return; }
+    wrap.style.display = '';
+    tbody.innerHTML = names.map(n => `<tr><td>${escapeHtml(n)}</td><td style="text-align:right;"><b>${counts[n]}</b></td></tr>`).join('');
+  }
+
+  function setSort(sk){
+    if(sortKey === sk){ sortDir = -sortDir; } else { sortKey = sk; sortDir = 1; }
+    renderTable();
+  }
+  function updateSortArrows(){
+    ['wo','asset','team','status','scheduledStart','progress'].forEach(k => {
+      const th = document.querySelector('#panel-' + key + ' th.sortable[data-key="'+k+'"]');
+      const arrow = $('arrow-'+k);
+      if(!th || !arrow) return;
+      if(sortKey === k){
+        th.classList.add('active-sort');
+        arrow.textContent = sortDir === 1 ? '▲' : '▼';
+      } else {
+        th.classList.remove('active-sort');
+        arrow.textContent = '';
+      }
+    });
+  }
+
+  function setFilter(f){ activeFilter = f; renderFilterBar(); renderTable(); }
+  function renderFilterBar(){
+    const bar = $('filterBar');
+    const counts = {ALL:0, COMP:0, OUT:0, CAN:0, HL:0};
+    DATA.workOrders.forEach(w => {
+      counts.ALL++;
+      counts[classify(w.status)]++;
+      if(w.highlight) counts.HL++;
+    });
+    const chips = [
+      ["ALL","Semua ("+counts.ALL+")"],
+      ["OUT","Outstanding ("+counts.OUT+")"],
+      ["COMP","Completed ("+counts.COMP+")"],
+      ["CAN","Cancelled ("+counts.CAN+")"],
+      ["HL","Highlight laporan ("+counts.HL+")"]
+    ];
+    bar.innerHTML = chips.map(c => `<div class="chip ${activeFilter===c[0]?'active':''}" onclick="setFilter${suffix}('${c[0]}')">${c[1]}</div>`).join("");
+  }
+
+  $('searchBox').addEventListener('input', function(e){
+    searchTerm = e.target.value.toLowerCase();
+    renderTable();
+  });
+  $('dateFromFilter').addEventListener('change', function(e){ dateFilterFrom = e.target.value; renderTable(); });
+  $('dateToFilter').addEventListener('change', function(e){ dateFilterTo = e.target.value; renderTable(); });
+  $('clearDateFilterBtn').addEventListener('click', function(){
+    dateFilterFrom = ""; dateFilterTo = "";
+    $('dateFromFilter').value = "";
+    $('dateToFilter').value = "";
+    renderTable();
+  });
+  $('execFilterBtn').addEventListener('click', function(e){
+    e.stopPropagation();
+    const panel = $('execFilterPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+  });
+  document.addEventListener('click', function(e){
+    const panel = $('execFilterPanel'), btn = $('execFilterBtn');
+    if(!panel || panel.style.display === 'none') return;
+    if(!panel.contains(e.target) && e.target !== btn) panel.style.display = 'none';
+  });
+  $('execFilterAll').addEventListener('change', function(e){
+    // "Pilih Semua" berarti tanpa filter — semua WO tampil, termasuk yang belum ada PIC-nya
+    const boxes = $('execFilterList').querySelectorAll('input[type=checkbox]');
+    boxes.forEach(b => { b.checked = e.target.checked; });
+    execFilterValues.clear();
+    updateExecFilterBtnLabel();
+    renderTable();
+  });
+
+  function render(){
+    const hasData = DATA.workOrders.length > 0;
+    $('noDataCard').style.display = hasData ? 'none' : 'block';
+    $('kpiCard').style.display = hasData ? 'block' : 'none';
+    $('recapCard').style.display = hasData ? 'block' : 'none';
+    $('tableCard').style.display = hasData ? 'block' : 'none';
+    $('recCard').style.display = hasData ? 'block' : 'none';
+    if(!hasData) return;
+
+    const comp = DATA.workOrders.filter(w => classify(w.status)==='COMP').length;
+    const out = DATA.workOrders.filter(w => classify(w.status)==='OUT').length;
+    const can = DATA.workOrders.filter(w => classify(w.status)==='CAN').length;
+    $('kpiTotal').textContent = DATA.workOrders.length;
+    $('kpiComp').textContent = comp;
+    $('kpiOut').textContent = out;
+    $('kpiCan').textContent = can;
+
+    renderFilterBar();
+    renderRsFilterBar();
+    renderProgFilterBar();
+    renderExecFilterOptions();
+    renderRecapTable();
+    renderGroupPies();
+    renderExecRecap();
+    renderTable();
+  }
+
+  function renderTable(){
+    const tbody = $('tblBody');
+    let list = DATA.workOrders;
+    if(activeFilter === 'HL') list = list.filter(w => w.highlight);
+    else if(activeFilter !== 'ALL') list = list.filter(w => classify(w.status) === activeFilter);
+    if(activeRsFilter !== 'ALL') list = list.filter(w => reportingStatus(w) === activeRsFilter);
+    if(activeProgFilter !== 'ALL') list = list.filter(w => (w.progress||'scheduled') === activeProgFilter);
+    if(dateFilterFrom) list = list.filter(w => { const dd = toDateInputValue(w.scheduledStart); return dd && dd >= dateFilterFrom; });
+    if(dateFilterTo) list = list.filter(w => { const dd = toDateInputValue(w.scheduledStart); return dd && dd <= dateFilterTo; });
+    if(execFilterValues.size > 0) list = list.filter(w => parsePicNames(w.pic).some(n => execFilterValues.has(n)));
+    if(searchTerm){
+      list = list.filter(w => (w.wo+" "+w.asset+" "+w.assetDesc+" "+w.workDesc+" "+w.failureDesc).toLowerCase().includes(searchTerm));
+    }
+    if(sortKey){
+      list = list.slice().sort((a,b) => {
+        let va, vb;
+        if(sortKey === 'progress'){
+          va = PROGRESS_OPTIONS.findIndex(o => o.value === (a.progress||'scheduled'));
+          vb = PROGRESS_OPTIONS.findIndex(o => o.value === (b.progress||'scheduled'));
+        } else if(sortKey === 'scheduledStart'){
+          va = toDateInputValue(a.scheduledStart);
+          vb = toDateInputValue(b.scheduledStart);
+        } else {
+          va = (a[sortKey]||'').toString().toLowerCase();
+          vb = (b[sortKey]||'').toString().toLowerCase();
+        }
+        if(va < vb) return -1*sortDir;
+        if(va > vb) return 1*sortDir;
+        return 0;
+      });
+    }
+    tbody.innerHTML = "";
+    list.forEach((w) => {
+      const realIdx = DATA.workOrders.indexOf(w);
+      const prog = w.progress || 'scheduled';
+      const tr = document.createElement('tr');
+      tr.style.cursor = 'pointer';
+      tr.innerHTML = `
+        <td>${w.highlight?'&#9733;':''}</td>
+        <td><b>${escapeHtml(w.wo)}</b>${w.manual?'<span class="badge-manual">MANUAL</span>':''}<br><span class="rs-dot rs-${reportingStatus(w)}" title="${{done:'Sudah Diisi',inprogress:'In Progress',notaccessed:'Belum Diakses'}[reportingStatus(w)]}"></span> <span style="font-size:10px;color:var(--grey);">${{done:'Sudah Diisi',inprogress:'In Progress',notaccessed:'Belum Diakses'}[reportingStatus(w)]}</span></td>
+        <td>${escapeHtml(w.asset)}<br><span style="color:var(--grey);font-size:11px;">${escapeHtml(w.assetDesc||'')}</span></td>
+        <td>${escapeHtml(w.team)}</td>
+        <td style="font-size:11px;">${escapeHtml(w.pic||'-')}</td>
+        <td><span class="status-pill st-${(w.status||'').toUpperCase()}">${escapeHtml(w.status)}</span></td>
+        <td></td>
+        <td></td>
+        <td>${escapeHtml(truncate(w.workDesc,70))}</td>
+        <td>${w.photos && w.photos.length ? w.photos.length+' foto' : '-'}</td>
+      `;
+      const dateTd = tr.children[6];
+      dateTd.addEventListener('click', e => e.stopPropagation());
+      const dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.value = toDateInputValue(w.scheduledStart);
+      dateInput.addEventListener('click', e => e.stopPropagation());
+      dateInput.addEventListener('change', e => setScheduledDate(realIdx, e.target.value));
+      dateTd.appendChild(dateInput);
+
+      const progTd = tr.children[7];
+      progTd.addEventListener('click', e => e.stopPropagation());
+      const progSelect = document.createElement('select');
+      progSelect.className = 'prog-pill prog-'+prog;
+      PROGRESS_OPTIONS.forEach(o => {
+        const opt = document.createElement('option');
+        opt.value = o.value;
+        opt.textContent = o.label;
+        if(o.value === prog) opt.selected = true;
+        progSelect.appendChild(opt);
+      });
+      progSelect.addEventListener('click', e => e.stopPropagation());
+      progSelect.addEventListener('change', e => setProgress(realIdx, e.target.value));
+      progTd.appendChild(progSelect);
+      tr.addEventListener('click', () => toggleDetail(realIdx));
+      tbody.appendChild(tr);
+      if(w._open){
+        const dtr = document.createElement('tr');
+        dtr.className = 'detail-row';
+        const td = document.createElement('td');
+        td.colSpan = 10;
+        td.appendChild(buildDetailPanel(realIdx));
+        dtr.appendChild(td);
+        tbody.appendChild(dtr);
+      }
+    });
+    if(list.length === 0){
+      tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--grey);padding:20px;">Tidak ada WO yang cocok.</td></tr>';
+    }
+    updateSortArrows();
+  }
+
+  function setScheduledDate(idx, value){
+    DATA.workOrders[idx].scheduledStart = value;
+    saveDraft();
+    renderTable();
+  }
+  function setProgress(idx, value){
+    DATA.workOrders[idx].progress = value;
+    saveDraft();
+    renderProgFilterBar();
+    renderRecapTable();
+    renderGroupPies();
+    renderTable();
+    pushCrossSync(key, DATA.workOrders[idx].wo, {progress: value});
+  }
+  function toggleDetail(idx){
+    DATA.workOrders[idx]._open = !DATA.workOrders[idx]._open;
+    if(DATA.workOrders[idx]._open) lastOpenIdx = idx;
+    renderTable();
+  }
+
+  function buildDetailPanel(idx){
+    const w = DATA.workOrders[idx];
+    const wrap = document.createElement('div');
+    const metaBits = [];
+    if(w.priority) metaBits.push('Priority: ' + escapeHtml(w.priority));
+    if(w.pic) metaBits.push('PIC: ' + escapeHtml(w.pic));
+    wrap.innerHTML = `
+      ${metaBits.length ? `<div class="meta-line" style="margin-bottom:10px;">${metaBits.join(' &nbsp;&middot;&nbsp; ')}</div>` : ''}
+      <div class="detail-grid">
+        <div>
+          <label>Failure Desc</label>
+          <div style="font-size:12.5px;color:var(--grey);margin-bottom:10px;white-space:pre-wrap;">${escapeHtml(w.failureDesc||'-')}</div>
+          <label>Work Desc</label>
+          <div style="font-size:12.5px;color:var(--grey);margin-bottom:10px;white-space:pre-wrap;">${escapeHtml(w.workDesc||'-')}</div>
+          <label class="hl-toggle"><input type="checkbox" id="${'hl_'+idx+suffix}" ${w.highlight?'checked':''}> Highlight untuk laporan (tampilkan di PPT)</label>
+          ${w.manual?`<div style="margin-top:10px;"><button class="btn danger" style="font-size:11px;padding:4px 12px;" onclick="removeManualWO${suffix}(${idx})">&#128465; Hapus entri manual ini</button></div>`:''}
+
+        </div>
+        <div>
+          <label>Update / What was Complete?</label>
+          <textarea id="${'wc_'+idx+suffix}" rows="6" placeholder="Tulis progress/update terbaru untuk WO ini...">${escapeHtml(w.whatComplete||'')}</textarea>
+        </div>
+      </div>
+      <div style="margin-top:12px;">
+        <label>Foto Evidence</label>
+        <div class="photo-zone" id="${'pz_'+idx+suffix}">
+          Tarik &amp; lepas foto ke sini, tekan <b>Ctrl+V</b> untuk paste dari clipboard, atau
+          <span class="file-btn btn secondary" style="padding:5px 10px;font-size:11px;">Pilih Foto<input type="file" accept="image/*" multiple id="${'pf_'+idx+suffix}"></span>
+        </div>
+        <div class="thumbs" id="${'th_'+idx+suffix}"></div>
+      </div>
+    `;
+    setTimeout(() => {
+      document.getElementById('hl_'+idx+suffix).addEventListener('change', e => { w.highlight = e.target.checked; saveDraft(); renderFilterBar(); pushCrossSync(key, w.wo, {highlight: w.highlight}); });
+      document.getElementById('wc_'+idx+suffix).addEventListener('input', e => { w.whatComplete = e.target.value; saveDraft(); renderRsFilterBar(); pushCrossSync(key, w.wo, {whatComplete: w.whatComplete}); });
+      document.getElementById('pf_'+idx+suffix).addEventListener('change', e => handleFiles(idx, e.target.files));
+      const zone = document.getElementById('pz_'+idx+suffix);
+      zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag'); });
+      zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+      zone.addEventListener('drop', e => {
+        e.preventDefault(); zone.classList.remove('drag');
+        handleFiles(idx, e.dataTransfer.files);
+      });
+      renderThumbs(idx);
+    }, 0);
+    return wrap;
+  }
+
+  function handleFiles(idx, files){
+    const w = DATA.workOrders[idx];
+    if(!w.photos) w.photos = [];
+    Array.from(files).forEach(file => {
+      if(!file.type.startsWith('image/')) return;
+      resizeImage(file, 900, 0.60).then(dataUrl => {
+        w.photos.push({filename:file.name, dataUrl:dataUrl, caption:""});
+        saveDraft();
+        renderThumbs(idx);
+        renderTable();
+      });
+    });
+  }
+
+  function renderThumbs(idx){
+    const w = DATA.workOrders[idx];
+    const box = document.getElementById('th_'+idx+suffix);
+    if(!box) return;
+    box.innerHTML = "";
+    (w.photos||[]).forEach((p, pi) => {
+      const div = document.createElement('div');
+      div.className = 'thumb';
+      div.innerHTML = `
+        <img src="${p.dataUrl}">
+        <input type="text" placeholder="caption..." value="${escapeHtml(p.caption||'')}">
+        <div class="rm">Hapus</div>
+      `;
+      div.querySelector('input').addEventListener('input', e => { p.caption = e.target.value; saveDraft(); });
+      div.querySelector('.rm').addEventListener('click', () => { w.photos.splice(pi,1); saveDraft(); renderThumbs(idx); renderTable(); });
+      box.appendChild(div);
+    });
+  }
+
+  function handlePasteImage(imageFile){
+    if(lastOpenIdx < 0 || lastOpenIdx >= DATA.workOrders.length) return false;
+    if(!DATA.workOrders[lastOpenIdx]._open) return false;
+    const w = DATA.workOrders[lastOpenIdx];
+    if(!w.photos) w.photos = [];
+    const pz = document.getElementById('pz_'+lastOpenIdx+suffix);
+    if(pz){ pz.classList.add('drag'); setTimeout(()=>pz.classList.remove('drag'), 600); }
+    resizeImage(imageFile, 900, 0.60).then(dataUrl => {
+      const ts = new Date().toISOString().slice(11,19).replace(/:/g,'');
+      w.photos.push({filename:'paste-'+ts+'.jpg', dataUrl:dataUrl, caption:""});
+      saveDraft();
+      renderThumbs(lastOpenIdx);
+      renderTable();
+    });
+    return true;
+  }
+
+  // ── Tambah WO / SR Manual ──
+  function openAddModal(){
+    ['mWo','mAsset','mAssetDesc','mTeam','mPic','mWorkDesc','mFailDesc'].forEach(id=>$(id).value='');
+    $('mStatus').value='INPRG';
+    $('mDate').value='';
+    $('addModal').style.display='flex';
+    setTimeout(()=>$('mWo').focus(),80);
+  }
+  function closeAddModal(){
+    $('addModal').style.display='none';
+  }
+  function submitAddWO(){
+    const wo = $('mWo').value.trim();
+    if(!wo){ alert('No. WO / SR wajib diisi.'); $('mWo').focus(); return; }
+    const existing = DATA.workOrders.find(w=>w.wo===wo);
+    if(existing && !confirm('WO "'+wo+'" sudah ada di list. Tambah tetap sebagai entri baru?')) return;
+    const entry = {
+      wo: wo,
+      asset:        $('mAsset').value.trim(),
+      assetDesc:    $('mAssetDesc').value.trim(),
+      locDesc:      '',
+      failureDesc:  $('mFailDesc').value.trim(),
+      workDesc:     $('mWorkDesc').value.trim(),
+      team:         $('mTeam').value.trim(),
+      pic:          $('mPic').value.trim(),
+      workType:     'MANUAL',
+      priority:     '',
+      scheduledStart: $('mDate').value,
+      status:       $('mStatus').value,
+      whatComplete: '',
+      highlight:    false,
+      photos:       [],
+      progress:     'scheduled',
+      manual:       true,
+      _open:        true
+    };
+    DATA.workOrders.unshift(entry);
+    saveDraft();
+    closeAddModal();
+    activeFilter = 'ALL';
+    lastOpenIdx = 0;
+    render();
+  }
+  function removeManualWO(idx){
+    const w = DATA.workOrders[idx];
+    if(!w || !w.manual) return;
+    if(!confirm('Hapus entri manual "'+w.wo+'" dari list?')) return;
+    DATA.workOrders.splice(idx,1);
+    saveDraft();
+    render();
+  }
+
+  // ── IndexedDB — riwayat laporan mingguan ──
+  function openDB(){
+    return new Promise((res,rej)=>{
+      const r = indexedDB.open(DB_NAME,1);
+      r.onupgradeneeded = e => {
+        const db = e.target.result;
+        if(!db.objectStoreNames.contains('weeks'))
+          db.createObjectStore('weeks',{keyPath:'id'});
+      };
+      r.onsuccess = e => res(e.target.result);
+      r.onerror   = e => rej(e.target.error);
+    });
+  }
+  function dbPut(rec){
+    return openDB().then(db=>new Promise((res,rej)=>{
+      const tx = db.transaction('weeks','readwrite');
+      tx.objectStore('weeks').put(rec);
+      tx.oncomplete = res;
+      tx.onerror = e=>rej(e.target.error);
+    }));
+  }
+  function dbGetAll(){
+    return openDB().then(db=>new Promise((res,rej)=>{
+      const tx = db.transaction('weeks','readonly');
+      const r = tx.objectStore('weeks').getAll();
+      r.onsuccess = ()=>res(r.result);
+      r.onerror   = e=>rej(e.target.error);
+    }));
+  }
+  function dbDeleteRec(id){
+    return openDB().then(db=>new Promise((res,rej)=>{
+      const tx = db.transaction('weeks','readwrite');
+      tx.objectStore('weeks').delete(id);
+      tx.oncomplete = res;
+      tx.onerror = e=>rej(e.target.error);
+    }));
+  }
+
+  function saveWeek(){
+    if(DATA.workOrders.length===0){ alert('Belum ada data WO untuk disimpan.'); return; }
+    if(!currentWeekId) currentWeekId = Date.now().toString();
+    const label = DATA.period || '(tanpa periode)';
+    const rec = {
+      id: currentWeekId,
+      period: label,
+      savedAt: new Date().toISOString(),
+      data: JSON.parse(JSON.stringify(DATA))
+    };
+    dbPut(rec).then(()=>{
+      renderHistory();
+      const info = $('sourceInfo');
+      info.textContent = '✓ Disimpan: ' + label;
+      setTimeout(()=>{ if(info.textContent.startsWith('✓')) info.textContent=''; }, 3000);
+    }).catch(e=>alert('Gagal menyimpan: '+e));
+  }
+  function newWeek(){
+    if(DATA.workOrders.length>0){
+      if(!confirm('Mulai laporan minggu baru?\nDraft aktif saat ini akan dihapus — pastikan sudah klik "Simpan Laporan" sebelum lanjut.\n\nLanjutkan?')) return;
+    }
+    currentWeekId = null;
+    localStorage.removeItem(LS_KEY);
+    DATA = { period:'', recNotes:'', workOrders:[] };
+    $('periodInput').value = '';
+    $('recNotes').value = '';
+    $('sourceInfo').textContent = '';
+    activeFilter = 'ALL';
+    activeRsFilter = 'ALL';
+    searchTerm = '';
+    lastOpenIdx = -1;
+    render();
+  }
+  function loadWeek(id, period){
+    if(DATA.workOrders.length>0){
+      if(!confirm('Muat laporan "'+period+'"?\nDraft aktif saat ini akan diganti. Pastikan sudah disimpan.')) return;
+    }
+    dbGetAll().then(all=>{
+      const rec = all.find(r=>r.id===id);
+      if(!rec){ alert('Data tidak ditemukan.'); return; }
+      DATA = JSON.parse(JSON.stringify(rec.data));
+      currentWeekId = id;
+      $('periodInput').value = DATA.period||'';
+      $('recNotes').value = DATA.recNotes||'';
+      $('sourceInfo').textContent = 'Memuat: '+rec.period+' ('+rec.savedAt.slice(0,10)+')';
+      saveDraft();
+      activeFilter = 'ALL';
+      activeRsFilter = 'ALL';
+      searchTerm = '';
+      lastOpenIdx = -1;
+      render();
+      window.scrollTo({top:0,behavior:'smooth'});
+    });
+  }
+  function deleteWeekRecord(id, period){
+    if(!confirm('Hapus laporan "'+period+'" dari riwayat?\nTindakan ini tidak dapat dibatalkan.')) return;
+    dbDeleteRec(id).then(()=>{
+      if(currentWeekId===id) currentWeekId=null;
+      renderHistory();
+    }).catch(e=>alert('Gagal hapus: '+e));
+  }
+  function renderHistory(){
+    dbGetAll().then(all=>{
+      const box = $('weekList');
+      all.sort((a,b)=>b.savedAt.localeCompare(a.savedAt));
+      if(all.length===0){
+        box.innerHTML='<div style="color:var(--grey);font-size:12.5px;">Belum ada laporan tersimpan.</div>';
+        return;
+      }
+      box.innerHTML = all.map(r=>{
+        const fotoCount = (r.data.workOrders||[]).filter(w=>w.photos&&w.photos.length).length;
+        const hlCount   = (r.data.workOrders||[]).filter(w=>w.highlight).length;
+        const isActive  = (r.id===currentWeekId) ? 'style="background:var(--light);border-left:3px solid var(--teal);padding-left:10px;"' : '';
+        return `<div ${isActive} style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div style="flex:1;">
+            <div style="font-weight:bold;font-size:13px;color:var(--navy);">${escapeHtml(r.period)}${r.id===currentWeekId?' <span style="font-size:10px;color:var(--teal);font-weight:normal;">(aktif)</span>':''}</div>
+            <div style="font-size:11px;color:var(--grey);">Disimpan: ${r.savedAt.slice(0,16).replace('T',' ')} &nbsp;·&nbsp; ${(r.data.workOrders||[]).length} WO &nbsp;·&nbsp; ${fotoCount} berfoto &nbsp;·&nbsp; ${hlCount} highlight</div>
+          </div>
+          <button class="btn secondary" style="padding:5px 12px;font-size:11px;" onclick="loadWeek${suffix}('${r.id}','${escapeHtml(r.period).replace(/'/g,"\\'")}')">Muat</button>
+          <button class="btn danger" style="padding:5px 10px;font-size:11px;" onclick="deleteWeekRecord${suffix}('${r.id}','${escapeHtml(r.period).replace(/'/g,"\\'")}')">Hapus</button>
+        </div>`;
+      }).join('');
+    }).catch(()=>{});
+  }
+
+  $('saveWeekBtn').addEventListener('click', saveWeek);
+  $('newWeekBtn').addEventListener('click', newWeek);
+
+  // Ekspos fungsi yang dipanggil lewat onclick="" (string HTML) / kode luar
+  window['setFilter'+suffix] = setFilter;
+  window['setRsFilter'+suffix] = setRsFilter;
+  window['setProgFilter'+suffix] = setProgFilter;
+  window['setSort'+suffix] = setSort;
+  window['openAddModal'+suffix] = openAddModal;
+  window['closeAddModal'+suffix] = closeAddModal;
+  window['submitAddWO'+suffix] = submitAddWO;
+  window['removeManualWO'+suffix] = removeManualWO;
+  window['loadWeek'+suffix] = loadWeek;
+  window['deleteWeekRecord'+suffix] = deleteWeekRecord;
+
+  function applyIncomingUpdate(wo, patch){
+    const w = DATA.workOrders.find(x => x.wo === wo);
+    if(!w) return false;
+    Object.assign(w, patch);
+    saveDraft();
+    renderTable();
+    renderRsFilterBar();
+    renderRecapTable();
+    renderGroupPies();
+    return true;
+  }
+
+  Sheets[key] = {
+    loadExternalFile,
+    handlePasteImage,
+    getData: () => DATA,
+    applyIncomingUpdate,
+    saveAndRerender: () => { saveDraft(); render(); }
+  };
+
+  loadDraft();
+  render();
+  renderHistory();
+}
+
+initSheet('report', '', null);
+initSheet('ja', 'Ja', JA_SEED_DATA);
+reconcileCrossSync();
+
+// Drag-and-drop Excel/JSON di mana saja pada halaman — routing ke sheet yang sedang aktif
 let dragCounter = 0;
 window.addEventListener('dragenter', e => {
   if(Array.from(e.dataTransfer.items||[]).some(it => it.kind==='file')){
@@ -979,203 +1659,10 @@ window.addEventListener('drop', e => {
   document.getElementById('dropOverlay').style.display = 'none';
   const file = e.dataTransfer.files[0];
   if(!file) return;
-  if(file.name.match(/\.xlsx?$/i)) loadExcelFile(file);
-  else if(file.name.match(/\.json$/i)){
-    const reader = new FileReader();
-    reader.onload = evt => {
-      DATA = JSON.parse(evt.target.result);
-      document.getElementById('periodInput').value = DATA.period || "";
-      document.getElementById('recNotes').value = DATA.recNotes || "";
-      saveDraft(); render();
-    };
-    reader.readAsText(file);
-  }
+  Sheets[activeTab].loadExternalFile(file);
 });
 
-// ── Tambah WO / SR Manual ──
-function openAddModal(){
-  ['mWo','mAsset','mAssetDesc','mTeam','mWorkDesc','mFailDesc'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('mStatus').value='INPRG';
-  document.getElementById('mDate').value='';
-  document.getElementById('addModal').style.display='flex';
-  setTimeout(()=>document.getElementById('mWo').focus(),80);
-}
-function closeAddModal(){
-  document.getElementById('addModal').style.display='none';
-}
-function submitAddWO(){
-  const wo = document.getElementById('mWo').value.trim();
-  if(!wo){ alert('No. WO / SR wajib diisi.'); document.getElementById('mWo').focus(); return; }
-  const existing = DATA.workOrders.find(w=>w.wo===wo);
-  if(existing && !confirm('WO "'+wo+'" sudah ada di list. Tambah tetap sebagai entri baru?')) return;
-  const entry = {
-    wo: wo,
-    asset:        document.getElementById('mAsset').value.trim(),
-    assetDesc:    document.getElementById('mAssetDesc').value.trim(),
-    locDesc:      '',
-    failureDesc:  document.getElementById('mFailDesc').value.trim(),
-    workDesc:     document.getElementById('mWorkDesc').value.trim(),
-    team:         document.getElementById('mTeam').value.trim(),
-    workType:     'MANUAL',
-    priority:     '',
-    scheduledStart: document.getElementById('mDate').value,
-    status:       document.getElementById('mStatus').value,
-    whatComplete: '',
-    highlight:    false,
-    photos:       [],
-    progress:     'scheduled',
-    manual:       true,
-    _open:        true
-  };
-  DATA.workOrders.unshift(entry);
-  saveDraft();
-  closeAddModal();
-  activeFilter = 'ALL';
-  lastOpenIdx = 0;
-  render();
-}
-function removeManualWO(idx){
-  const w = DATA.workOrders[idx];
-  if(!w || !w.manual) return;
-  if(!confirm('Hapus entri manual "'+w.wo+'" dari list?')) return;
-  DATA.workOrders.splice(idx,1);
-  saveDraft();
-  render();
-}
-
-// ── IndexedDB — riwayat laporan mingguan ──
-let currentWeekId = null;
-
-function openDB(){
-  return new Promise((res,rej)=>{
-    const r = indexedDB.open('eic7_weekly',1);
-    r.onupgradeneeded = e => {
-      const db = e.target.result;
-      if(!db.objectStoreNames.contains('weeks'))
-        db.createObjectStore('weeks',{keyPath:'id'});
-    };
-    r.onsuccess = e => res(e.target.result);
-    r.onerror   = e => rej(e.target.error);
-  });
-}
-function dbPut(rec){
-  return openDB().then(db=>new Promise((res,rej)=>{
-    const tx = db.transaction('weeks','readwrite');
-    tx.objectStore('weeks').put(rec);
-    tx.oncomplete = res;
-    tx.onerror = e=>rej(e.target.error);
-  }));
-}
-function dbGetAll(){
-  return openDB().then(db=>new Promise((res,rej)=>{
-    const tx = db.transaction('weeks','readonly');
-    const r = tx.objectStore('weeks').getAll();
-    r.onsuccess = ()=>res(r.result);
-    r.onerror   = e=>rej(e.target.error);
-  }));
-}
-function dbDeleteRec(id){
-  return openDB().then(db=>new Promise((res,rej)=>{
-    const tx = db.transaction('weeks','readwrite');
-    tx.objectStore('weeks').delete(id);
-    tx.oncomplete = res;
-    tx.onerror = e=>rej(e.target.error);
-  }));
-}
-
-function saveWeek(){
-  if(DATA.workOrders.length===0){ alert('Belum ada data WO untuk disimpan.'); return; }
-  if(!currentWeekId) currentWeekId = Date.now().toString();
-  const label = DATA.period || '(tanpa periode)';
-  const rec = {
-    id: currentWeekId,
-    period: label,
-    savedAt: new Date().toISOString(),
-    data: JSON.parse(JSON.stringify(DATA))
-  };
-  dbPut(rec).then(()=>{
-    renderHistory();
-    const info = document.getElementById('sourceInfo');
-    info.textContent = '✓ Disimpan: ' + label;
-    setTimeout(()=>{ if(info.textContent.startsWith('✓')) info.textContent=''; }, 3000);
-  }).catch(e=>alert('Gagal menyimpan: '+e));
-}
-
-function newWeek(){
-  if(DATA.workOrders.length>0){
-    if(!confirm('Mulai laporan minggu baru?\nDraft aktif saat ini akan dihapus — pastikan sudah klik "Simpan Laporan" sebelum lanjut.\n\nLanjutkan?')) return;
-  }
-  currentWeekId = null;
-  localStorage.removeItem('eic7_weekly_draft');
-  DATA = { period:'', recNotes:'', workOrders:[] };
-  document.getElementById('periodInput').value = '';
-  document.getElementById('recNotes').value = '';
-  document.getElementById('sourceInfo').textContent = '';
-  activeFilter = 'ALL';
-  activeRsFilter = 'ALL';
-  searchTerm = '';
-  lastOpenIdx = -1;
-  render();
-}
-
-function loadWeek(id, period){
-  if(DATA.workOrders.length>0){
-    if(!confirm('Muat laporan "'+period+'"?\nDraft aktif saat ini akan diganti. Pastikan sudah disimpan.')) return;
-  }
-  dbGetAll().then(all=>{
-    const rec = all.find(r=>r.id===id);
-    if(!rec){ alert('Data tidak ditemukan.'); return; }
-    DATA = JSON.parse(JSON.stringify(rec.data));
-    currentWeekId = id;
-    document.getElementById('periodInput').value = DATA.period||'';
-    document.getElementById('recNotes').value = DATA.recNotes||'';
-    document.getElementById('sourceInfo').textContent = 'Memuat: '+rec.period+' ('+rec.savedAt.slice(0,10)+')';
-    saveDraft();
-    activeFilter = 'ALL';
-    activeRsFilter = 'ALL';
-    searchTerm = '';
-    lastOpenIdx = -1;
-    render();
-    window.scrollTo({top:0,behavior:'smooth'});
-  });
-}
-
-function deleteWeekRecord(id, period){
-  if(!confirm('Hapus laporan "'+period+'" dari riwayat?\nTindakan ini tidak dapat dibatalkan.')) return;
-  dbDeleteRec(id).then(()=>{
-    if(currentWeekId===id) currentWeekId=null;
-    renderHistory();
-  }).catch(e=>alert('Gagal hapus: '+e));
-}
-
-function renderHistory(){
-  dbGetAll().then(all=>{
-    const box = document.getElementById('weekList');
-    all.sort((a,b)=>b.savedAt.localeCompare(a.savedAt));
-    if(all.length===0){
-      box.innerHTML='<div style="color:var(--grey);font-size:12.5px;">Belum ada laporan tersimpan.</div>';
-      return;
-    }
-    box.innerHTML = all.map(r=>{
-      const fotoCount = (r.data.workOrders||[]).filter(w=>w.photos&&w.photos.length).length;
-      const hlCount   = (r.data.workOrders||[]).filter(w=>w.highlight).length;
-      const isActive  = (r.id===currentWeekId) ? 'style="background:var(--light);border-left:3px solid var(--teal);padding-left:10px;"' : '';
-      return `<div ${isActive} style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);">
-        <div style="flex:1;">
-          <div style="font-weight:bold;font-size:13px;color:var(--navy);">${escapeHtml(r.period)}${r.id===currentWeekId?' <span style="font-size:10px;color:var(--teal);font-weight:normal;">(aktif)</span>':''}</div>
-          <div style="font-size:11px;color:var(--grey);">Disimpan: ${r.savedAt.slice(0,16).replace('T',' ')} &nbsp;·&nbsp; ${(r.data.workOrders||[]).length} WO &nbsp;·&nbsp; ${fotoCount} berfoto &nbsp;·&nbsp; ${hlCount} highlight</div>
-        </div>
-        <button class="btn secondary" style="padding:5px 12px;font-size:11px;" onclick="loadWeek('${r.id}','${escapeHtml(r.period).replace(/'/g,"\\'")}')">Muat</button>
-        <button class="btn danger" style="padding:5px 10px;font-size:11px;" onclick="deleteWeekRecord('${r.id}','${escapeHtml(r.period).replace(/'/g,"\\'")}')">Hapus</button>
-      </div>`;
-    }).join('');
-  }).catch(()=>{});
-}
-
-document.getElementById('saveWeekBtn').addEventListener('click', saveWeek);
-document.getElementById('newWeekBtn').addEventListener('click', newWeek);
-
-// Paste image from clipboard (Ctrl+V)
+// Paste image dari clipboard (Ctrl+V) — target ke sheet yang sedang aktif
 document.addEventListener('paste', function(e){
   const items = (e.clipboardData || window.clipboardData || {}).items;
   if(!items) return;
@@ -1187,25 +1674,9 @@ document.addEventListener('paste', function(e){
     }
   }
   if(!imageFile) return;
-  if(lastOpenIdx < 0 || lastOpenIdx >= DATA.workOrders.length) return;
-  if(!DATA.workOrders[lastOpenIdx]._open) return;
-  e.preventDefault();
-  const w = DATA.workOrders[lastOpenIdx];
-  if(!w.photos) w.photos = [];
-  const pz = document.getElementById('pz_'+lastOpenIdx);
-  if(pz){ pz.classList.add('drag'); setTimeout(()=>pz.classList.remove('drag'), 600); }
-  resizeImage(imageFile, 900, 0.60).then(dataUrl => {
-    const ts = new Date().toISOString().slice(11,19).replace(/:/g,'');
-    w.photos.push({filename:'paste-'+ts+'.jpg', dataUrl:dataUrl, caption:""});
-    saveDraft();
-    renderThumbs(lastOpenIdx);
-    renderTable();
-  });
+  const handled = Sheets[activeTab].handlePasteImage(imageFile);
+  if(handled) e.preventDefault();
 });
-
-loadDraft();
-render();
-renderHistory();
 </script>
 </body>
 </html>
