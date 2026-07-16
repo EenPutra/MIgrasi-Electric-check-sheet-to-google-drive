@@ -83,13 +83,50 @@ HP bisa jauh lebih besar dari itu. Alur yang benar:
 - Semua approval perubahan besar melalui supervisor Fajar DS (untuk hal
   yang menyangkut proses kerja EIC7, bukan hanya kode).
 
+## Struktur Drive yang sudah dibuat (2026-07-16)
+Root folder `EIC7 CheckSheets`: https://drive.google.com/drive/folders/1FxT9LM6ABuNnD6KFWwTWCsTWGBYMEC_r
+`MASTER_INDEX`: https://docs.google.com/spreadsheets/d/1D_-B7Z2MzQxx1ML69iSNIW1jPcnx6dLmVzWQ1Taj5us
+
+13 subfolder (masing-masing punya `{Nama}_Data` sheet + folder `Photos/`), nama ikut
+file HTML lama persis: `7EPLCB4_Maintenance`, `7EPMCC_Maintenance`,
+`Battery_7EB-BY-125-250`, `DRY_TRAFO_PM`, `ESP_7BGPCP800A_B`,
+`GEN_BrushGear_PM_Checksheet`, `HV_Motor_6Monthly_PM`, `HV_Motor_SWGR`,
+`Hoist_Inspection_Maintenance`, `LV_Motor_MCC`, `PM_CheckSheet_BYC125`,
+`Transformer_Weekly_Inspection`, `Work_Activity_Record`.
+
+Semua ID sheet/folder per asset ada di `CHECKSHEETS` map dalam `Code.gs`.
+
+Dikecualikan dari migrasi: `esp_checksheet.html` (versi lama "V1", tidak
+di-link dari `index.html` yang aktif — dianggap usang, duplikat dari
+`ESP_7BGPCP800A_B`).
+
+Catatan: `Work_Activity_Record.html` sebelumnya cuma nyimpan draft ke
+`localStorage` (gak pernah ke Firestore) — folder+sheet-nya sudah dibuat,
+tapi ini pada dasarnya fitur baru (belum ada data lama yang dimigrasi).
+
 ## Progress
 - [x] Analisa struktur data & kode repo lama
 - [x] Sepakati arsitektur folder + master index + penyimpanan foto
-- [x] Buat repo baru (kosong) di GitHub
-- [ ] Setup Apps Script: `Code.gs` (doGet, doPost, LockService untuk lock saat tulis)
-- [ ] Setup struktur folder + sheet awal di Drive (bisa manual atau via script sekali jalan)
+- [x] Buat repo baru (kosong) di GitHub, clone history dari repo lama
+- [x] Setup struktur folder + sheet awal di Drive (13 subfolder + MASTER_INDEX)
+- [x] Tulis `Code.gs` (doGet, doPost, LockService) — belum di-deploy, lihat
+      langkah manual di bawah
+- [ ] Jalankan `setupHeaders()` sekali dari Apps Script editor (perbaiki
+      posisi header yang kegeser ke baris 2 akibat import CSV)
+- [ ] Deploy `Code.gs` sebagai Web App, catat URL-nya
 - [ ] Ganti `firebase-config.js` + `db-helper.js` jadi wrapper `fetch()` ke Apps Script Web App
 - [ ] Tambah pengiriman foto (`PHOTOS[]`) ke backend — fitur baru, belum ada di sistem lama
 - [ ] Bangun dashboard baru (baca `MASTER_INDEX`, klik → detail + foto)
 - [ ] Testing paralel dengan sistem lama sebelum cutover
+
+## Cara deploy Code.gs (manual, belum bisa diotomasi dari sini)
+Google Drive connector yang dipakai Claude cuma bisa create file/folder,
+BUKAN Apps Script API — jadi bagian ini wajib manual:
+1. Buka https://script.google.com → New project
+2. Hapus isi default, paste seluruh isi `Code.gs` dari repo ini
+3. Jalankan fungsi `setupHeaders` sekali (pilih dari dropdown function →
+   Run) untuk membetulkan header yang kegeser ke baris 2
+4. Deploy → New deployment → type "Web app", execute as "Me", access
+   "Anyone" (atau sesuai kebutuhan sharing) → Deploy
+5. Copy Web App URL, dipakai nanti sebagai endpoint `fetch()` pengganti
+   Firebase di frontend
