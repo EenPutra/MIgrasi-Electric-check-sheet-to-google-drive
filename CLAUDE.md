@@ -83,6 +83,11 @@ HP bisa jauh lebih besar dari itu. Alur yang benar:
 - Semua approval perubahan besar melalui supervisor Fajar DS (untuk hal
   yang menyangkut proses kerja EIC7, bukan hanya kode).
 
+## Hosting frontend
+Repo ini pakai GitHub Pages (sama seperti repo lama), source: branch `main`,
+path `/`. Live di: https://eenputra.github.io/MIgrasi-Electric-check-sheet-to-google-drive/
+(portal utama: `index.html` di root — sama nama file dengan tiap checksheet lama).
+
 ## Struktur Drive yang sudah dibuat (2026-07-16)
 Root folder `EIC7 CheckSheets`: https://drive.google.com/drive/folders/1FxT9LM6ABuNnD6KFWwTWCsTWGBYMEC_r
 `MASTER_INDEX`: https://docs.google.com/spreadsheets/d/1D_-B7Z2MzQxx1ML69iSNIW1jPcnx6dLmVzWQ1Taj5us
