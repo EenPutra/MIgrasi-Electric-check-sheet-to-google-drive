@@ -20,6 +20,7 @@ const CHECKSHEETS = {
   'LV_Motor_MCC':                 { dataSheetId: '1-YgS6YDVNyihN3iYWkYM10IA3FNxODL7dJInzDufeIE', photosFolderId: '1sAxarLKaIvTsQ-KnfQPcsAFVuRImKp51' },
   'PM_CheckSheet_BYC125':         { dataSheetId: '1CwUVL8U1GIoio10dK4J8rqtWVys6yu3dZH5R4XtPNDg', photosFolderId: '1Px-g3SRWL2bnRdLCuJTsxJnWFkXO9UWz' },
   'Transformer_Weekly_Inspection':{ dataSheetId: '1u14HSUans8cN0fjHcuP4XaCj66X9HcGSVznPgqFB4jE', photosFolderId: '1Wu70NMvbTk1EKiWonPB-0uyBV987R8sM' },
+  'UPS_7EB-UPS-AB_Monthly':       { dataSheetId: '1z9eM5LpoY0ceWOVKS85oEQeMYK-A-1TFaAcO3TGCMVk', photosFolderId: '1lKmBN0t583aFWyjBVyRM0jj9TPjIJVfV' },
   'Work_Activity_Record':         { dataSheetId: '1MrFOIVAIYKoNjqsqa4dgMZfFgGGhJ2RBPZJkGmbXQxc', photosFolderId: '1xeOzeUQiQxFMXNUt5tvjQ2y3Y7LNr24S' }
 };
 

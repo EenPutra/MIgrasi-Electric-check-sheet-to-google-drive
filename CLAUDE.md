@@ -92,12 +92,13 @@ path `/`. Live di: https://eenputra.github.io/MIgrasi-Electric-check-sheet-to-go
 Root folder `EIC7 CheckSheets`: https://drive.google.com/drive/folders/1FxT9LM6ABuNnD6KFWwTWCsTWGBYMEC_r
 `MASTER_INDEX`: https://docs.google.com/spreadsheets/d/1D_-B7Z2MzQxx1ML69iSNIW1jPcnx6dLmVzWQ1Taj5us
 
-13 subfolder (masing-masing punya `{Nama}_Data` sheet + folder `Photos/`), nama ikut
+14 subfolder (masing-masing punya `{Nama}_Data` sheet + folder `Photos/`), nama ikut
 file HTML lama persis: `7EPLCB4_Maintenance`, `7EPMCC_Maintenance`,
 `Battery_7EB-BY-125-250`, `DRY_TRAFO_PM`, `ESP_7BGPCP800A_B`,
 `GEN_BrushGear_PM_Checksheet`, `HV_Motor_6Monthly_PM`, `HV_Motor_SWGR`,
 `Hoist_Inspection_Maintenance`, `LV_Motor_MCC`, `PM_CheckSheet_BYC125`,
-`Transformer_Weekly_Inspection`, `Work_Activity_Record`.
+`Transformer_Weekly_Inspection`, `UPS_7EB-UPS-AB_Monthly`, `Work_Activity_Record`.
+(`UPS_7EB-UPS-AB_Monthly` ketinggalan waktu batch pertama, ditambah belakangan.)
 
 Semua ID sheet/folder per asset ada di `CHECKSHEETS` map dalam `Code.gs`.
 
