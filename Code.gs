@@ -24,8 +24,8 @@ const CHECKSHEETS = {
   'Work_Activity_Record':         { dataSheetId: '1MrFOIVAIYKoNjqsqa4dgMZfFgGGhJ2RBPZJkGmbXQxc', photosFolderId: '1xeOzeUQiQxFMXNUt5tvjQ2y3Y7LNr24S' }
 };
 
-const CHECKSHEET_HEADER = ['id','assetTag','assetName','frequency','woNumber','executionDate','timeStart','timeEnd','checkedBy','nik','reviewedBy','shift','overallStatus','countOk','countNg','countNa','items','measurements','toggleStates','inputValues','findings','recommendations','photos','photoCount','createdAt','submittedAt'];
-const WAR_HEADER = ['id','asset','desc','woNumber','woDate','failureDesc','pic','conclusion','recommendations','blocks','photos','photoCount','createdAt'];
+const CHECKSHEET_HEADER = ['id','assetTag','assetName','frequency','woNumber','executionDate','timeStart','timeEnd','checkedBy','nik','reviewedBy','shift','overallStatus','countOk','countNg','countNa','items','measurements','toggleStates','inputValues','findings','recommendations','photos','photoCount','createdAt','submittedAt','rawData'];
+const WAR_HEADER = ['id','asset','desc','woNumber','woDate','failureDesc','pic','conclusion','recommendations','blocks','photos','photoCount','createdAt','rawData'];
 const MASTER_INDEX_HEADER = ['id','checksheetType','assetTag','assetName','frequency','executionDate','checkedBy','overallStatus','photoCount','detailSheetId','createdAt'];
 
 // ── Run this once manually from the Apps Script editor after pasting this file. ──
@@ -87,7 +87,7 @@ function getDetail_(checksheetType, id) {
   const row = values.slice(1).find(r => String(r[idCol]) === String(id));
   if (!row) throw new Error('Submission not found: ' + id);
   const obj = rowToObject_(header, row);
-  ['items', 'measurements', 'toggleStates', 'inputValues', 'photos', 'blocks'].forEach(f => {
+  ['items', 'measurements', 'toggleStates', 'inputValues', 'photos', 'blocks', 'rawData'].forEach(f => {
     if (obj[f]) { try { obj[f] = JSON.parse(obj[f]); } catch (e) {} }
   });
   return obj;
@@ -111,8 +111,11 @@ function doPost(e) {
     const cfg = CHECKSHEETS[checksheetType];
     if (!cfg) throw new Error('Unknown checksheetType: ' + checksheetType);
 
-    const id = Utilities.getUuid();
+    // Preserve id/timestamps when provided (data migration); generate fresh ones for live frontend submissions.
+    const id = body.id || Utilities.getUuid();
     const now = new Date().toISOString();
+    const createdAt = body.createdAt || now;
+    const submittedAt = body.submittedAt || now;
 
     const photoRefs = uploadPhotos_(body.photos || [], cfg.photosFolderId, id);
 
@@ -121,10 +124,10 @@ function doPost(e) {
       id,
       photos: JSON.stringify(photoRefs),
       photoCount: photoRefs.length,
-      createdAt: now,
-      submittedAt: now
+      createdAt,
+      submittedAt
     });
-    ['items', 'measurements', 'toggleStates', 'inputValues', 'blocks'].forEach(f => {
+    ['items', 'measurements', 'toggleStates', 'inputValues', 'blocks', 'rawData'].forEach(f => {
       if (rowObj[f] && typeof rowObj[f] !== 'string') rowObj[f] = JSON.stringify(rowObj[f]);
     });
     const row = header.map(key => rowObj[key] !== undefined ? rowObj[key] : '');
@@ -142,7 +145,7 @@ function doPost(e) {
       overallStatus: body.overallStatus || '',
       photoCount: photoRefs.length,
       detailSheetId: cfg.dataSheetId,
-      createdAt: now
+      createdAt
     });
 
     return respond_({ success: true, id });
